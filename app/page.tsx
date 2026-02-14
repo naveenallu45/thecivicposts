@@ -5,6 +5,7 @@ import Article from '@/models/Article'
 import TopStoriesSection from '@/components/TopStoriesSection'
 import TrendingSection from '@/components/TrendingSection'
 import CategorySection from '@/components/CategorySection'
+import AutoRefreshWrapper from '@/components/AutoRefreshWrapper'
 import { formatDateShort } from '@/lib/date-utils'
 
 // ISR: Revalidate home page every 30 seconds
@@ -111,26 +112,28 @@ export default async function Home() {
   )
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-12">
-        {/* Top Stories Section */}
-        <TopStoriesSection 
-          topStories={topStoriesData}
-          miniTopStories={miniTopStoriesData}
-        />
-
-        {/* Trending Section */}
-        <TrendingSection articles={trendingData} />
-
-        {/* Category Sections */}
-        {categories.map((cat, index) => (
-          <CategorySection
-            key={cat.key}
-            articles={categoryData[index] || []}
-            categoryName={cat.name}
+    <AutoRefreshWrapper interval={30}>
+      <main className="min-h-screen bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-12">
+          {/* Top Stories Section */}
+          <TopStoriesSection 
+            topStories={topStoriesData}
+            miniTopStories={miniTopStoriesData}
           />
-        ))}
-      </div>
-    </main>
+
+          {/* Trending Section */}
+          <TrendingSection articles={trendingData} />
+
+          {/* Category Sections */}
+          {categories.map((cat, index) => (
+            <CategorySection
+              key={cat.key}
+              articles={categoryData[index] || []}
+              categoryName={cat.name}
+            />
+          ))}
+        </div>
+      </main>
+    </AutoRefreshWrapper>
   )
 }
