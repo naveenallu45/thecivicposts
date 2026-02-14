@@ -26,7 +26,7 @@ export default function TopStoriesSection({ topStories, miniTopStories }: TopSto
   return (
     <div className="mb-12">
       <SectionHeading title="Top Stories" />
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-3 md:mt-6">
         {/* Large Featured Articles Carousel - Left Side */}
         <div className="lg:col-span-2">
           {topStories.length > 0 ? (

@@ -24,7 +24,7 @@ export default function TrendingSection({ articles }: TrendingSectionProps) {
   return (
     <div className="mb-12">
       <SectionHeading title="Trending" />
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-3 md:mt-6">
         {articles.map((article) => (
           <ArticleCard
             key={article.id}

@@ -29,7 +29,7 @@ export default function ArticlesRow({ articles, heading }: ArticlesRowProps) {
   return (
     <div className="w-full">
       {heading && <SectionHeading title={heading} />}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-3 md:mt-6">
         {articles.map((article) => (
           <ArticleCard
             key={article.id}

@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useState, useEffect } from 'react'
 
 const navItems = [
   { href: '/', label: 'Home' },
@@ -14,11 +15,26 @@ const navItems = [
 
 export default function Navigation() {
   const pathname = usePathname()
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    // Reset loading state when pathname changes
+    setLoading(false)
+  }, [pathname])
+
+  const handleLinkClick = (href: string) => {
+    if (href !== pathname) {
+      setLoading(true)
+    }
+  }
 
   return (
     <nav className="bg-orange-100 border-t border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex overflow-x-auto scrollbar-hide justify-start md:justify-center items-center gap-6 md:gap-8 py-3.5">
+        <div className="flex overflow-x-auto scrollbar-hide justify-start md:justify-center items-center gap-6 md:gap-8 py-3.5 relative">
+          {loading && (
+            <div className="absolute top-0 left-0 right-0 h-0.5 bg-orange-600 animate-pulse"></div>
+          )}
           {navItems.map((item) => {
             const isActive = pathname === item.href || 
               (item.href !== '/' && pathname?.startsWith(item.href))
@@ -27,11 +43,13 @@ export default function Navigation() {
               <Link
                 key={item.href}
                 href={item.href}
+                prefetch={true}
+                onClick={() => handleLinkClick(item.href)}
                 className={`font-semibold text-sm md:text-base transition-colors duration-200 relative pb-1 whitespace-nowrap flex-shrink-0 ${
                   isActive
                     ? 'text-orange-600'
                     : 'text-gray-900 hover:text-orange-600'
-                }`}
+                } ${loading && !isActive ? 'opacity-70' : ''}`}
               >
                 {item.label}
                 {isActive && (

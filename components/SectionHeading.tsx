@@ -4,7 +4,7 @@ interface SectionHeadingProps {
 
 export default function SectionHeading({ title }: SectionHeadingProps) {
   return (
-    <div className="flex items-center mb-8">
+    <div className="flex items-center mb-4 md:mb-8">
       <h2 className="text-2xl md:text-3xl font-bold text-gray-900 font-merriweather pr-4 whitespace-nowrap">
         {title}
       </h2>
