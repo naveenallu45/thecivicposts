@@ -93,14 +93,6 @@ export default function ArticleForm({ authors, article, onPreviewChange }: Artic
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const capitalizeFirstLetter = (text: string): string => {
-    if (!text) return ''
-    return text
-      .split(' ')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-      .join(' ')
-  }
-
   const handleContentChange = (index: number, value: string) => {
     const currentContent = formData.content || ['', '']
     // Ensure we always have at least 2 paragraphs
@@ -590,8 +582,7 @@ export default function ArticleForm({ authors, article, onPreviewChange }: Artic
             <textarea
               value={formData.title || ''}
               onChange={(e) => {
-                const capitalized = capitalizeFirstLetter(e.target.value)
-                setFormData({ ...formData, title: capitalized })
+                setFormData({ ...formData, title: e.target.value })
               }}
               required
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-orange-500 resize-y min-h-[60px]"
@@ -607,8 +598,7 @@ export default function ArticleForm({ authors, article, onPreviewChange }: Artic
             <textarea
               value={formData.subtitle || ''}
               onChange={(e) => {
-                const capitalized = capitalizeFirstLetter(e.target.value)
-                setFormData({ ...formData, subtitle: capitalized })
+                setFormData({ ...formData, subtitle: e.target.value })
               }}
               required
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-orange-500 resize-y min-h-[60px]"
