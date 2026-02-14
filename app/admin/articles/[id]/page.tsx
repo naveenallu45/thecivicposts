@@ -42,6 +42,7 @@ export default async function EditArticlePage({
         author: article.author.toString(),
         publishedDate: article.publishedDate.toISOString(),
         mainImage: article.mainImage,
+        miniImage: article.miniImage && article.miniImage.url ? article.miniImage : undefined,
         subImages: article.subImages,
         status: article.status,
         category: article.category,

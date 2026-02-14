@@ -19,6 +19,7 @@ interface Article {
   author: string
   publishedDate: string
   mainImage: { url: string; public_id: string; alt?: string }
+  miniImage?: { url: string; public_id: string; alt?: string }
   subImages: Array<{ url: string; public_id: string; alt?: string; order: number }>
   status: 'draft' | 'published'
   category: string

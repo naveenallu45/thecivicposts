@@ -75,7 +75,7 @@ export default function ArticleForm({ authors, article, onPreviewChange }: Artic
       public_id: article.mainImage.public_id ?? '',
       alt: article.mainImage.alt ?? '',
     } : { url: '', public_id: '', alt: '' },
-    miniImage: article?.miniImage ? {
+    miniImage: article?.miniImage && article.miniImage.url ? {
       url: article.miniImage.url ?? '',
       public_id: article.miniImage.public_id ?? '',
       alt: article.miniImage.alt ?? '',
@@ -331,6 +331,13 @@ export default function ArticleForm({ authors, article, onPreviewChange }: Artic
 
     if (!formData.mainImage.url) {
       setError('Main Image is required')
+      setLoading(false)
+      return
+    }
+
+    // Mini Image is required for both draft and published
+    if (!formData.miniImage.url) {
+      setError('Mini Image is required')
       setLoading(false)
       return
     }
@@ -750,7 +757,7 @@ export default function ArticleForm({ authors, article, onPreviewChange }: Artic
           {/* Mini Image Upload */}
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Mini Image (between paragraphs)
+              Mini Image (between paragraphs) *
             </label>
             {formData.miniImage?.url ? (
               <div className="relative">
@@ -778,6 +785,7 @@ export default function ArticleForm({ authors, article, onPreviewChange }: Artic
                   if (file) handleImageUpload(file, 'mini')
                 }}
                 disabled={uploading}
+                required
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg"
               />
             )}
