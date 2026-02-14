@@ -4,6 +4,7 @@ import { ThemeProvider, createTheme } from '@mui/material/styles'
 import CssBaseline from '@mui/material/CssBaseline'
 import { useEffect } from 'react'
 import { ToastProvider } from '@/contexts/ToastContext'
+import DesktopOnly from '@/components/admin/DesktopOnly'
 
 const theme = createTheme({
   palette: {
@@ -39,13 +40,15 @@ export default function AdminLayout({
   }, [])
 
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <ToastProvider>
-        <div className="min-h-screen bg-gray-50">
-          {children}
-        </div>
-      </ToastProvider>
-    </ThemeProvider>
+    <DesktopOnly>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <ToastProvider>
+          <div className="min-h-screen bg-gray-50">
+            {children}
+          </div>
+        </ToastProvider>
+      </ThemeProvider>
+    </DesktopOnly>
   )
 }
