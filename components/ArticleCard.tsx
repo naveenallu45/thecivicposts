@@ -45,7 +45,7 @@ export default function ArticleCard({
           {/* Content Side - 60% width on mobile/tablet */}
           <div className="w-3/5 md:w-3/5 p-2 md:p-4 flex flex-col h-[140px] md:h-[180px]">
             <div className="flex-1 flex flex-col overflow-hidden min-h-0">
-              <h3 className="text-xs md:text-sm font-bold text-gray-900 mb-1 md:mb-2 font-merriweather group-hover:text-red-600 transition-colors duration-200 break-words line-clamp-3 leading-tight">
+              <h3 className="text-[10px] md:text-sm font-bold text-gray-900 mb-1 md:mb-2 font-merriweather group-hover:text-red-600 transition-colors duration-200 break-words line-clamp-3 leading-tight">
                 {title}
               </h3>
               {subtitle && (
