@@ -1,0 +1,13 @@
+# Allow all public pages
+User-agent: *
+Allow: /
+
+# Block admin routes from being indexed
+Disallow: /admin/
+Disallow: /api/admin/
+
+# Block admin login page
+Disallow: /admin/login
+
+# Sitemap location (update with your actual sitemap URL)
+# Sitemap: https://www.thecivicposts.com/sitemap.xml
