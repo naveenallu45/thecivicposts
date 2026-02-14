@@ -335,12 +335,7 @@ export default function ArticleForm({ authors, article, onPreviewChange }: Artic
       return
     }
 
-    // Mini Image is required for both draft and published
-    if (!formData.miniImage.url) {
-      setError('Mini Image is required')
-      setLoading(false)
-      return
-    }
+    // Mini Image is optional
 
     // Validate that both paragraphs are filled
     if (!formData.content || formData.content.length < 2) {
@@ -361,6 +356,8 @@ export default function ArticleForm({ authors, article, onPreviewChange }: Artic
         ...formData,
         status: publish ? 'published' : 'draft',
         content: filteredContent,
+        // Only include miniImage if it has a URL
+        miniImage: formData.miniImage?.url ? formData.miniImage : undefined,
       }
 
       const url = article
@@ -757,7 +754,7 @@ export default function ArticleForm({ authors, article, onPreviewChange }: Artic
           {/* Mini Image Upload */}
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Mini Image (between paragraphs) *
+              Mini Image (between paragraphs) <span className="text-gray-500 text-xs">(Optional)</span>
             </label>
             {formData.miniImage?.url ? (
               <div className="relative">

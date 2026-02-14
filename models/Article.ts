@@ -87,11 +87,9 @@ const ArticleSchema: Schema = new Schema(
     miniImage: {
       url: {
         type: String,
-        required: [true, 'Mini image is required'],
       },
       public_id: {
         type: String,
-        required: [true, 'Mini image public_id is required'],
       },
       alt: {
         type: String,
