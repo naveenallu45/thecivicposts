@@ -31,12 +31,26 @@
     outline: inherit;
   }
   
-  /* Remove default input styles */
+  /* Remove default input styles but allow Tailwind borders */
   input, textarea, select {
     font: inherit;
-    border: none;
     outline: none;
-    background: none;
+    /* Don't remove border - let Tailwind classes handle it */
+    /* Don't remove background - let Tailwind classes handle it */
+  }
+  
+  /* Ensure form inputs have proper styling */
+  input[type="text"],
+  input[type="email"],
+  input[type="date"],
+  input[type="file"],
+  input[type="number"],
+  textarea,
+  select {
+    display: block;
+    width: 100%;
+    /* Ensure borders are visible when Tailwind classes are applied */
+    border-style: solid;
   }
   
   /* Remove default link styles */

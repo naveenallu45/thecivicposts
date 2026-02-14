@@ -21,6 +21,7 @@ export default async function ArticlePreviewPage({
 
   const { id } = await params
   // authorName is already stored in article, no populate needed
+  // Ensure miniImage is included in the query
   const article = await Article.findById(id)
     .select('title subtitle content mainImage miniImage subImages publishedDate authorName category slug')
     .lean()
@@ -108,15 +109,16 @@ export default async function ArticlePreviewPage({
               </div>
             )}
 
-            {/* Mini Image */}
+            {/* Mini Image - Display between first and second paragraph */}
             {article.miniImage?.url && (
-              <div className="mb-6">
+              <div className="mb-6 flex justify-center">
                 <Image
                   src={article.miniImage.url}
                   alt={article.miniImage.alt || article.title || 'Mini image'}
                   width={800}
                   height={600}
-                  className="w-full h-auto rounded-lg"
+                  className="w-full max-w-2xl h-auto rounded-lg"
+                  loading="lazy"
                 />
               </div>
             )}

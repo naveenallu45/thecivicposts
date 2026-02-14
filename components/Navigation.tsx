@@ -16,7 +16,7 @@ export default function Navigation() {
   const pathname = usePathname()
 
   return (
-    <nav className="bg-orange-50 border-t border-gray-200">
+    <nav className="bg-orange-100 border-t border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex overflow-x-auto scrollbar-hide justify-start md:justify-center items-center gap-6 md:gap-8 py-3.5">
           {navItems.map((item) => {
@@ -27,7 +27,7 @@ export default function Navigation() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`font-medium text-sm md:text-base transition-colors duration-200 relative pb-1 whitespace-nowrap flex-shrink-0 ${
+                className={`font-semibold text-sm md:text-base transition-colors duration-200 relative pb-1 whitespace-nowrap flex-shrink-0 ${
                   isActive
                     ? 'text-orange-600'
                     : 'text-gray-900 hover:text-orange-600'
