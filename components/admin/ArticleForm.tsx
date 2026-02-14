@@ -317,11 +317,7 @@ export default function ArticleForm({ authors, article, onPreviewChange }: Artic
       return
     }
 
-    if (!formData.subtitle || !formData.subtitle.trim()) {
-      setError('Subtitle is required')
-      setLoading(false)
-      return
-    }
+    // Subtitle is optional
 
     if (!formData.author) {
       setError('Author is required')
@@ -606,7 +602,7 @@ export default function ArticleForm({ authors, article, onPreviewChange }: Artic
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Subtitle *
+              Subtitle <span className="text-gray-500 text-xs">(Optional)</span>
             </label>
             <textarea
               value={formData.subtitle || ''}
