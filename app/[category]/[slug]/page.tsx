@@ -240,7 +240,7 @@ export default async function ArticlePage({
         </div>
 
         {/* Title */}
-        <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4 font-merriweather leading-tight">
+        <h1 className="text-[22px] md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4 font-merriweather leading-tight">
           {article.title}
         </h1>
 
