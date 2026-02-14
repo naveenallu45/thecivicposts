@@ -124,9 +124,14 @@ export default function Footer() {
             <p className="text-gray-400 text-sm">
               © {currentYear} The Civic Posts. All rights reserved.
             </p>
-            <p className="text-gray-400 text-sm">
-              Stay informed. Stay connected.
-            </p>
+            <div className="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-4">
+              <p className="text-gray-400 text-sm">
+                Stay informed. Stay connected.
+              </p>
+              <p className="text-gray-500 text-sm">
+                Under <span className="text-orange-600 font-semibold">Shraddha Media Production</span>
+              </p>
+            </div>
           </div>
         </div>
       </div>
