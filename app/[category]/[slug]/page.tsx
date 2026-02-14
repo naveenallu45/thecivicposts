@@ -12,7 +12,17 @@ import { renderFormattedText } from '@/lib/text-formatting'
 
 // ISR: Revalidate every 60 seconds (1 minute)
 // Pages will be statically generated and revalidated in the background
+// This ensures pages are cached and served instantly after first generation
 export const revalidate = 60
+
+// Enable dynamic params for better performance
+export const dynamicParams = true
+
+// Generate static params for better performance (optional - can be removed if you have too many articles)
+// export async function generateStaticParams() {
+//   // This pre-generates pages at build time for better performance
+//   // Only enable if you have a manageable number of articles
+// }
 
 // Generate metadata for social media sharing (Open Graph & Twitter Cards)
 export async function generateMetadata({
@@ -23,7 +33,9 @@ export async function generateMetadata({
   await connectDB()
   
   const { category, slug } = await params
-  const article = await Article.findOne({ slug, status: 'published' }).lean()
+  const article = await Article.findOne({ slug, status: 'published' })
+    .select('title subtitle content mainImage publishedDate authorName category')
+    .lean()
 
   if (!article) {
     return {
@@ -44,7 +56,7 @@ export async function generateMetadata({
   
   // Get description from subtitle or first paragraph of content
   const description = article.subtitle || 
-    (article.content && article.content.length > 0 && article.content[0] 
+    (article.content && Array.isArray(article.content) && article.content.length > 0 && article.content[0] 
       ? article.content[0].substring(0, 160).replace(/\n/g, ' ').trim() + '...'
       : 'Read the full article on The Civic Posts')
   
@@ -109,14 +121,18 @@ export default async function ArticlePage({
 }: {
   params: Promise<{ category: string; slug: string }>
 }) {
-  await connectDB()
-
   const { category, slug } = await params
   
+  // Connect to DB (cached connection)
+  await connectDB()
+  
   // Fetch article (ISR will cache this page)
-  // Optimized: Removed populate() since authorName is stored in document
+  // Optimized: Only select needed fields for better performance
+  // Using lean() for faster queries (returns plain JS objects)
   const article = await Article.findOne({ slug, status: 'published' })
+    .select('title subtitle content mainImage miniImage subImages publishedDate authorName category slug updatedAt')
     .lean()
+    .exec()
 
   if (!article) {
     notFound()
@@ -191,7 +207,7 @@ export default async function ArticlePage({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
       <main className="min-h-screen bg-gray-50">
-        <article className="w-[92%] lg:w-[85%] mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <article className="w-[95%] lg:w-[85%] mx-auto px-2 sm:px-6 lg:px-8 py-12">
         {/* Back Button */}
         <div className="mb-6">
           <Link
@@ -258,6 +274,8 @@ export default async function ArticlePage({
               height={800}
               className="w-full h-auto rounded-lg"
               priority
+              quality={85}
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1200px"
             />
           </div>
         )}
@@ -284,6 +302,7 @@ export default async function ArticlePage({
                 width={800}
                 height={600}
                 className="w-full h-auto rounded-lg"
+                loading="lazy"
               />
             </div>
           )}
@@ -328,6 +347,7 @@ export default async function ArticlePage({
                     width={1200}
                     height={600}
                     className="w-full h-auto rounded-lg"
+                    loading="lazy"
                   />
                 </div>
               ))}

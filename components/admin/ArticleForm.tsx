@@ -6,6 +6,7 @@ import Image from 'next/image'
 import imageCompression from 'browser-image-compression'
 import { formatDateShort } from '@/lib/date-utils'
 import { renderFormattedText } from '@/lib/text-formatting'
+import { useToast } from '@/contexts/ToastContext'
 
 interface Author {
   _id: string
@@ -46,6 +47,7 @@ type FormDataState = {
 
 export default function ArticleForm({ authors, article, onPreviewChange }: ArticleFormProps) {
   const router = useRouter()
+  const { showToast } = useToast()
   const [loading, setLoading] = useState(false)
   const [preview, setPreview] = useState(false)
   const textareaRef1 = useRef<HTMLTextAreaElement>(null)
@@ -400,8 +402,16 @@ export default function ArticleForm({ authors, article, onPreviewChange }: Artic
       // Verify we got valid data
       if (!data || (!data.article && data.success === false)) {
         setError('Article was not saved successfully')
+        showToast('Article was not saved successfully', 'error')
         setLoading(false)
         return
+      }
+
+      // Show success toast
+      if (article) {
+        showToast('Article updated successfully!', 'success')
+      } else {
+        showToast('Article created successfully!', 'success')
       }
 
       // Navigate on success
@@ -411,6 +421,7 @@ export default function ArticleForm({ authors, article, onPreviewChange }: Artic
       console.error('Error saving article:', err)
       const errorMessage = err instanceof Error ? err.message : 'Failed to save article. Please try again.'
       setError(errorMessage)
+      showToast(errorMessage, 'error')
     } finally {
       setLoading(false)
     }
@@ -454,7 +465,7 @@ export default function ArticleForm({ authors, article, onPreviewChange }: Artic
             disabled={loading}
             className="px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50 transition-colors"
           >
-            {loading ? 'Publishing...' : 'Publish'}
+            {loading ? (article ? 'Updating...' : 'Publishing...') : (article ? 'Update Article' : 'Publish')}
           </button>
         </div>
 
@@ -821,7 +832,7 @@ export default function ArticleForm({ authors, article, onPreviewChange }: Artic
             disabled={loading}
             className="px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50"
           >
-            {loading ? 'Publishing...' : 'Publish'}
+            {loading ? (article ? 'Updating...' : 'Publishing...') : (article ? 'Update Article' : 'Publish')}
           </button>
         </div>
     </form>

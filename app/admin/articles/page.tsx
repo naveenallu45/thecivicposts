@@ -5,6 +5,7 @@ import connectDB from '@/lib/mongodb'
 import Article from '@/models/Article'
 import ArticlesTable from '@/components/admin/ArticlesTable'
 import Link from 'next/link'
+import LogoutButton from '@/components/admin/LogoutButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -75,14 +76,7 @@ export default async function ManageArticlesPage() {
               >
                 Dashboard
               </Link>
-              <form action="/api/admin/logout" method="POST">
-                <button
-                  type="submit"
-                  className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
-                >
-                  Logout
-                </button>
-              </form>
+              <LogoutButton />
             </div>
           </div>
         </div>

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useToast } from '@/contexts/ToastContext'
 
 interface AuthorFormProps {
   author?: {
@@ -15,6 +16,7 @@ interface AuthorFormProps {
 
 export default function AuthorForm({ author }: AuthorFormProps) {
   const router = useRouter()
+  const { showToast } = useToast()
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     name: author?.name || '',
@@ -82,13 +84,13 @@ export default function AuthorForm({ author }: AuthorFormProps) {
       router.refresh()
       if (!author) {
         setFormData({ name: '', email: '', bio: '', avatar: '' })
-        // Show success message
-        alert('Author added successfully!')
+        showToast('Author added successfully!', 'success')
       } else {
-        alert('Author updated successfully!')
+        showToast('Author updated successfully!', 'success')
       }
     } catch (error) {
-      alert(error instanceof Error ? error.message : 'Failed to save author')
+      const errorMessage = error instanceof Error ? error.message : 'Failed to save author'
+      showToast(errorMessage, 'error')
     } finally {
       setLoading(false)
     }

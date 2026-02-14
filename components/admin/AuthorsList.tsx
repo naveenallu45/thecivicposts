@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useToast } from '@/contexts/ToastContext'
 import Image from 'next/image'
 import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
@@ -21,6 +22,7 @@ interface AuthorsListProps {
 
 export default function AuthorsList({ authors }: AuthorsListProps) {
   const router = useRouter()
+  const { showToast } = useToast()
   const [loading, setLoading] = useState<string | null>(null)
   const [deleteDialog, setDeleteDialog] = useState<{ isOpen: boolean; authorId: string | null; authorName: string }>({
     isOpen: false,
@@ -45,11 +47,12 @@ export default function AuthorsList({ authors }: AuthorsListProps) {
         throw new Error('Failed to delete author')
       }
 
+      showToast('Author deleted successfully!', 'success')
       router.refresh()
       setDeleteDialog({ isOpen: false, authorId: null, authorName: '' })
     } catch (error) {
       console.error('Error deleting author:', error)
-      alert('Failed to delete author. Please try again.')
+      showToast('Failed to delete author. Please try again.', 'error')
     } finally {
       setLoading(null)
     }

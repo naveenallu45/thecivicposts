@@ -4,6 +4,7 @@ import Author from '@/models/Author'
 import Link from 'next/link'
 import AuthorForm from '@/components/admin/AuthorForm'
 import AuthorsList from '@/components/admin/AuthorsList'
+import LogoutButton from '@/components/admin/LogoutButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -26,14 +27,7 @@ export default async function AuthorsPage() {
               >
                 Dashboard
               </Link>
-              <form action="/api/admin/logout" method="POST">
-                <button
-                  type="submit"
-                  className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
-                >
-                  Logout
-                </button>
-              </form>
+              <LogoutButton />
             </div>
           </div>
         </div>

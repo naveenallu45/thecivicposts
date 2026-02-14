@@ -10,12 +10,19 @@ interface SocialShareProps {
 export default function SocialShare({ title, url }: SocialShareProps) {
   const [copied, setCopied] = useState(false)
 
-  // Use the provided URL or get current page URL
-  const shareUrl = typeof window !== 'undefined' 
+  // Always use the provided canonical URL to ensure shared links go directly to article page
+  // The URL prop is the full canonical URL: https://www.thecivicposts.com/{category}/{slug}
+  // This ensures when someone opens a shared link, they go directly to the article view page
+  const shareUrl = url || (typeof window !== 'undefined' 
     ? (window.location.origin + window.location.pathname)
-    : url
+    : '')
+  
+  // Ensure the URL is absolute (starts with http/https)
+  const absoluteShareUrl = shareUrl.startsWith('http') 
+    ? shareUrl 
+    : (typeof window !== 'undefined' ? `${window.location.origin}${shareUrl}` : shareUrl)
   const encodedTitle = encodeURIComponent(title)
-  const encodedUrl = encodeURIComponent(shareUrl)
+  const encodedUrl = encodeURIComponent(absoluteShareUrl)
 
   const handleShare = (platform: string) => {
     // Format WhatsApp message to include title and URL on separate lines for better visibility
@@ -35,7 +42,7 @@ export default function SocialShare({ title, url }: SocialShareProps) {
 
   const handleCopyLink = async () => {
     try {
-      await navigator.clipboard.writeText(shareUrl)
+      await navigator.clipboard.writeText(absoluteShareUrl)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch (err) {

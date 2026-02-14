@@ -9,6 +9,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked'
 import { useRouter } from 'next/navigation'
 import ConfirmDialog from './ConfirmDialog'
+import { useToast } from '@/contexts/ToastContext'
 
 interface ArticleRow {
   id: string
@@ -31,6 +32,7 @@ interface ArticlesTableProps {
 
 export default function ArticlesTable({ articles }: ArticlesTableProps) {
   const router = useRouter()
+  const { showToast } = useToast()
   const [loading, setLoading] = useState(false)
   const [deleteDialog, setDeleteDialog] = useState<{ isOpen: boolean; articleId: string | null }>({
     isOpen: false,
@@ -58,11 +60,12 @@ export default function ArticlesTable({ articles }: ArticlesTableProps) {
         throw new Error('Failed to delete article')
       }
 
+      showToast('Article deleted successfully!', 'success')
       router.refresh()
       setDeleteDialog({ isOpen: false, articleId: null })
     } catch (error) {
       console.error('Error deleting article:', error)
-      alert('Failed to delete article. Please try again.')
+      showToast('Failed to delete article. Please try again.', 'error')
     } finally {
       setLoading(false)
     }
@@ -111,10 +114,11 @@ export default function ArticlesTable({ articles }: ArticlesTableProps) {
         throw new Error(errorData.error || `Failed to update ${field}`)
       }
 
+      showToast(`${field === 'isTopStory' ? 'Top Story' : field === 'isMiniTopStory' ? 'Mini Top Story' : field === 'isLatest' ? 'Latest' : 'Trending'} ${newValue ? 'enabled' : 'disabled'} successfully!`, 'success')
       router.refresh()
     } catch (error) {
       console.error(`Error updating ${field}:`, error)
-      alert(`Failed to update ${field}. Please try again.`)
+      showToast(`Failed to update ${field}. Please try again.`, 'error')
     } finally {
       setLoading(false)
     }
