@@ -24,14 +24,14 @@ export default function TopStoriesCarousel({ articles }: TopStoriesCarouselProps
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
 
-  // Auto-scroll every 5 seconds
+  // Auto-scroll with production-level delay (7 seconds)
   useEffect(() => {
     if (articles.length <= 1) return
 
     if (isAutoPlaying) {
       intervalRef.current = setInterval(() => {
         setCurrentIndex((prev) => (prev + 1) % articles.length)
-      }, 5000) // 5 second delay
+      }, 7000) // 7 second delay - production level timing
     }
 
     return () => {
@@ -60,18 +60,6 @@ export default function TopStoriesCarousel({ articles }: TopStoriesCarouselProps
     setTimeout(() => setIsAutoPlaying(true), 10000)
   }
 
-  const goToPrevious = () => {
-    setCurrentIndex((prev) => (prev - 1 + articles.length) % articles.length)
-    setIsAutoPlaying(false)
-    setTimeout(() => setIsAutoPlaying(true), 10000)
-  }
-
-  const goToNext = () => {
-    setCurrentIndex((prev) => (prev + 1) % articles.length)
-    setIsAutoPlaying(false)
-    setTimeout(() => setIsAutoPlaying(true), 10000)
-  }
-
   if (articles.length === 0) {
     return null
   }
@@ -91,7 +79,7 @@ export default function TopStoriesCarousel({ articles }: TopStoriesCarouselProps
   }
 
   return (
-    <div className="relative group">
+    <div className="relative">
       {/* Carousel Container */}
       <div
         ref={scrollContainerRef}
@@ -117,27 +105,6 @@ export default function TopStoriesCarousel({ articles }: TopStoriesCarouselProps
           </div>
         ))}
       </div>
-
-      {/* Navigation Arrows */}
-      <button
-        onClick={goToPrevious}
-        className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-gray-800 p-3 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10"
-        aria-label="Previous article"
-      >
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-        </svg>
-      </button>
-
-      <button
-        onClick={goToNext}
-        className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-gray-800 p-3 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10"
-        aria-label="Next article"
-      >
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-        </svg>
-      </button>
 
       {/* Dots Indicator */}
       <div className="flex justify-center gap-2 mt-6">
