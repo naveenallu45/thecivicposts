@@ -286,7 +286,7 @@ export default async function ArticlePage({
           {article.content && article.content[0] && article.content[0].trim() && (
             <div className="mb-6">
               {article.content[0].split('\n').filter(line => line.trim()).map((line, lineIdx) => (
-                <p key={lineIdx} className="mb-5 text-gray-800 leading-relaxed text-lg md:text-xl font-merriweather font-normal">
+                <p key={lineIdx} className="mb-5 text-gray-800 leading-relaxed text-[13.5px] md:text-xl font-merriweather font-normal">
                   {renderFormattedText(line.trim())}
                 </p>
               ))}
@@ -311,7 +311,7 @@ export default async function ArticlePage({
           {article.content && article.content[1] && article.content[1].trim() && (
             <div className="mb-6">
               {article.content[1].split('\n').filter(line => line.trim()).map((line, lineIdx) => (
-                <p key={lineIdx} className="mb-5 text-gray-800 leading-relaxed text-lg md:text-xl font-merriweather font-normal">
+                <p key={lineIdx} className="mb-5 text-gray-800 leading-relaxed text-[13.5px] md:text-xl font-merriweather font-normal">
                   {renderFormattedText(line.trim())}
                 </p>
               ))}
@@ -325,7 +325,7 @@ export default async function ArticlePage({
             return (
               <div key={idx + 2} className="mb-6">
                 {lines.map((line, lineIdx) => (
-                  <p key={lineIdx} className="mb-5 text-gray-800 leading-relaxed text-lg md:text-xl font-merriweather font-normal">
+                  <p key={lineIdx} className="mb-5 text-gray-800 leading-relaxed text-[13.5px] md:text-xl font-merriweather font-normal">
                     {renderFormattedText(line.trim())}
                   </p>
                 ))}
