@@ -59,7 +59,7 @@ export default async function SportsPage({
 
   return (
     <main className="min-h-screen bg-gray-50">
-      <div className="w-[92%] lg:w-[85%] mx-auto py-12">
+      <div className="w-[92%] lg:w-[85%] mx-auto py-6 md:py-12">
         <ArticlesRow articles={articlesData} heading="Sports" />
         <Pagination 
           currentPage={currentPage} 
