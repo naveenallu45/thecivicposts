@@ -16,8 +16,17 @@ export default async function EditArticlePage({
   await connectDB()
 
   const { id } = await params
-  const article = await Article.findById(id).lean()
-  const authors = await Author.find().sort({ name: 1 }).lean()
+  
+  // Optimized: Parallel queries instead of sequential
+  const [article, authors] = await Promise.all([
+    Article.findById(id)
+      .select('title subtitle content author publishedDate mainImage miniImage subImages status category')
+      .lean(),
+    Author.find()
+      .select('name email')
+      .sort({ name: 1 })
+      .lean(),
+  ])
 
   if (!article) {
     redirect('/admin/dashboard')

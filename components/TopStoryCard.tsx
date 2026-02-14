@@ -28,7 +28,7 @@ export default function TopStoryCard({
     >
       <div className="bg-white rounded-lg overflow-hidden h-full">
         {/* Large Image */}
-        <div className="relative w-full h-[400px] md:h-[500px] lg:h-[600px] mb-4 overflow-hidden">
+        <div className="relative w-full h-[340px] md:h-[500px] lg:h-[600px] mb-4 overflow-hidden">
           <Image
             src={mainImage}
             alt={title}

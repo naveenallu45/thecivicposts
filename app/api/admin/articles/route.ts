@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
     })
 
     await article.save()
-    await article.populate('author', 'name email')
+    // Note: authorName is already stored, no need to populate
 
     // Revalidate home page if article is published or has home page flags
     if (status === 'published' || article.isTopStory || article.isMiniTopStory || article.isLatest || article.isTrending) {

@@ -18,8 +18,9 @@ export default async function AdminDashboard() {
     Author.countDocuments(),
   ])
 
+  // Optimized: Use stored authorName instead of populate
   const recentArticles = await Article.find()
-    .populate('author', 'name')
+    .select('title authorName category status createdAt')
     .sort({ createdAt: -1 })
     .limit(10)
     .lean()
@@ -69,6 +70,7 @@ export default async function AdminDashboard() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <Link
               href="/admin/articles"
+              prefetch={true}
               className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-all border-2 border-transparent hover:border-orange-300 group"
             >
               <div className="flex items-center gap-3 mb-2">
@@ -79,6 +81,7 @@ export default async function AdminDashboard() {
             </Link>
             <Link
               href="/admin/authors"
+              prefetch={true}
               className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-all border-2 border-transparent hover:border-orange-300 group"
             >
               <div className="flex items-center gap-3 mb-2">
@@ -98,7 +101,6 @@ export default async function AdminDashboard() {
               {recentArticles.map((article: {
                 _id: { toString: () => string }
                 title: string
-                author?: { name?: string } | string | null | unknown
                 authorName?: string
                 category: string
                 status: string
@@ -106,15 +108,14 @@ export default async function AdminDashboard() {
                 <Link
                   key={article._id.toString()}
                   href={`/admin/articles/${article._id}`}
+                  prefetch={true}
                   className="block px-6 py-4 hover:bg-orange-50 transition-colors group"
                 >
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
                       <h3 className="font-medium text-gray-900 group-hover:text-orange-700 transition-colors">{article.title}</h3>
                       <p className="text-sm text-gray-500 mt-1">
-                        by {typeof article.author === 'object' && article.author !== null && 'name' in article.author 
-                          ? (article.author as { name?: string }).name || article.authorName || 'Unknown'
-                          : article.authorName || 'Unknown'} • <span className="text-orange-600 font-medium">{article.category}</span>
+                        by {article.authorName || 'Unknown'} • <span className="text-orange-600 font-medium">{article.category}</span>
                       </p>
                     </div>
                     <span

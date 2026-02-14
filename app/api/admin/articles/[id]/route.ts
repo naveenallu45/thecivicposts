@@ -89,12 +89,27 @@ export async function PUT(
     const oldPublishedDate = article.publishedDate
     const oldAuthorName = article.authorName
 
+    // Always ensure authorName is stored (required field)
     // If author is being updated, get and store the author name
-    if (author !== undefined && author !== article.author.toString()) {
+    if (author !== undefined) {
       const authorDoc = await Author.findById(author)
       if (authorDoc) {
         article.authorName = authorDoc.name
+      } else if (!article.authorName) {
+        // If author not found but article exists, keep existing authorName
+        // This handles case where author was deleted but article remains
+        return NextResponse.json(
+          { error: 'Author not found' },
+          { status: 400 }
+        )
       }
+    } else if (!article.authorName) {
+      // Ensure authorName exists even if author field wasn't updated
+      const authorDoc = await Author.findById(article.author)
+      if (authorDoc) {
+        article.authorName = authorDoc.name
+      }
+      // If author doesn't exist (was deleted), keep existing authorName
     }
 
     // Delete old images if new ones are uploaded
@@ -145,7 +160,7 @@ export async function PUT(
     if (isTrending !== undefined) article.isTrending = Boolean(isTrending)
 
     await article.save()
-    await article.populate('author', 'name email')
+    // Note: authorName is already stored, no need to populate
 
     // Revalidate home page if:
     // 1. Status changed to/from published

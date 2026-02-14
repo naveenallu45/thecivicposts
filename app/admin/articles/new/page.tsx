@@ -9,7 +9,11 @@ export default async function NewArticlePage() {
   await requireAdmin()
   await connectDB()
 
-  const authors = await Author.find().sort({ name: 1 }).lean()
+  // Optimized: Only select needed fields
+  const authors = await Author.find()
+    .select('name email')
+    .sort({ name: 1 })
+    .lean()
 
   return (
     <ArticleFormWrapper

@@ -17,7 +17,10 @@ export default async function EditAuthorPage({
   await connectDB()
 
   const { id } = await params
-  const author = await Author.findById(id).lean()
+  // Optimized: Only select needed fields
+  const author = await Author.findById(id)
+    .select('name email bio avatar')
+    .lean()
 
   if (!author) {
     redirect('/admin/authors')

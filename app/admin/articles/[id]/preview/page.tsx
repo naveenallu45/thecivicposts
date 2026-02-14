@@ -20,17 +20,17 @@ export default async function ArticlePreviewPage({
   await connectDB()
 
   const { id } = await params
+  // authorName is already stored in article, no populate needed
   const article = await Article.findById(id)
-    .populate('author', 'name email')
+    .select('title subtitle content mainImage miniImage subImages publishedDate authorName category slug')
     .lean()
 
   if (!article) {
     redirect('/admin/articles')
   }
 
-  const author = typeof article.author === 'object' && article.author !== null && 'name' in article.author
-    ? (article.author as { name?: string }).name || 'Unknown Author'
-    : 'Unknown Author'
+  // Use stored authorName directly (no populate needed)
+  const author = article.authorName || 'Unknown Author'
 
   const formattedDate = article.publishedDate
     ? formatDateShort(article.publishedDate)

@@ -82,12 +82,13 @@ export async function DELETE(
     const articleCount = await Article.countDocuments({ author: id })
     
     // Delete the author - articles will keep authorName field which preserves the name
+    // This ensures articles remain intact even if author is deleted
     await Author.findByIdAndDelete(id)
     
     return NextResponse.json({ 
       success: true,
       message: articleCount > 0 
-        ? `Author deleted. ${articleCount} existing article(s) will keep the author name.`
+        ? `Author deleted successfully. ${articleCount} existing article(s) will continue to display the author name (${author.name}) as stored in the article.`
         : 'Author deleted successfully.'
     })
   } catch (error) {

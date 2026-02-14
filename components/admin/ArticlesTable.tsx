@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { DataGrid, GridColDef, GridActionsCellItem, GridRowParams } from '@mui/x-data-grid'
 import { Box, Chip, Tooltip } from '@mui/material'
 import EditIcon from '@mui/icons-material/Edit'
@@ -30,101 +30,261 @@ interface ArticlesTableProps {
   articles: ArticleRow[]
 }
 
+type FieldType = 'isTopStory' | 'isMiniTopStory' | 'isLatest' | 'isTrending'
+
+interface LoadingState {
+  [key: string]: boolean
+}
+
+const API_TIMEOUT = 10000 // 10 seconds
+const DEBOUNCE_DELAY = 300 // 300ms debounce
+
 export default function ArticlesTable({ articles }: ArticlesTableProps) {
   const router = useRouter()
   const { showToast } = useToast()
   const [loading, setLoading] = useState(false)
+  const [rowLoading, setRowLoading] = useState<LoadingState>({})
+  const [localArticles, setLocalArticles] = useState<ArticleRow[]>(articles)
   const [deleteDialog, setDeleteDialog] = useState<{ isOpen: boolean; articleId: string | null }>({
     isOpen: false,
     articleId: null,
   })
+  
+  // Track pending requests to prevent race conditions
+  const pendingRequestsRef = useRef<Map<string, AbortController>>(new Map())
+  const debounceTimersRef = useRef<Map<string, NodeJS.Timeout>>(new Map())
 
-  const handleEdit = (id: string) => {
+  // Update local articles when props change
+  useEffect(() => {
+    setLocalArticles(articles)
+  }, [articles])
+
+  // Cleanup on unmount
+  useEffect(() => {
+    const pendingRequests = pendingRequestsRef.current
+    const debounceTimers = debounceTimersRef.current
+    
+    return () => {
+      // Cancel all pending requests
+      pendingRequests.forEach((controller) => {
+        controller.abort()
+      })
+      // Clear all debounce timers
+      debounceTimers.forEach((timer) => {
+        clearTimeout(timer)
+      })
+    }
+  }, [])
+
+  const handleEdit = useCallback((id: string) => {
+    // Prefetch the edit page data
+    router.prefetch(`/admin/articles/${id}`)
     router.push(`/admin/articles/${id}`)
-  }
+  }, [router])
 
   const handleDeleteClick = (id: string) => {
     setDeleteDialog({ isOpen: true, articleId: id })
   }
 
-  const handleDeleteConfirm = async () => {
+  const handleDeleteConfirm = useCallback(async () => {
     if (!deleteDialog.articleId) return
 
     setLoading(true)
+    const articleId = deleteDialog.articleId
+    
     try {
-      const response = await fetch(`/api/admin/articles/${deleteDialog.articleId}`, {
+      // Create abort controller for request cancellation
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT)
+
+      const response = await fetch(`/api/admin/articles/${articleId}`, {
         method: 'DELETE',
+        signal: controller.signal,
       })
 
+      clearTimeout(timeoutId)
+
       if (!response.ok) {
-        throw new Error('Failed to delete article')
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || 'Failed to delete article')
       }
 
+      // Optimistically remove from local state
+      setLocalArticles((prev) => prev.filter((article) => article.id !== articleId))
       showToast('Article deleted successfully!', 'success')
+      
+      // Refresh in background
       router.refresh()
       setDeleteDialog({ isOpen: false, articleId: null })
     } catch (error) {
-      console.error('Error deleting article:', error)
-      showToast('Failed to delete article. Please try again.', 'error')
+      if (error instanceof Error && error.name === 'AbortError') {
+        showToast('Request timed out. Please try again.', 'error')
+      } else {
+        console.error('Error deleting article:', error)
+        const errorMessage = error instanceof Error ? error.message : 'Failed to delete article. Please try again.'
+        showToast(errorMessage, 'error')
+      }
     } finally {
       setLoading(false)
     }
-  }
+  }, [deleteDialog.articleId, router, showToast])
 
   const handleDeleteCancel = () => {
     setDeleteDialog({ isOpen: false, articleId: null })
   }
 
-  const handleToggleField = async (id: string, field: 'isTopStory' | 'isMiniTopStory' | 'isLatest' | 'isTrending', currentValue: boolean) => {
-    setLoading(true)
-    try {
-      const newValue = !currentValue
-      
-      // If setting to true, set all other fields to false (only one can be true at a time)
-      const updateData: Record<string, boolean> = {
-        [field]: newValue,
-      }
-      
-      if (newValue) {
-        // Set all other fields to false
-        const allFields: Array<'isTopStory' | 'isMiniTopStory' | 'isLatest' | 'isTrending'> = [
-          'isTopStory',
-          'isMiniTopStory',
-          'isLatest',
-          'isTrending',
-        ]
-        
-        allFields.forEach((f) => {
-          if (f !== field) {
-            updateData[f] = false
-          }
-        })
-      }
-
-      const response = await fetch(`/api/admin/articles/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updateData),
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        throw new Error(errorData.error || `Failed to update ${field}`)
-      }
-
-      showToast(`${field === 'isTopStory' ? 'Top Story' : field === 'isMiniTopStory' ? 'Mini Top Story' : field === 'isLatest' ? 'Latest' : 'Trending'} ${newValue ? 'enabled' : 'disabled'} successfully!`, 'success')
-      router.refresh()
-    } catch (error) {
-      console.error(`Error updating ${field}:`, error)
-      showToast(`Failed to update ${field}. Please try again.`, 'error')
-    } finally {
-      setLoading(false)
+  const handleToggleField = useCallback(async (
+    id: string, 
+    field: FieldType, 
+    currentValue: boolean
+  ) => {
+    const requestKey = `${id}-${field}`
+    
+    // Cancel previous pending request for this field
+    const existingController = pendingRequestsRef.current.get(requestKey)
+    if (existingController) {
+      existingController.abort()
+      pendingRequestsRef.current.delete(requestKey)
     }
-  }
 
-  const columns: GridColDef[] = [
+    // Clear existing debounce timer
+    const existingTimer = debounceTimersRef.current.get(requestKey)
+    if (existingTimer) {
+      clearTimeout(existingTimer)
+    }
+
+    const newValue = !currentValue
+    
+    // Store original state for rollback
+    const originalArticle = localArticles.find((a) => a.id === id)
+    if (!originalArticle) return
+
+    // Optimistically update UI immediately
+    setLocalArticles((prevArticles) => {
+      return prevArticles.map((article) => {
+        if (article.id === id) {
+          const updated = { ...article, [field]: newValue }
+          
+          // If setting to true, set all other fields to false
+          if (newValue) {
+            updated.isTopStory = field === 'isTopStory'
+            updated.isMiniTopStory = field === 'isMiniTopStory'
+            updated.isLatest = field === 'isLatest'
+            updated.isTrending = field === 'isTrending'
+          }
+          
+          return updated
+        }
+        return article
+      })
+    })
+
+    // Set loading state for this specific row/field
+    setRowLoading((prev) => ({ ...prev, [requestKey]: true }))
+
+    // Debounce the API call
+    const timer = setTimeout(async () => {
+      const controller = new AbortController()
+      pendingRequestsRef.current.set(requestKey, controller)
+      
+      try {
+        // Prepare update data
+        const updateData: Record<string, boolean> = {
+          [field]: newValue,
+        }
+        
+        if (newValue) {
+          // Set all other fields to false
+          const allFields: FieldType[] = [
+            'isTopStory',
+            'isMiniTopStory',
+            'isLatest',
+            'isTrending',
+          ]
+          
+          allFields.forEach((f) => {
+            if (f !== field) {
+              updateData[f] = false
+            }
+          })
+        }
+
+        // Create timeout for request
+        const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT)
+
+        const response = await fetch(`/api/admin/articles/${id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(updateData),
+          signal: controller.signal,
+        })
+
+        clearTimeout(timeoutId)
+        pendingRequestsRef.current.delete(requestKey)
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}))
+          throw new Error(errorData.error || `Failed to update ${field}`)
+        }
+
+        const fieldLabels: Record<FieldType, string> = {
+          isTopStory: 'Top Story',
+          isMiniTopStory: 'Mini Top Story',
+          isLatest: 'Latest',
+          isTrending: 'Trending',
+        }
+
+        showToast(
+          `${fieldLabels[field]} ${newValue ? 'enabled' : 'disabled'} successfully!`, 
+          'success'
+        )
+        
+        // Silent refresh in background
+        router.refresh()
+      } catch (error) {
+        pendingRequestsRef.current.delete(requestKey)
+        
+        if (error instanceof Error && error.name === 'AbortError') {
+          if (controller.signal.aborted) {
+            showToast('Request timed out. Please try again.', 'error')
+          } else {
+            // Request was cancelled, don't show error
+            return
+          }
+        } else {
+          console.error(`Error updating ${field}:`, error)
+          const errorMessage = error instanceof Error 
+            ? error.message 
+            : `Failed to update ${field}. Please try again.`
+          showToast(errorMessage, 'error')
+        }
+        
+        // Revert optimistic update on error
+        setLocalArticles((prevArticles) => {
+          return prevArticles.map((article) => {
+            if (article.id === id && originalArticle) {
+              return { ...originalArticle }
+            }
+            return article
+          })
+        })
+      } finally {
+        setRowLoading((prev) => {
+          const updated = { ...prev }
+          delete updated[requestKey]
+          return updated
+        })
+        debounceTimersRef.current.delete(requestKey)
+      }
+    }, DEBOUNCE_DELAY)
+
+    debounceTimersRef.current.set(requestKey, timer)
+  }, [localArticles, router, showToast])
+
+  // Memoize columns to prevent unnecessary re-renders
+  const columns: GridColDef[] = useMemo(() => [
     {
       field: 'title',
       headerName: 'Title',
@@ -222,25 +382,32 @@ export default function ArticlesTable({ articles }: ArticlesTableProps) {
       type: 'boolean',
       align: 'center',
       headerAlign: 'center',
-      renderCell: (params) => (
-        <Chip
-          label={params.value ? 'Yes' : 'No'}
-          color={params.value ? 'primary' : 'default'}
-          variant={params.value ? 'filled' : 'outlined'}
-          size="small"
-          onClick={(e) => {
-            e.stopPropagation()
-            handleToggleField(params.row.id, 'isTopStory', params.value)
-          }}
-          sx={{ 
-            cursor: 'pointer',
-            fontWeight: params.value ? 600 : 400,
-            '&:hover': {
-              opacity: 0.8,
-            },
-          }}
-        />
-      ),
+      renderCell: (params) => {
+        const isLoading = rowLoading[`${params.row.id}-isTopStory`] || false
+        return (
+          <Chip
+            label={params.value ? 'Yes' : 'No'}
+            color={params.value ? 'primary' : 'default'}
+            variant={params.value ? 'filled' : 'outlined'}
+            size="small"
+            onClick={(e) => {
+              e.stopPropagation()
+              if (!isLoading) {
+                handleToggleField(params.row.id, 'isTopStory', params.value)
+              }
+            }}
+            disabled={isLoading}
+            sx={{ 
+              cursor: isLoading ? 'wait' : 'pointer',
+              fontWeight: params.value ? 600 : 400,
+              opacity: isLoading ? 0.6 : 1,
+              '&:hover': {
+                opacity: isLoading ? 0.6 : 0.8,
+              },
+            }}
+          />
+        )
+      },
     },
     {
       field: 'isMiniTopStory',
@@ -250,25 +417,32 @@ export default function ArticlesTable({ articles }: ArticlesTableProps) {
       type: 'boolean',
       align: 'center',
       headerAlign: 'center',
-      renderCell: (params) => (
-        <Chip
-          label={params.value ? 'Yes' : 'No'}
-          color={params.value ? 'primary' : 'default'}
-          variant={params.value ? 'filled' : 'outlined'}
-          size="small"
-          onClick={(e) => {
-            e.stopPropagation()
-            handleToggleField(params.row.id, 'isMiniTopStory', params.value)
-          }}
-          sx={{ 
-            cursor: 'pointer',
-            fontWeight: params.value ? 600 : 400,
-            '&:hover': {
-              opacity: 0.8,
-            },
-          }}
-        />
-      ),
+      renderCell: (params) => {
+        const isLoading = rowLoading[`${params.row.id}-isMiniTopStory`] || false
+        return (
+          <Chip
+            label={params.value ? 'Yes' : 'No'}
+            color={params.value ? 'primary' : 'default'}
+            variant={params.value ? 'filled' : 'outlined'}
+            size="small"
+            onClick={(e) => {
+              e.stopPropagation()
+              if (!isLoading) {
+                handleToggleField(params.row.id, 'isMiniTopStory', params.value)
+              }
+            }}
+            disabled={isLoading}
+            sx={{ 
+              cursor: isLoading ? 'wait' : 'pointer',
+              fontWeight: params.value ? 600 : 400,
+              opacity: isLoading ? 0.6 : 1,
+              '&:hover': {
+                opacity: isLoading ? 0.6 : 0.8,
+              },
+            }}
+          />
+        )
+      },
     },
     {
       field: 'isLatest',
@@ -278,25 +452,32 @@ export default function ArticlesTable({ articles }: ArticlesTableProps) {
       type: 'boolean',
       align: 'center',
       headerAlign: 'center',
-      renderCell: (params) => (
-        <Chip
-          label={params.value ? 'Yes' : 'No'}
-          color={params.value ? 'primary' : 'default'}
-          variant={params.value ? 'filled' : 'outlined'}
-          size="small"
-          onClick={(e) => {
-            e.stopPropagation()
-            handleToggleField(params.row.id, 'isLatest', params.value)
-          }}
-          sx={{ 
-            cursor: 'pointer',
-            fontWeight: params.value ? 600 : 400,
-            '&:hover': {
-              opacity: 0.8,
-            },
-          }}
-        />
-      ),
+      renderCell: (params) => {
+        const isLoading = rowLoading[`${params.row.id}-isLatest`] || false
+        return (
+          <Chip
+            label={params.value ? 'Yes' : 'No'}
+            color={params.value ? 'primary' : 'default'}
+            variant={params.value ? 'filled' : 'outlined'}
+            size="small"
+            onClick={(e) => {
+              e.stopPropagation()
+              if (!isLoading) {
+                handleToggleField(params.row.id, 'isLatest', params.value)
+              }
+            }}
+            disabled={isLoading}
+            sx={{ 
+              cursor: isLoading ? 'wait' : 'pointer',
+              fontWeight: params.value ? 600 : 400,
+              opacity: isLoading ? 0.6 : 1,
+              '&:hover': {
+                opacity: isLoading ? 0.6 : 0.8,
+              },
+            }}
+          />
+        )
+      },
     },
     {
       field: 'isTrending',
@@ -306,25 +487,32 @@ export default function ArticlesTable({ articles }: ArticlesTableProps) {
       type: 'boolean',
       align: 'center',
       headerAlign: 'center',
-      renderCell: (params) => (
-        <Chip
-          label={params.value ? 'Yes' : 'No'}
-          color={params.value ? 'primary' : 'default'}
-          variant={params.value ? 'filled' : 'outlined'}
-          size="small"
-          onClick={(e) => {
-            e.stopPropagation()
-            handleToggleField(params.row.id, 'isTrending', params.value)
-          }}
-          sx={{ 
-            cursor: 'pointer',
-            fontWeight: params.value ? 600 : 400,
-            '&:hover': {
-              opacity: 0.8,
-            },
-          }}
-        />
-      ),
+      renderCell: (params) => {
+        const isLoading = rowLoading[`${params.row.id}-isTrending`] || false
+        return (
+          <Chip
+            label={params.value ? 'Yes' : 'No'}
+            color={params.value ? 'primary' : 'default'}
+            variant={params.value ? 'filled' : 'outlined'}
+            size="small"
+            onClick={(e) => {
+              e.stopPropagation()
+              if (!isLoading) {
+                handleToggleField(params.row.id, 'isTrending', params.value)
+              }
+            }}
+            disabled={isLoading}
+            sx={{ 
+              cursor: isLoading ? 'wait' : 'pointer',
+              fontWeight: params.value ? 600 : 400,
+              opacity: isLoading ? 0.6 : 1,
+              '&:hover': {
+                opacity: isLoading ? 0.6 : 0.8,
+              },
+            }}
+          />
+        )
+      },
     },
     {
       field: 'actions',
@@ -351,7 +539,7 @@ export default function ArticlesTable({ articles }: ArticlesTableProps) {
         />,
       ],
     },
-  ]
+  ], [handleToggleField, handleEdit, rowLoading])
 
   return (
     <Box 
@@ -367,7 +555,7 @@ export default function ArticlesTable({ articles }: ArticlesTableProps) {
       }}
     >
       <DataGrid
-        rows={articles}
+        rows={localArticles}
         columns={columns}
         pageSizeOptions={[10, 25, 50, 100]}
         initialState={{

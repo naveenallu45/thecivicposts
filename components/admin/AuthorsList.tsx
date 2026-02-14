@@ -110,7 +110,10 @@ export default function AuthorsList({ authors }: AuthorsListProps) {
             {/* Actions */}
             <div className="flex-shrink-0 flex gap-2">
               <button
-                onClick={() => router.push(`/admin/authors/${author._id}`)}
+                onClick={() => {
+                  router.prefetch(`/admin/authors/${author._id}`)
+                  router.push(`/admin/authors/${author._id}`)
+                }}
                 className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                 title="Edit Author"
               >

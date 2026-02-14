@@ -59,10 +59,13 @@ const ArticleSchema: Schema = new Schema(
       type: Schema.Types.ObjectId,
       ref: 'Author',
       required: [true, 'Author is required'],
+      // No cascade delete - articles preserve authorName even if author is deleted
     },
     authorName: {
       type: String,
       trim: true,
+      // Always store author name - required for new articles, preserved for existing ones
+      // This ensures articles remain intact even if author is deleted
     },
     publishedDate: {
       type: Date,
@@ -172,7 +175,22 @@ ArticleSchema.index({ slug: 1, status: 1 }) // Article lookup by slug
 ArticleSchema.index({ createdAt: -1 }) // General sorting by creation date
 
 // Generate slug from title before saving - includes full title
-ArticleSchema.pre('save', function (this: IArticle) {
+ArticleSchema.pre('save', async function (this: IArticle) {
+  // Ensure authorName is always stored when saving
+  if (!this.authorName && this.author) {
+    try {
+      const Author = mongoose.model('Author')
+      const authorDoc = await Author.findById(this.author)
+      if (authorDoc) {
+        this.authorName = authorDoc.name
+      }
+    } catch (error) {
+      // If author doesn't exist (was deleted), keep existing authorName
+      // This ensures articles remain intact even if author is deleted
+      console.warn('Author not found when saving article, preserving existing authorName')
+    }
+  }
+  
   if (this.isModified('title') && !this.slug) {
     const title = String(this.title || '')
     // Convert to lowercase, replace spaces and special chars with hyphens
