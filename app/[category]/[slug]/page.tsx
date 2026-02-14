@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 // Import models index FIRST to ensure all models are registered before use
@@ -126,29 +126,6 @@ export default async function ArticlePage({
   // Connect to DB (cached connection)
   await connectDB()
   
-  // Fetch article (ISR will cache this page)
-  // Optimized: Only select needed fields for better performance
-  // Using lean() for faster queries (returns plain JS objects)
-  const article = await Article.findOne({ slug, status: 'published' })
-    .select('title subtitle content mainImage miniImage subImages publishedDate authorName category slug updatedAt')
-    .lean()
-    .exec()
-
-  if (!article) {
-    notFound()
-  }
-
-  // Verify category matches
-  if (article.category !== category) {
-    notFound()
-  }
-
-  const authorName = article.authorName || 'Unknown'
-
-  const publishedDate = article.publishedDate
-    ? formatDateShort(article.publishedDate)
-    : ''
-
   const categoryLabels: Record<string, string> = {
     'news': 'News',
     'entertainment': 'Entertainment',
@@ -158,6 +135,31 @@ export default async function ArticlePage({
     'technology': 'Technology',
     'automobiles': 'Automobiles',
   }
+  
+  // Fetch article (ISR will cache this page)
+  // Optimized: Only select needed fields for better performance
+  // Using lean() for faster queries (returns plain JS objects)
+  const article = await Article.findOne({ slug, status: 'published' })
+    .select('title subtitle content mainImage miniImage subImages publishedDate authorName category slug updatedAt')
+    .lean()
+    .exec()
+
+  if (!article) {
+    // Article not found - return proper 404 status
+    // Redirect to category page after a short delay for better UX
+    notFound()
+  }
+
+  // Verify category matches - redirect to correct category
+  if (article.category !== category) {
+    redirect(`/${article.category}/${article.slug}`)
+  }
+
+  const authorName = article.authorName || 'Unknown'
+
+  const publishedDate = article.publishedDate
+    ? formatDateShort(article.publishedDate)
+    : ''
 
   const categoryLabel = categoryLabels[article.category] || article.category
   
