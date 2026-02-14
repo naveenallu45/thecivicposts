@@ -121,17 +121,17 @@ export default function Footer() {
         {/* Bottom Bar */}
         <div className="mt-8 pt-8 border-t border-gray-800">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-            <p className="text-gray-400 text-sm">
-              © {currentYear} The Civic Posts. All rights reserved.
-            </p>
-            <div className="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-4">
+            <div className="flex flex-col items-center md:items-start space-y-2">
               <p className="text-gray-400 text-sm">
-                Stay informed. Stay connected.
+                © {currentYear} The Civic Posts. All rights reserved.
               </p>
               <p className="text-gray-500 text-sm">
-                Under <span className="text-orange-600 font-semibold">Shraddha Media Production</span>
+                @ <span className="text-orange-600 font-semibold">Shraddha Media Production</span>
               </p>
             </div>
+            <p className="text-gray-400 text-sm">
+              Stay informed. Stay connected.
+            </p>
           </div>
         </div>
       </div>
