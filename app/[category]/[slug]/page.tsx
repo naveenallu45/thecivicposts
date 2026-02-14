@@ -246,7 +246,7 @@ export default async function ArticlePage({
 
         {/* Subtitle */}
         {article.subtitle && (
-          <h2 className="text-xl md:text-2xl text-gray-700 font-semibold mb-6 font-merriweather leading-relaxed">
+          <h2 className="text-[12px] md:text-2xl text-gray-700 font-semibold mb-6 font-merriweather leading-relaxed">
             {article.subtitle}
           </h2>
         )}
