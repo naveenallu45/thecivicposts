@@ -19,7 +19,6 @@ interface ArticleRow {
   createdAt: string
   isTopStory: boolean
   isMiniTopStory: boolean
-  isLatest: boolean
   isTrending: boolean
   status: 'draft' | 'published'
   category: string
@@ -30,7 +29,7 @@ interface ArticlesTableProps {
   articles: ArticleRow[]
 }
 
-type FieldType = 'isTopStory' | 'isMiniTopStory' | 'isLatest' | 'isTrending'
+type FieldType = 'isTopStory' | 'isMiniTopStory' | 'isTrending'
 
 interface LoadingState {
   [key: string]: boolean
@@ -169,7 +168,6 @@ export default function ArticlesTable({ articles }: ArticlesTableProps) {
           if (newValue) {
             updated.isTopStory = field === 'isTopStory'
             updated.isMiniTopStory = field === 'isMiniTopStory'
-            updated.isLatest = field === 'isLatest'
             updated.isTrending = field === 'isTrending'
           }
           
@@ -198,7 +196,6 @@ export default function ArticlesTable({ articles }: ArticlesTableProps) {
           const allFields: FieldType[] = [
             'isTopStory',
             'isMiniTopStory',
-            'isLatest',
             'isTrending',
           ]
           
@@ -232,7 +229,6 @@ export default function ArticlesTable({ articles }: ArticlesTableProps) {
         const fieldLabels: Record<FieldType, string> = {
           isTopStory: 'Top Story',
           isMiniTopStory: 'Mini Top Story',
-          isLatest: 'Latest',
           isTrending: 'Trending',
         }
 
@@ -445,41 +441,6 @@ export default function ArticlesTable({ articles }: ArticlesTableProps) {
       },
     },
     {
-      field: 'isLatest',
-      headerName: 'Latest',
-      flex: 0.7,
-      minWidth: 80,
-      type: 'boolean',
-      align: 'center',
-      headerAlign: 'center',
-      renderCell: (params) => {
-        const isLoading = rowLoading[`${params.row.id}-isLatest`] || false
-        return (
-          <Chip
-            label={params.value ? 'Yes' : 'No'}
-            color={params.value ? 'primary' : 'default'}
-            variant={params.value ? 'filled' : 'outlined'}
-            size="small"
-            onClick={(e) => {
-              e.stopPropagation()
-              if (!isLoading) {
-                handleToggleField(params.row.id, 'isLatest', params.value)
-              }
-            }}
-            disabled={isLoading}
-            sx={{ 
-              cursor: isLoading ? 'wait' : 'pointer',
-              fontWeight: params.value ? 600 : 400,
-              opacity: isLoading ? 0.6 : 1,
-              '&:hover': {
-                opacity: isLoading ? 0.6 : 0.8,
-              },
-            }}
-          />
-        )
-      },
-    },
-    {
       field: 'isTrending',
       headerName: 'Trending',
       flex: 0.8,
@@ -599,7 +560,7 @@ export default function ArticlesTable({ articles }: ArticlesTableProps) {
             display: 'flex',
             alignItems: 'center',
           },
-          '& .MuiDataGrid-cell[data-field="author"], & .MuiDataGrid-cell[data-field="status"], & .MuiDataGrid-cell[data-field="type"], & .MuiDataGrid-cell[data-field="publishedDate"], & .MuiDataGrid-cell[data-field="isTopStory"], & .MuiDataGrid-cell[data-field="isMiniTopStory"], & .MuiDataGrid-cell[data-field="isLatest"], & .MuiDataGrid-cell[data-field="isTrending"], & .MuiDataGrid-cell[data-field="actions"]': {
+          '& .MuiDataGrid-cell[data-field="author"], & .MuiDataGrid-cell[data-field="status"], & .MuiDataGrid-cell[data-field="type"], & .MuiDataGrid-cell[data-field="publishedDate"], & .MuiDataGrid-cell[data-field="isTopStory"], & .MuiDataGrid-cell[data-field="isMiniTopStory"], & .MuiDataGrid-cell[data-field="isTrending"], & .MuiDataGrid-cell[data-field="actions"]': {
             justifyContent: 'center',
           },
           '& .MuiDataGrid-cell[data-field="title"]': {
@@ -628,7 +589,7 @@ export default function ArticlesTable({ articles }: ArticlesTableProps) {
             display: 'flex',
             alignItems: 'center',
           },
-          '& .MuiDataGrid-columnHeader[data-field="author"], & .MuiDataGrid-columnHeader[data-field="status"], & .MuiDataGrid-columnHeader[data-field="type"], & .MuiDataGrid-columnHeader[data-field="publishedDate"], & .MuiDataGrid-columnHeader[data-field="isTopStory"], & .MuiDataGrid-columnHeader[data-field="isMiniTopStory"], & .MuiDataGrid-columnHeader[data-field="isLatest"], & .MuiDataGrid-columnHeader[data-field="isTrending"], & .MuiDataGrid-columnHeader[data-field="actions"]': {
+          '& .MuiDataGrid-columnHeader[data-field="author"], & .MuiDataGrid-columnHeader[data-field="status"], & .MuiDataGrid-columnHeader[data-field="type"], & .MuiDataGrid-columnHeader[data-field="publishedDate"], & .MuiDataGrid-columnHeader[data-field="isTopStory"], & .MuiDataGrid-columnHeader[data-field="isMiniTopStory"], & .MuiDataGrid-columnHeader[data-field="isTrending"], & .MuiDataGrid-columnHeader[data-field="actions"]': {
             justifyContent: 'center',
           },
           '& .MuiDataGrid-columnHeader[data-field="title"]': {

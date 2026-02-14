@@ -38,7 +38,6 @@ interface ArticleWithAuthor {
   views?: number
   isTopStory?: boolean
   isMiniTopStory?: boolean
-  isLatest?: boolean
   isTrending?: boolean
   createdAt: Date
   updatedAt: Date
@@ -51,7 +50,7 @@ export default async function ManageArticlesPage() {
   // Optimized: Only select needed fields, no populate (authorName is already stored)
   // Parallel execution with Promise.all for better performance
   const articles = await Article.find()
-    .select('title author authorName publishedDate createdAt status category isTopStory isMiniTopStory isLatest isTrending')
+    .select('title author authorName publishedDate createdAt status category isTopStory isMiniTopStory isTrending')
     .sort({ createdAt: -1 })
     .limit(1000)
     .lean() as unknown as ArticleWithAuthor[]
@@ -103,7 +102,6 @@ export default async function ManageArticlesPage() {
             createdAt: article.createdAt ? new Date(article.createdAt).toISOString() : new Date().toISOString(),
             isTopStory: article.isTopStory || false,
             isMiniTopStory: article.isMiniTopStory || false,
-            isLatest: article.isLatest || false,
             isTrending: article.isTrending || false,
             status: article.status,
             category: article.category,

@@ -46,9 +46,15 @@ export default async function Home() {
       .select('title subtitle mainImage publishedDate authorName slug category')
       .lean(),
     
-    // Latest articles for each category (4 per category)
+    // Latest articles for each category (4 per category) - exclude top story, mini top story, and trending
     ...categories.map(cat =>
-      Article.find({ status: 'published', isLatest: true, category: cat.key })
+      Article.find({ 
+        status: 'published', 
+        category: cat.key,
+        isTopStory: { $ne: true },
+        isMiniTopStory: { $ne: true },
+        isTrending: { $ne: true }
+      })
         .sort({ createdAt: -1 })
         .limit(4)
         .select('title subtitle mainImage publishedDate authorName slug category')
