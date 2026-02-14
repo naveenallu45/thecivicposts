@@ -16,6 +16,8 @@ const categories = [
   { key: 'sports', name: 'Sports' },
   { key: 'health-fitness', name: 'Health & Fitness' },
   { key: 'editorial', name: 'Editorial' },
+  { key: 'technology', name: 'Technology' },
+  { key: 'automobiles', name: 'Automobiles' },
 ]
 
 export default async function Home() {

@@ -24,7 +24,7 @@ export interface IArticle extends Document {
     order: number
   }>
   status: 'draft' | 'published'
-  category: 'news' | 'entertainment' | 'sports' | 'health-fitness' | 'editorial'
+  category: 'news' | 'entertainment' | 'sports' | 'health-fitness' | 'editorial' | 'technology' | 'automobiles'
   slug: string
   views?: number
   isTopStory?: boolean
@@ -124,7 +124,7 @@ const ArticleSchema: Schema = new Schema(
     },
     category: {
       type: String,
-      enum: ['news', 'entertainment', 'sports', 'health-fitness', 'editorial'],
+      enum: ['news', 'entertainment', 'sports', 'health-fitness', 'editorial', 'technology', 'automobiles'],
       required: [true, 'Category is required'],
       index: true,
     },

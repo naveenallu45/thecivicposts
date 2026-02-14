@@ -63,8 +63,8 @@ export default function AdminLogin() {
         // Silent fail - will redirect anyway
       }
       
-      // Small delay to ensure cookie is set and processed
-      await new Promise(resolve => setTimeout(resolve, 200))
+      // Minimal delay to ensure cookie is set and processed
+      await new Promise(resolve => setTimeout(resolve, 50))
       
       // Force navigation with full page reload
       window.location.href = '/admin/dashboard'

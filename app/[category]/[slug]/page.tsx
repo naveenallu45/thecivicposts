@@ -155,6 +155,8 @@ export default async function ArticlePage({
     'sports': 'Sports',
     'health-fitness': 'Health & Fitness',
     'editorial': 'Editorial',
+    'technology': 'Technology',
+    'automobiles': 'Automobiles',
   }
 
   const categoryLabel = categoryLabels[article.category] || article.category

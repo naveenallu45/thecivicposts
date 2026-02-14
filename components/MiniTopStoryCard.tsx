@@ -21,6 +21,7 @@ export default function MiniTopStoryCard({
   return (
     <Link 
       href={`/${category}/${slug}`} 
+      prefetch={true}
       className="block group"
       aria-label={`Read article: ${title}`}
     >

@@ -34,6 +34,7 @@ export default async function AdminDashboard() {
             <div className="flex gap-4">
               <Link
                 href="/admin/articles/new"
+                prefetch={true}
                 className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors font-medium shadow-md"
               >
                 New Article

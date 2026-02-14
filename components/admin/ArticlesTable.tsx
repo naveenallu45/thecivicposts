@@ -36,7 +36,7 @@ interface LoadingState {
 }
 
 const API_TIMEOUT = 10000 // 10 seconds
-const DEBOUNCE_DELAY = 300 // 300ms debounce
+const DEBOUNCE_DELAY = 150 // 150ms debounce - reduced for faster response
 
 export default function ArticlesTable({ articles }: ArticlesTableProps) {
   const router = useRouter()
@@ -343,6 +343,8 @@ export default function ArticlesTable({ articles }: ArticlesTableProps) {
           'sports': 'Sports',
           'health-fitness': 'Health & Fitness',
           'editorial': 'Editorial',
+          'technology': 'Technology',
+          'automobiles': 'Automobiles',
         }
         const label = typeLabels[params.value] || params.value
         return (

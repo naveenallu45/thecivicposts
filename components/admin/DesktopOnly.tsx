@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 
 export default function DesktopOnly({ children }: { children: React.ReactNode }) {
-  const [isDesktop, setIsDesktop] = useState<boolean | null>(null)
+  const [isDesktop, setIsDesktop] = useState<boolean>(true) // Default to true to avoid loading delay
 
   useEffect(() => {
     // Check if screen width is laptop/desktop size (1024px+)
@@ -11,8 +11,10 @@ export default function DesktopOnly({ children }: { children: React.ReactNode })
       setIsDesktop(window.innerWidth >= 1024)
     }
 
-    // Check on mount
-    checkScreenSize()
+    // Check immediately on mount (synchronous check)
+    if (typeof window !== 'undefined') {
+      checkScreenSize()
+    }
 
     // Listen for resize events
     window.addEventListener('resize', checkScreenSize)
@@ -21,18 +23,6 @@ export default function DesktopOnly({ children }: { children: React.ReactNode })
       window.removeEventListener('resize', checkScreenSize)
     }
   }, [])
-
-  // Show loading state while checking
-  if (isDesktop === null) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mb-4"></div>
-          <p className="text-gray-600 font-medium">Loading...</p>
-        </div>
-      </div>
-    )
-  }
 
   // Block mobile/tablet access
   if (!isDesktop) {

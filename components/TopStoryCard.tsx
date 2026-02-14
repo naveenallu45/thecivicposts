@@ -23,6 +23,7 @@ export default function TopStoryCard({
   return (
     <Link 
       href={`/${category}/${slug}`} 
+      prefetch={true}
       className="block group"
       aria-label={`Read article: ${title}`}
     >

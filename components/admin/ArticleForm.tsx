@@ -440,6 +440,8 @@ export default function ArticleForm({ authors, article, onPreviewChange }: Artic
       'sports': 'Sports',
       'health-fitness': 'Health & Fitness',
       'editorial': 'Editorial',
+      'technology': 'Technology',
+      'automobiles': 'Automobiles',
     }
 
     const categoryLabel = categoryLabels[formData.category] || formData.category
@@ -630,6 +632,8 @@ export default function ArticleForm({ authors, article, onPreviewChange }: Artic
               <option value="sports">Sports</option>
               <option value="health-fitness">Health & Fitness</option>
               <option value="editorial">Editorial</option>
+              <option value="technology">Technology</option>
+              <option value="automobiles">Automobiles</option>
             </select>
           </div>
 
