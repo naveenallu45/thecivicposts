@@ -1,7 +1,8 @@
 'use client'
 
+import { useTransition } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 
 const navItems = [
   { href: '/', label: 'Home' },
@@ -16,6 +17,8 @@ const navItems = [
 
 export default function Navigation() {
   const pathname = usePathname()
+  const router = useRouter()
+  const [isPending, startTransition] = useTransition()
 
   return (
     <nav className="bg-orange-100 border-t border-gray-200">
@@ -30,11 +33,44 @@ export default function Navigation() {
                 key={item.href}
                 href={item.href}
                 prefetch={true}
+                onClick={() => {
+                  // Start transition immediately for instant feel
+                  startTransition(() => {
+                    router.prefetch(item.href)
+                  })
+                }}
+                onMouseEnter={() => {
+                  // Aggressive prefetch on hover for instant navigation
+                  router.prefetch(item.href)
+                  
+                  // Also prefetch the API data immediately
+                  if (item.href !== '/' && typeof window !== 'undefined') {
+                    const categoryName = item.href.replace('/', '')
+                    const apiUrl = `/api/articles?category=${categoryName}&page=1&limit=10`
+                    
+                    // Prefetch API link
+                    const link = document.createElement('link')
+                    link.rel = 'prefetch'
+                    link.href = apiUrl
+                    link.as = 'fetch'
+                    link.crossOrigin = 'anonymous'
+                    document.head.appendChild(link)
+                    
+                    // Fetch immediately with highest priority
+                    fetch(apiUrl, { 
+                      method: 'GET', 
+                      cache: 'force-cache',
+                      priority: 'high'
+                    }).catch(() => {
+                      // Silently fail
+                    })
+                  }
+                }}
                 className={`font-semibold text-sm md:text-base transition-colors duration-200 relative pb-1 whitespace-nowrap flex-shrink-0 ${
                   isActive
                     ? 'text-orange-600'
                     : 'text-gray-900 hover:text-orange-600'
-                }`}
+                } ${isPending ? 'opacity-70' : ''}`}
               >
                 {item.label}
                 {isActive && (

@@ -7,6 +7,7 @@ import connectDB from '@/lib/mongodb'
 import Article from '@/models/Article'
 import Author from '@/models/Author'
 import { deleteImage } from '@/lib/cloudinary'
+import { queryCache } from '@/lib/query-cache'
 
 export async function GET(
   request: NextRequest,
@@ -61,6 +62,7 @@ export async function PUT(
       publishedDate,
       mainImage,
       miniImage,
+      youtubeLink,
       subImages,
       status,
       category,
@@ -148,6 +150,7 @@ export async function PUT(
     if (publishedDate !== undefined) article.publishedDate = new Date(publishedDate)
     if (mainImage !== undefined) article.mainImage = mainImage
     if (miniImage !== undefined) article.miniImage = miniImage || undefined
+    if (youtubeLink !== undefined) article.youtubeLink = youtubeLink?.trim() || undefined
     if (subImages !== undefined) article.subImages = subImages || []
     if (status !== undefined) article.status = status
     if (category !== undefined) article.category = category
@@ -161,6 +164,12 @@ export async function PUT(
 
     await article.save()
     // Note: authorName is already stored, no need to populate
+
+    // Clear query cache for this article and related queries
+    queryCache.delete(`article:single:${article.slug}`)
+    queryCache.clear('article:') // Clear all article list caches
+    queryCache.clear('author:') // Clear author caches
+    queryCache.clear('articles:all:') // Clear "all articles" cache
 
     // Revalidate home page if:
     // 1. Status changed to/from published
@@ -242,8 +251,14 @@ export async function DELETE(
 
     const deletedArticle = await Article.findByIdAndDelete(id)
 
-    // Revalidate home page and category page after deletion
+    // Clear query cache after deletion
     if (deletedArticle) {
+      queryCache.delete(`article:single:${deletedArticle.slug}`)
+      queryCache.clear('article:') // Clear all article list caches
+      queryCache.clear('author:') // Clear author caches
+      queryCache.clear('articles:all:') // Clear "all articles" cache
+
+      // Revalidate home page and category page after deletion
       revalidatePath('/', 'page')
       if (deletedArticle.category) {
         revalidatePath(`/${deletedArticle.category}`, 'page')

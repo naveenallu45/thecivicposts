@@ -1,5 +1,10 @@
+'use client'
+
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import ArticleCard from './ArticleCard'
 import SectionHeading from './SectionHeading'
+import ViewportPrefetch from './ViewportPrefetch'
 
 interface Article {
   id: string
@@ -18,6 +23,15 @@ interface ArticlesRowProps {
 }
 
 export default function ArticlesRow({ articles, heading }: ArticlesRowProps) {
+  const router = useRouter()
+
+  // Prefetch all articles immediately
+  useEffect(() => {
+    articles.forEach((article) => {
+      router.prefetch(`/${article.category}/${article.slug}`)
+    })
+  }, [articles, router])
+
   if (articles.length === 0) {
     return (
       <div className="text-center py-12">
@@ -28,19 +42,21 @@ export default function ArticlesRow({ articles, heading }: ArticlesRowProps) {
 
   return (
     <div className="w-full">
+      <ViewportPrefetch articles={articles} />
       {heading && <SectionHeading title={heading} />}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-3 md:mt-6">
         {articles.map((article) => (
-          <ArticleCard
-            key={article.id}
-            title={article.title}
-            subtitle={article.subtitle}
-            mainImage={article.mainImage}
-            publishedDate={article.publishedDate}
-            authorName={article.authorName}
-            slug={article.slug}
-            category={article.category}
-          />
+          <div key={article.id} data-article-id={`${article.category}/${article.slug}`}>
+            <ArticleCard
+              title={article.title}
+              subtitle={article.subtitle}
+              mainImage={article.mainImage}
+              publishedDate={article.publishedDate}
+              authorName={article.authorName}
+              slug={article.slug}
+              category={article.category}
+            />
+          </div>
         ))}
       </div>
     </div>

@@ -16,12 +16,12 @@ export async function GET(request: NextRequest) {
     await connectDB()
 
     const { searchParams } = new URL(request.url)
-    const category = searchParams.get('category')
-    const limit = parseInt(searchParams.get('limit') || '12')
-    const page = parseInt(searchParams.get('page') || '1')
+    const excludeSlug = searchParams.get('excludeSlug') // Exclude current article
+    const limit = parseInt(searchParams.get('limit') || '10', 10)
+    const page = parseInt(searchParams.get('page') || '1', 10)
 
     // Check cache first
-    const cacheKey = `article:${category || 'all'}:${page}:${limit}`
+    const cacheKey = `articles:all:${excludeSlug || 'none'}:${page}:${limit}`
     
     interface ArticleListItem {
       id: string
@@ -31,12 +31,12 @@ export async function GET(request: NextRequest) {
       publishedDate: string
       authorName: string
       slug: string
-      createdAt: Date
+      category: string
     }
 
     interface ArticlesResponse {
       articles: ArticleListItem[]
-      pagination: { page: number; limit: number; total: number; pages: number }
+      pagination: { page: number; limit: number; total: number; hasMore: boolean }
     }
     
     const cachedResult = queryCache.get<ArticlesResponse>(cacheKey)
@@ -49,25 +49,31 @@ export async function GET(request: NextRequest) {
     const currentDate = new Date()
     currentDate.setHours(0, 0, 0, 0)
 
-    const query: { status: string; category?: string; publishedDate?: { $lte: Date } } = {
-      status: 'published', // Only published articles
-      publishedDate: { $lte: currentDate }, // Only show articles published today or earlier
+    const query: { 
+      status: string
+      publishedDate: { $lte: Date }
+      slug?: { $ne: string }
+    } = {
+      status: 'published',
+      publishedDate: { $lte: currentDate },
     }
     
-    if (category) {
-      query.category = category
+    // Exclude current article if provided
+    if (excludeSlug) {
+      query.slug = { $ne: excludeSlug }
     }
 
-    const articles = await Article.find(query)
-      .sort({ createdAt: -1 })
-      .skip((page - 1) * limit)
-      .limit(limit)
-      .select('title subtitle mainImage publishedDate authorName slug createdAt')
-      .lean()
+    const skip = (page - 1) * limit
 
-    // Use countDocuments - estimatedDocumentCount doesn't support queries
-    // For better performance, ensure indexes are used (already indexed)
-    const total = await Article.countDocuments(query)
+    const [articles, totalArticles] = await Promise.all([
+      Article.find(query)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .select('title subtitle mainImage publishedDate authorName slug category createdAt')
+        .lean(),
+      Article.countDocuments(query)
+    ])
 
     interface ArticleDoc {
       _id: { toString: () => string }
@@ -75,30 +81,34 @@ export async function GET(request: NextRequest) {
       subtitle?: string
       mainImage?: { url: string }
       publishedDate: Date
-      author?: { name?: string } | string | null
       authorName?: string
       slug: string
+      category: string
       createdAt: Date
     }
 
+    const articlesData = (articles as ArticleDoc[]).map((article) => ({
+      id: article._id.toString(),
+      title: article.title,
+      subtitle: article.subtitle,
+      mainImage: article.mainImage?.url || '',
+      publishedDate: article.publishedDate
+        ? formatDateShort(article.publishedDate)
+        : '',
+      authorName: article.authorName || 'Unknown',
+      slug: article.slug,
+      category: article.category,
+    }))
+
+    const hasMore = skip + articles.length < totalArticles
+
     const result = {
-      articles: (articles as ArticleDoc[]).map((article) => ({
-        id: article._id.toString(),
-        title: article.title,
-        subtitle: article.subtitle,
-        mainImage: article.mainImage?.url || '',
-        publishedDate: article.publishedDate
-          ? formatDateShort(article.publishedDate)
-          : '',
-        authorName: article.authorName || 'Unknown',
-        slug: article.slug,
-        createdAt: article.createdAt,
-      })),
+      articles: articlesData,
       pagination: {
         page,
         limit,
-        total,
-        pages: Math.ceil(total / limit),
+        total: totalArticles,
+        hasMore,
       },
     }
 

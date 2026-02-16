@@ -6,6 +6,7 @@ import { requireAdminApi } from '@/lib/admin-auth'
 import connectDB from '@/lib/mongodb'
 import Article from '@/models/Article'
 import Author from '@/models/Author'
+import { queryCache } from '@/lib/query-cache'
 
 export async function GET(request: NextRequest) {
   try {
@@ -71,6 +72,7 @@ export async function POST(request: NextRequest) {
       publishedDate,
       mainImage,
       miniImage,
+      youtubeLink,
       subImages,
       status,
       category,
@@ -108,6 +110,7 @@ export async function POST(request: NextRequest) {
       publishedDate: new Date(publishedDate),
       mainImage,
       miniImage: miniImage || undefined,
+      youtubeLink: youtubeLink?.trim() || undefined,
       subImages: subImages || [],
       status: status || 'draft',
       category,
@@ -116,6 +119,11 @@ export async function POST(request: NextRequest) {
 
     await article.save()
     // Note: authorName is already stored, no need to populate
+
+    // Clear query cache after creating article
+    queryCache.clear('article:') // Clear all article list caches
+    queryCache.clear('author:') // Clear author caches
+    queryCache.clear('articles:all:') // Clear "all articles" cache
 
     // Revalidate home page if article is published or has home page flags
     if (status === 'published' || article.isTopStory || article.isMiniTopStory || article.isLatest || article.isTrending) {

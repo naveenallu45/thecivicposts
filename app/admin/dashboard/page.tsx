@@ -1,3 +1,5 @@
+// Import models index FIRST to ensure all models are registered before use
+import '@/models'
 import { requireAdmin } from '@/lib/admin-auth'
 import Link from 'next/link'
 import connectDB from '@/lib/mongodb'

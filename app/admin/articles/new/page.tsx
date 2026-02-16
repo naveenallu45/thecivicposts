@@ -1,9 +1,12 @@
+// Import models index FIRST to ensure all models are registered before use
+import '@/models'
 import { requireAdmin } from '@/lib/admin-auth'
 import connectDB from '@/lib/mongodb'
 import Author from '@/models/Author'
 import ArticleFormWrapper from '@/components/admin/ArticleFormWrapper'
 
 export const dynamic = 'force-dynamic'
+export const dynamicParams = true
 
 export default async function NewArticlePage() {
   await requireAdmin()

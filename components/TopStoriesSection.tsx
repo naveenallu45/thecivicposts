@@ -1,6 +1,11 @@
+'use client'
+
+import { useEffect, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
 import TopStoriesCarousel from './TopStoriesCarousel'
 import MiniTopStoryCard from './MiniTopStoryCard'
 import SectionHeading from './SectionHeading'
+import ViewportPrefetch from './ViewportPrefetch'
 
 interface Article {
   id: string
@@ -19,12 +24,23 @@ interface TopStoriesSectionProps {
 }
 
 export default function TopStoriesSection({ topStories, miniTopStories }: TopStoriesSectionProps) {
+  const router = useRouter()
+  const allArticles = useMemo(() => [...topStories, ...miniTopStories], [topStories, miniTopStories])
+
+  // Prefetch all articles immediately
+  useEffect(() => {
+    allArticles.forEach((article) => {
+      router.prefetch(`/${article.category}/${article.slug}`)
+    })
+  }, [allArticles, router])
+
   if (topStories.length === 0 && miniTopStories.length === 0) {
     return null
   }
 
   return (
     <div className="mb-12">
+      <ViewportPrefetch articles={allArticles} />
       <SectionHeading title="Top Stories" />
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-3 md:mt-6">
         {/* Large Featured Articles Carousel - Left Side */}
@@ -42,15 +58,16 @@ export default function TopStoriesSection({ topStories, miniTopStories }: TopSto
         <div className="lg:col-span-1 space-y-4">
           {miniTopStories.length > 0 ? (
             miniTopStories.map((article) => (
-              <MiniTopStoryCard
-                key={article.id}
-                title={article.title}
-                mainImage={article.mainImage}
-                publishedDate={article.publishedDate}
-                authorName={article.authorName}
-                slug={article.slug}
-                category={article.category}
-              />
+              <div key={article.id} data-article-id={`${article.category}/${article.slug}`}>
+                <MiniTopStoryCard
+                  title={article.title}
+                  mainImage={article.mainImage}
+                  publishedDate={article.publishedDate}
+                  authorName={article.authorName}
+                  slug={article.slug}
+                  category={article.category}
+                />
+              </div>
             ))
           ) : (
             <div className="space-y-4">

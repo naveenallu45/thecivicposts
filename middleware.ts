@@ -2,77 +2,46 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export function middleware(request: NextRequest) {
-  const token = request.cookies.get('admin_token')?.value
-  const pathname = request.nextUrl.pathname
+  const response = NextResponse.next()
 
-  // Block admin access on mobile/tablet devices (check User-Agent)
-  if (pathname.startsWith('/admin')) {
-    const userAgent = request.headers.get('user-agent') || ''
-    const isMobileOrTablet = /Mobile|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent)
-    
-    // Also check for viewport width header if available (some browsers send this)
-    const viewportWidth = request.headers.get('viewport-width')
-    const isSmallScreen = viewportWidth ? parseInt(viewportWidth) < 1024 : false
-    
-    if (isMobileOrTablet || isSmallScreen) {
-      // Allow login page to show the desktop-only message
-      if (pathname === '/admin/login') {
-        return NextResponse.next()
-      }
-      // Block all other admin routes on mobile/tablet
-      return NextResponse.redirect(new URL('/admin/login', request.url))
-    }
+  // Production-level cache headers for static assets
+  if (request.nextUrl.pathname.startsWith('/_next/static')) {
+    response.headers.set(
+      'Cache-Control',
+      'public, max-age=31536000, immutable'
+    )
   }
 
-  // Skip middleware for API routes, static files, and Next.js internals
+  // Cache headers for images
   if (
-    pathname.startsWith('/api/') ||
-    pathname.startsWith('/_next/') ||
-    pathname === '/favicon.ico'
+    request.nextUrl.pathname.match(/\.(jpg|jpeg|png|gif|webp|avif|svg)$/i)
   ) {
-    return NextResponse.next()
+    response.headers.set(
+      'Cache-Control',
+      'public, max-age=31536000, immutable'
+    )
   }
 
-  // Block admin access on mobile/tablet devices (check User-Agent)
-  if (pathname.startsWith('/admin')) {
-    const userAgent = request.headers.get('user-agent') || ''
-    const isMobileOrTablet = /Mobile|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent)
-    
-    // Block mobile/tablet access to admin routes (except login page which shows desktop-only message)
-    if (isMobileOrTablet && pathname !== '/admin/login') {
-      // Redirect to login page which will show desktop-only message
-      return NextResponse.redirect(new URL('/admin/login', request.url))
+  // Cache headers for fonts
+  if (request.nextUrl.pathname.match(/\.(woff|woff2|ttf|otf|eot)$/i)) {
+    response.headers.set(
+      'Cache-Control',
+      'public, max-age=31536000, immutable'
+    )
+  }
+
+  // Cache headers for API routes (handled in route handlers, but add fallback)
+  if (request.nextUrl.pathname.startsWith('/api/')) {
+    // Don't override route-specific cache headers
+    if (!response.headers.get('Cache-Control')) {
+      response.headers.set(
+        'Cache-Control',
+        'public, s-maxage=60, stale-while-revalidate=300'
+      )
     }
   }
 
-  // If admin is logged in, restrict them to admin routes only
-  if (token) {
-    // Allow admin routes
-    if (pathname.startsWith('/admin')) {
-      // If trying to access admin login page while logged in, redirect to dashboard
-      if (pathname === '/admin/login') {
-        return NextResponse.redirect(new URL('/admin/dashboard', request.url))
-      }
-      return NextResponse.next()
-    }
-    
-    // Admin is logged in but trying to access public route - redirect to admin dashboard
-    return NextResponse.redirect(new URL('/admin/dashboard', request.url))
-  }
-
-  // No token - protect admin routes
-  if (pathname.startsWith('/admin')) {
-    // Allow login page
-    if (pathname === '/admin/login') {
-      return NextResponse.next()
-    }
-
-    // No token, redirect to login
-    return NextResponse.redirect(new URL('/admin/login', request.url))
-  }
-
-  // Public routes - allow access for non-admin users
-  return NextResponse.next()
+  return response
 }
 
 export const config = {

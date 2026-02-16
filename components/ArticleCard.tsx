@@ -1,5 +1,11 @@
+'use client'
+
+import { memo, useCallback } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useTransition } from 'react'
+import { generateAuthorSlug } from '@/lib/author-utils'
 
 interface ArticleCardProps {
   title: string
@@ -11,7 +17,7 @@ interface ArticleCardProps {
   category: string
 }
 
-export default function ArticleCard({
+function ArticleCard({
   title,
   subtitle,
   mainImage,
@@ -20,11 +26,28 @@ export default function ArticleCard({
   slug,
   category,
 }: ArticleCardProps) {
+  const router = useRouter()
+  const [, startTransition] = useTransition()
+
+  const handleAuthorClick = useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    startTransition(() => {
+      router.push(`/author/${generateAuthorSlug(authorName)}`)
+    })
+  }, [router, authorName])
+
+  // Prefetch on hover for instant navigation
+  const handleMouseEnter = useCallback(() => {
+    router.prefetch(`/${category}/${slug}`)
+  }, [router, category, slug])
+
   return (
     <Link 
       href={`/${category}/${slug}`} 
       prefetch={true}
-      className="block group focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 rounded-lg transition-all duration-200"
+      onMouseEnter={handleMouseEnter}
+      className="block group focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 rounded-lg transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
       aria-label={`Read article: ${title}`}
     >
       <div className="bg-white rounded-lg overflow-hidden h-full border border-gray-100 hover:border-gray-200 transition-colors duration-200">
@@ -39,6 +62,9 @@ export default function ArticleCard({
               className="object-cover"
               sizes="(max-width: 768px) 40vw, 40vw"
               loading="lazy"
+              quality={85}
+              placeholder="blur"
+              blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
             />
           </div>
           
@@ -56,7 +82,14 @@ export default function ArticleCard({
             </div>
             <div className="mt-auto pt-2 md:pt-4 border-t border-gray-200 flex items-center justify-between flex-shrink-0">
               <p className="text-[10px] md:text-xs text-gray-600 font-sans truncate pr-2">
-                {authorName} - {publishedDate}
+                <span 
+                  onClick={handleAuthorClick}
+                  className="text-orange-600 hover:text-orange-700 font-medium transition-colors cursor-pointer"
+                >
+                  {authorName}
+                </span>
+                {' - '}
+                {publishedDate}
               </p>
             </div>
           </div>
@@ -73,6 +106,9 @@ export default function ArticleCard({
               className="object-cover"
               sizes="(min-width: 1024px) 25vw, 100vw"
               loading="lazy"
+              quality={85}
+              placeholder="blur"
+              blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
             />
           </div>
           
@@ -88,11 +124,18 @@ export default function ArticleCard({
                 </p>
               )}
             </div>
-            <div className="mt-auto pt-3 border-t border-gray-200 flex items-center justify-between flex-shrink-0">
-              <p className="text-xs text-gray-600 font-sans truncate pr-2">
-                {authorName} - {publishedDate}
+            <div className="mt-auto pt-3 border-t border-gray-200 flex items-center justify-between gap-2 flex-shrink-0">
+              <p className="text-xs text-gray-600 font-sans truncate min-w-0 flex-1">
+                <span 
+                  onClick={handleAuthorClick}
+                  className="text-orange-600 hover:text-orange-700 font-medium transition-colors cursor-pointer"
+                >
+                  {authorName}
+                </span>
+                {' - '}
+                {publishedDate}
               </p>
-              <span className="text-orange-600 text-xs font-sans font-medium group-hover:text-orange-700 transition-colors">
+              <span className="text-orange-600 text-xs font-sans font-medium group-hover:text-orange-700 transition-colors flex-shrink-0 whitespace-nowrap">
                 Read More
               </span>
             </div>
@@ -102,3 +145,5 @@ export default function ArticleCard({
     </Link>
   )
 }
+
+export default memo(ArticleCard)

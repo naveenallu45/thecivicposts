@@ -1,7 +1,8 @@
 'use client'
 
+import { useEffect } from 'react'
 import Link from 'next/link'
-import { usePathname, useSearchParams } from 'next/navigation'
+import { usePathname, useSearchParams, useRouter } from 'next/navigation'
 
 interface PaginationProps {
   currentPage: number
@@ -11,6 +12,36 @@ interface PaginationProps {
 export default function Pagination({ currentPage, totalPages }: PaginationProps) {
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const router = useRouter()
+
+  // Prefetch adjacent pages for instant navigation
+  useEffect(() => {
+    const createPageUrl = (page: number) => {
+      const params = new URLSearchParams(searchParams.toString())
+      if (page === 1) {
+        return pathname || '/'
+      } else {
+        params.set('page', page.toString())
+        return `${pathname}?${params.toString()}`
+      }
+    }
+
+    if (currentPage > 1) {
+      router.prefetch(createPageUrl(currentPage - 1))
+    }
+    
+    if (currentPage < totalPages) {
+      router.prefetch(createPageUrl(currentPage + 1))
+    }
+
+    // Prefetch first and last pages
+    if (totalPages > 1) {
+      router.prefetch(createPageUrl(1))
+      if (totalPages > 2) {
+        router.prefetch(createPageUrl(totalPages))
+      }
+    }
+  }, [currentPage, totalPages, pathname, searchParams, router])
 
   // Only show pagination when there are more than 10 articles (2+ pages)
   if (totalPages <= 1) return null

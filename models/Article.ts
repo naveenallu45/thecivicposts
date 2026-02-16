@@ -17,6 +17,7 @@ export interface IArticle extends Document {
     public_id: string
     alt?: string
   }
+  youtubeLink?: string
   subImages: Array<{
     url: string
     public_id: string
@@ -94,6 +95,10 @@ const ArticleSchema: Schema = new Schema(
       alt: {
         type: String,
       },
+    },
+    youtubeLink: {
+      type: String,
+      trim: true,
     },
     subImages: [
       {

@@ -6,6 +6,7 @@ import Image from 'next/image'
 import imageCompression from 'browser-image-compression'
 import { formatDateShort } from '@/lib/date-utils'
 import { renderFormattedText } from '@/lib/text-formatting'
+import { extractYouTubeVideoId, getYouTubeEmbedUrl } from '@/lib/youtube-utils'
 import { useToast } from '@/contexts/ToastContext'
 
 interface Author {
@@ -25,6 +26,7 @@ interface ArticleFormProps {
     publishedDate: string
     mainImage: { url: string; public_id: string; alt?: string }
     miniImage?: { url: string; public_id: string; alt?: string }
+    youtubeLink?: string
     subImages: Array<{ url: string; public_id: string; alt?: string; order: number }>
     status: 'draft' | 'published'
     category: string
@@ -42,6 +44,7 @@ type FormDataState = {
   status: 'draft' | 'published'
   mainImage: { url: string; public_id: string; alt: string }
   miniImage: { url: string; public_id: string; alt: string }
+  youtubeLink: string
   subImages: Array<{ url: string; public_id: string; alt: string; order: number }>
 }
 
@@ -80,6 +83,7 @@ export default function ArticleForm({ authors, article, onPreviewChange }: Artic
       public_id: article.miniImage.public_id ?? '',
       alt: article.miniImage.alt ?? '',
     } : { url: '', public_id: '', alt: '' },
+    youtubeLink: article?.youtubeLink ?? '',
     subImages: Array.isArray(article?.subImages) 
       ? article.subImages.map(img => ({
           url: img.url ?? '',
@@ -92,6 +96,24 @@ export default function ArticleForm({ authors, article, onPreviewChange }: Artic
 
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  
+  // Track which option is selected: 'image', 'youtube', or 'none'
+  const [mediaType, setMediaType] = useState<'image' | 'youtube' | 'none'>(() => {
+    if (article?.miniImage?.url) return 'image'
+    if (article?.youtubeLink) return 'youtube'
+    return 'none'
+  })
+
+  // Helper function to count words
+  const countWords = (text: string): number => {
+    if (!text || !text.trim()) return 0
+    return text.trim().split(/\s+/).filter(word => word.length > 0).length
+  }
+
+  // Calculate total words across all paragraphs
+  const getTotalWords = (): number => {
+    return formData.content.reduce((total, paragraph) => total + countWords(paragraph || ''), 0)
+  }
 
   const handleContentChange = (index: number, value: string) => {
     const currentContent = formData.content || ['', '']
@@ -275,6 +297,7 @@ export default function ArticleForm({ authors, article, onPreviewChange }: Artic
           ...prev,
           miniImage: { url: data.url, public_id: data.public_id, alt: '' },
         }))
+        setMediaType('image') // Set media type to image after upload
       } else {
         setFormData((prev) => {
           const currentSubImages = prev.subImages || []
@@ -344,8 +367,10 @@ export default function ArticleForm({ authors, article, onPreviewChange }: Artic
         ...formData,
         status: publish ? 'published' : 'draft',
         content: filteredContent,
-        // Only include miniImage if it has a URL
-        miniImage: formData.miniImage?.url ? formData.miniImage : undefined,
+        // Only include miniImage if it has a URL and no YouTube link
+        miniImage: formData.miniImage?.url && !formData.youtubeLink?.trim() ? formData.miniImage : undefined,
+        // Only include youtubeLink if it has a value and no mini image
+        youtubeLink: formData.youtubeLink?.trim() && !formData.miniImage?.url ? formData.youtubeLink.trim() : undefined,
       }
 
       const url = article
@@ -517,8 +542,29 @@ export default function ArticleForm({ authors, article, onPreviewChange }: Artic
               </div>
             )}
 
-            {/* Mini Image */}
-            {formData.miniImage?.url && (
+            {/* YouTube Video or Mini Image (Only One) */}
+            {formData.youtubeLink && (() => {
+              const videoId = extractYouTubeVideoId(formData.youtubeLink)
+              if (videoId) {
+                return (
+                  <div className="mb-8">
+                    <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+                      <iframe
+                        src={getYouTubeEmbedUrl(videoId)}
+                        className="absolute top-0 left-0 w-full h-full rounded-lg"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        title="YouTube video player"
+                      />
+                    </div>
+                  </div>
+                )
+              }
+              return null
+            })()}
+            
+            {/* Mini Image - Only show if no YouTube link */}
+            {!formData.youtubeLink && formData.miniImage?.url && (
               <div className="mb-8">
                 <Image
                   src={formData.miniImage.url}
@@ -702,18 +748,28 @@ export default function ArticleForm({ authors, article, onPreviewChange }: Artic
           </div>
         </div>
 
-        {/* Right Side - Description */}
+          {/* Right Side - Description */}
         <div className="flex flex-col h-full">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Description *
-          </label>
+          <div className="flex items-center justify-between mb-2">
+            <label className="block text-sm font-medium text-gray-700">
+              Description *
+            </label>
+            <span className="text-sm font-semibold text-gray-600">
+              Total Words: <span className="text-orange-600">{getTotalWords()}</span>
+            </span>
+          </div>
           
           {/* First Paragraph */}
           <div className="mb-4 flex flex-col">
             <div className="flex items-center justify-between mb-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Paragraph 1 <span className="text-red-500">*</span>
-              </label>
+              <div className="flex items-center gap-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Paragraph 1 <span className="text-red-500">*</span>
+                </label>
+                <span className="text-xs text-gray-500">
+                  ({countWords(formData.content[0] || '')} words)
+                </span>
+              </div>
               <button
                 type="button"
                 onClick={() => handleBoldFormat(0)}
@@ -737,49 +793,161 @@ export default function ArticleForm({ authors, article, onPreviewChange }: Artic
             </p>
           </div>
 
-          {/* Mini Image Upload */}
+          {/* Mini Image or YouTube Video (Optional - Choose one only or leave both empty) */}
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Mini Image (between paragraphs) <span className="text-gray-500 text-xs">(Optional)</span>
+              Mini Image or YouTube Video <span className="text-gray-500 text-xs">(Optional - Choose one only or leave empty)</span>
             </label>
-            {formData.miniImage?.url ? (
-              <div className="relative">
-                <Image
-                  src={formData.miniImage.url}
-                  alt={formData.miniImage.alt || 'Mini image'}
-                  width={400}
-                  height={300}
-                  className="max-w-md max-h-64 w-auto h-auto rounded-lg mb-2 object-contain"
+            
+            {/* Toggle between Mini Image and YouTube Link */}
+            <div className="flex gap-2 mb-4">
+              <button
+                type="button"
+                onClick={() => {
+                  setMediaType('image')
+                  setFormData({ 
+                    ...formData, 
+                    youtubeLink: '', // Clear YouTube link when selecting image
+                  })
+                }}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  mediaType === 'image'
+                    ? 'bg-orange-600 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                Mini Image
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setMediaType('youtube')
+                  setFormData({ 
+                    ...formData, 
+                    miniImage: { url: '', public_id: '', alt: '' }, // Clear image when selecting YouTube
+                  })
+                }}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  mediaType === 'youtube'
+                    ? 'bg-orange-600 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                YouTube Video
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setMediaType('none')
+                  setFormData({ 
+                    ...formData, 
+                    miniImage: { url: '', public_id: '', alt: '' },
+                    youtubeLink: '',
+                  })
+                }}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  mediaType === 'none'
+                    ? 'bg-orange-600 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                None
+              </button>
+            </div>
+
+            {/* Mini Image Section - Show when image is selected */}
+            {mediaType === 'image' && (
+              <div>
+                {formData.miniImage?.url ? (
+                  <div className="relative">
+                    <Image
+                      src={formData.miniImage.url}
+                      alt={formData.miniImage.alt || 'Mini image'}
+                      width={400}
+                      height={300}
+                      className="max-w-md max-h-64 w-auto h-auto rounded-lg mb-2 object-contain"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormData({ ...formData, miniImage: { url: '', public_id: '', alt: '' } })
+                        setMediaType('none')
+                      }}
+                      className="absolute top-2 right-2 bg-red-600 text-white px-3 py-1 rounded"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ) : (
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0]
+                      if (file) handleImageUpload(file, 'mini')
+                    }}
+                    disabled={uploading}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                  />
+                )}
+              </div>
+            )}
+
+            {/* YouTube Link Section - Show when YouTube is selected */}
+            {mediaType === 'youtube' && (
+              <div>
+                <input
+                  type="text"
+                  value={formData.youtubeLink || ''}
+                  onChange={(e) => setFormData({ ...formData, youtubeLink: e.target.value })}
+                  placeholder="https://www.youtube.com/watch?v=... or https://youtu.be/..."
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-orange-500"
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  Paste YouTube URL (full URL or short URL)
+                </p>
+                {formData.youtubeLink && (() => {
+                  const videoId = extractYouTubeVideoId(formData.youtubeLink)
+                  if (videoId) {
+                    return (
+                      <div className="mt-4 relative w-full" style={{ paddingBottom: '56.25%' }}>
+                        <iframe
+                          src={getYouTubeEmbedUrl(videoId)}
+                          className="absolute top-0 left-0 w-full h-full rounded-lg"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                          title="YouTube video preview"
+                        />
+                      </div>
+                    )
+                  }
+                  return null
+                })()}
                 <button
                   type="button"
-                  onClick={() => setFormData({ ...formData, miniImage: { url: '', public_id: '', alt: '' } })}
-                  className="absolute top-2 right-2 bg-red-600 text-white px-3 py-1 rounded"
+                  onClick={() => {
+                    setFormData({ ...formData, youtubeLink: '' })
+                    setMediaType('none')
+                  }}
+                  className="mt-2 text-sm text-red-600 hover:text-red-700"
                 >
-                  Remove
+                  Remove YouTube Link
                 </button>
               </div>
-            ) : (
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  const file = e.target.files?.[0]
-                  if (file) handleImageUpload(file, 'mini')
-                }}
-                disabled={uploading}
-                required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-              />
             )}
           </div>
 
           {/* Second Paragraph */}
           <div className="mb-4 flex flex-col">
             <div className="flex items-center justify-between mb-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Paragraph 2 <span className="text-red-500">*</span>
-              </label>
+              <div className="flex items-center gap-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Paragraph 2 <span className="text-red-500">*</span>
+                </label>
+                <span className="text-xs text-gray-500">
+                  ({countWords(formData.content[1] || '')} words)
+                </span>
+              </div>
               <button
                 type="button"
                 onClick={() => handleBoldFormat(1)}

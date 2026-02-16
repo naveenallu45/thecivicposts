@@ -53,6 +53,37 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${inter.variable} ${roboto.variable} ${playfair.variable} ${merriweather.variable}`}>
+      <head>
+        {/* Preconnect to external domains for faster resource loading */}
+        <link rel="preconnect" href="https://res.cloudinary.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://res.cloudinary.com" />
+        {/* Preconnect to Google Fonts */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        {/* Production-level aggressive prefetching for instant loading */}
+        <link rel="prefetch" href="/news" as="document" />
+        <link rel="prefetch" href="/entertainment" as="document" />
+        <link rel="prefetch" href="/sports" as="document" />
+        <link rel="prefetch" href="/health-fitness" as="document" />
+        <link rel="prefetch" href="/editorial" as="document" />
+        <link rel="prefetch" href="/technology" as="document" />
+        <link rel="prefetch" href="/automobiles" as="document" />
+        <link rel="prefetch" href="/about-us" as="document" />
+        <link rel="prefetch" href="/contact-us" as="document" />
+        <link rel="prefetch" href="/privacy-policy" as="document" />
+        <link rel="prefetch" href="/terms-and-conditions" as="document" />
+        {/* Prefetch category API routes for instant data loading */}
+        <link rel="prefetch" href="/api/articles?category=news&page=1&limit=10" as="fetch" crossOrigin="anonymous" />
+        <link rel="prefetch" href="/api/articles?category=entertainment&page=1&limit=10" as="fetch" crossOrigin="anonymous" />
+        <link rel="prefetch" href="/api/articles?category=sports&page=1&limit=10" as="fetch" crossOrigin="anonymous" />
+        <link rel="prefetch" href="/api/articles?category=health-fitness&page=1&limit=10" as="fetch" crossOrigin="anonymous" />
+        <link rel="prefetch" href="/api/articles?category=editorial&page=1&limit=10" as="fetch" crossOrigin="anonymous" />
+        <link rel="prefetch" href="/api/articles?category=technology&page=1&limit=10" as="fetch" crossOrigin="anonymous" />
+        <link rel="prefetch" href="/api/articles?category=automobiles&page=1&limit=10" as="fetch" crossOrigin="anonymous" />
+        {/* Prefetch API routes */}
+        <link rel="prefetch" href="/api/articles" as="fetch" crossOrigin="anonymous" />
+        <link rel="prefetch" href="/api/articles/all?limit=10&page=1" as="fetch" crossOrigin="anonymous" />
+      </head>
       <body className="antialiased font-sans flex flex-col min-h-screen">
         <ConditionalLayout>{children}</ConditionalLayout>
       </body>

@@ -5,9 +5,6 @@ import Article from '@/models/Article'
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://www.thecivicposts.com'
   
-  // Connect to database
-  await connectDB()
-
   // Static pages
   const staticPages: MetadataRoute.Sitemap = [
     {
@@ -78,20 +75,40 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ]
 
-  // Dynamic article pages
-  // Limit to most recent 10,000 articles for performance
-  const articles = await Article.find({ status: 'published' })
-    .select('slug category updatedAt')
-    .sort({ updatedAt: -1 })
-    .limit(10000)
-    .lean()
+  // Try to fetch articles, but don't fail if database is unavailable
+  let articlePages: MetadataRoute.Sitemap = []
+  
+  try {
+    // Connect to database
+    await connectDB()
 
-  const articlePages: MetadataRoute.Sitemap = articles.map((article) => ({
-    url: `${baseUrl}/${article.category}/${article.slug}`,
-    lastModified: article.updatedAt || new Date(),
-    changeFrequency: 'weekly' as const,
-    priority: 0.8,
-  }))
+    // Current date for filtering out future-dated articles
+    const currentDate = new Date()
+    currentDate.setHours(0, 0, 0, 0)
+
+    // Dynamic article pages
+    // Limit to most recent 10,000 articles for performance
+    // Only include articles published today or earlier
+    const articles = await Article.find({ 
+      status: 'published',
+      publishedDate: { $lte: currentDate } // Only show articles published today or earlier
+    })
+      .select('slug category updatedAt')
+      .sort({ updatedAt: -1 })
+      .limit(10000)
+      .lean()
+
+    articlePages = articles.map((article) => ({
+      url: `${baseUrl}/${article.category}/${article.slug}`,
+      lastModified: article.updatedAt || new Date(),
+      changeFrequency: 'weekly' as const,
+      priority: 0.8,
+    }))
+  } catch (error) {
+    // If database connection fails during build, just return static pages
+    // This prevents build failures when MongoDB is unavailable
+    console.error('Error fetching articles for sitemap:', error)
+  }
 
   return [...staticPages, ...articlePages]
 }

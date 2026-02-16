@@ -9,7 +9,9 @@ import AutoRefreshWrapper from '@/components/AutoRefreshWrapper'
 import { formatDateShort } from '@/lib/date-utils'
 
 // ISR: Revalidate home page every 30 seconds
+// Production-level caching with stale-while-revalidate
 export const revalidate = 30
+export const dynamic = 'force-static'
 
 const categories = [
   { key: 'news', name: 'News' },
@@ -24,26 +26,43 @@ const categories = [
 export default async function Home() {
   await connectDB()
 
+  // Current date for filtering out future-dated articles
+  const currentDate = new Date()
+  currentDate.setHours(0, 0, 0, 0) // Set to start of day for accurate comparison
+
   // Fetch all required articles in parallel
   // Optimized: Removed populate() calls since authorName is already stored in article document
   // This eliminates N+1 query problem and improves performance with 100k+ articles
+  // Filter out articles with future publishedDate
   const [topStories, miniTopStories, trendingArticles, ...categoryArticles] = await Promise.all([
     // Top Stories (multiple articles for carousel) - Limit to 10 for performance
-    Article.find({ status: 'published', isTopStory: true })
+    Article.find({ 
+      status: 'published', 
+      isTopStory: true,
+      publishedDate: { $lte: currentDate } // Only show articles published today or earlier
+    })
       .sort({ createdAt: -1 })
       .limit(10)
       .select('title subtitle mainImage publishedDate authorName slug category')
       .lean(),
     
     // Mini Top Stories (6 articles)
-    Article.find({ status: 'published', isMiniTopStory: true })
+    Article.find({ 
+      status: 'published', 
+      isMiniTopStory: true,
+      publishedDate: { $lte: currentDate }
+    })
       .sort({ createdAt: -1 })
       .limit(6)
       .select('title subtitle mainImage publishedDate authorName slug category')
       .lean(),
     
     // Trending (4 articles)
-    Article.find({ status: 'published', isTrending: true })
+    Article.find({ 
+      status: 'published', 
+      isTrending: true,
+      publishedDate: { $lte: currentDate }
+    })
       .sort({ createdAt: -1 })
       .limit(4)
       .select('title subtitle mainImage publishedDate authorName slug category')
@@ -54,6 +73,7 @@ export default async function Home() {
       Article.find({ 
         status: 'published', 
         category: cat.key,
+        publishedDate: { $lte: currentDate },
         isTopStory: { $ne: true },
         isMiniTopStory: { $ne: true },
         isTrending: { $ne: true }

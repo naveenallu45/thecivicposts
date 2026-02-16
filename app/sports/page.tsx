@@ -8,8 +8,11 @@ import Pagination from '@/components/Pagination'
 import type { ArticleListItem } from '@/lib/article-types'
 import { formatDateShort } from '@/lib/date-utils'
 
-// ISR: Revalidate every 60 seconds
-export const revalidate = 60
+// ISR: Revalidate every 30 seconds for faster updates
+export const revalidate = 30
+
+// Production-level caching: Use static generation with revalidation
+export const dynamic = 'force-static'
 
 const ARTICLES_PER_PAGE = 10
 
@@ -24,10 +27,15 @@ export default async function SportsPage({
   const currentPage = parseInt(params.page || '1', 10)
   const skip = (currentPage - 1) * ARTICLES_PER_PAGE
 
+  // Current date for filtering out future-dated articles
+  const currentDate = new Date()
+  currentDate.setHours(0, 0, 0, 0)
+
   const [articles, totalArticles] = await Promise.all([
     Article.find({ 
       status: 'published',
-      category: 'sports'
+      category: 'sports',
+      publishedDate: { $lte: currentDate }
     })
       .sort({ createdAt: -1 })
       .skip(skip)
@@ -38,7 +46,8 @@ export default async function SportsPage({
     // For better performance, ensure indexes are used (already indexed)
     Article.countDocuments({ 
       status: 'published',
-      category: 'sports'
+      category: 'sports',
+      publishedDate: { $lte: currentDate }
     })
   ])
 
@@ -58,14 +67,12 @@ export default async function SportsPage({
   const totalPages = Math.ceil(totalArticles / ARTICLES_PER_PAGE)
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      <div className="w-[92%] lg:w-[85%] mx-auto py-6 md:py-12">
-        <ArticlesRow articles={articlesData} heading="Sports" />
-        <Pagination 
-          currentPage={currentPage} 
-          totalPages={totalPages}
-        />
-      </div>
-    </main>
+    <div className="w-[92%] lg:w-[85%] mx-auto py-6 md:py-12">
+      <ArticlesRow articles={articlesData} heading="Sports" />
+      <Pagination 
+        currentPage={currentPage} 
+        totalPages={totalPages}
+      />
+    </div>
   )
 }

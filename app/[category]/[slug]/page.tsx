@@ -9,6 +9,12 @@ import Image from 'next/image'
 import SocialShare from '@/components/SocialShare'
 import { formatDateShort } from '@/lib/date-utils'
 import { renderFormattedText } from '@/lib/text-formatting'
+import { generateAuthorSlug } from '@/lib/author-utils'
+import { extractYouTubeVideoId } from '@/lib/youtube-utils'
+import MoreArticles from '@/components/MoreArticles'
+import ViewportPrefetch from '@/components/ViewportPrefetch'
+import YouTubeVideo from '@/components/YouTubeVideo'
+import type { ArticleListItem } from '@/lib/article-types'
 
 // ISR: Revalidate every 60 seconds (1 minute)
 // Pages will be statically generated and revalidated in the background
@@ -17,6 +23,9 @@ export const revalidate = 60
 
 // Enable dynamic params for better performance
 export const dynamicParams = true
+
+// Production-level caching: Use static generation with revalidation
+export const dynamic = 'force-static'
 
 // Generate static params for better performance (optional - can be removed if you have too many articles)
 // export async function generateStaticParams() {
@@ -33,7 +42,16 @@ export async function generateMetadata({
   await connectDB()
   
   const { category, slug } = await params
-  const article = await Article.findOne({ slug, status: 'published' })
+  
+  // Current date for filtering out future-dated articles
+  const currentDate = new Date()
+  currentDate.setHours(0, 0, 0, 0)
+  
+  const article = await Article.findOne({ 
+    slug, 
+    status: 'published',
+    publishedDate: { $lte: currentDate } // Only show articles published today or earlier
+  })
     .select('title subtitle content mainImage publishedDate authorName category')
     .lean()
 
@@ -136,11 +154,20 @@ export default async function ArticlePage({
     'automobiles': 'Automobiles',
   }
   
+  // Current date for filtering out future-dated articles
+  const currentDate = new Date()
+  currentDate.setHours(0, 0, 0, 0) // Set to start of day for accurate comparison
+
   // Fetch article (ISR will cache this page)
   // Optimized: Only select needed fields for better performance
   // Using lean() for faster queries (returns plain JS objects)
-  const article = await Article.findOne({ slug, status: 'published' })
-    .select('title subtitle content mainImage miniImage subImages publishedDate authorName category slug updatedAt')
+  // Filter out articles with future publishedDate
+  const article = await Article.findOne({ 
+    slug, 
+    status: 'published',
+    publishedDate: { $lte: currentDate } // Only show articles published today or earlier
+  })
+    .select('title subtitle content mainImage miniImage youtubeLink subImages publishedDate authorName category slug updatedAt')
     .lean()
     .exec()
 
@@ -162,6 +189,37 @@ export default async function ArticlePage({
     : ''
 
   const categoryLabel = categoryLabels[article.category] || article.category
+  
+  // Fetch initial "More Articles" (latest from all categories, excluding current article)
+  const [moreArticles, totalMoreArticles] = await Promise.all([
+    Article.find({ 
+      status: 'published',
+      publishedDate: { $lte: currentDate },
+      slug: { $ne: slug } // Exclude current article
+    })
+      .sort({ createdAt: -1 })
+      .limit(10)
+      .select('title subtitle mainImage publishedDate authorName slug category')
+      .lean() as Promise<ArticleListItem[]>,
+    Article.countDocuments({ 
+      status: 'published',
+      publishedDate: { $lte: currentDate },
+      slug: { $ne: slug }
+    })
+  ])
+
+  const moreArticlesData = moreArticles.map((article) => ({
+    id: article._id.toString(),
+    title: article.title,
+    subtitle: article.subtitle,
+    mainImage: article.mainImage?.url || '',
+    publishedDate: article.publishedDate
+      ? formatDateShort(article.publishedDate)
+      : '',
+    authorName: article.authorName || 'Unknown',
+    slug: article.slug,
+    category: article.category,
+  }))
   
   // Construct the full article URL for sharing with category
   const baseUrl = 'https://www.thecivicposts.com'
@@ -205,6 +263,15 @@ export default async function ArticlePage({
 
   return (
     <>
+      {/* Preload main image for faster loading */}
+      {article.mainImage?.url && (
+        <link
+          rel="preload"
+          as="image"
+          href={article.mainImage.url}
+          fetchPriority="high"
+        />
+      )}
       {/* Structured Data (JSON-LD) for SEO and Social Sharing */}
       <script
         type="application/ld+json"
@@ -258,7 +325,14 @@ export default async function ArticlePage({
         {/* Author and Date */}
         <div className="mb-6">
           <p className="text-base md:text-lg text-gray-600 font-sans">
-            {authorName} - {publishedDate}
+            <Link 
+              href={`/author/${generateAuthorSlug(authorName)}`}
+              className="text-orange-600 hover:text-orange-700 font-medium transition-colors"
+            >
+              {authorName}
+            </Link>
+            {' - '}
+            {publishedDate}
           </p>
         </div>
 
@@ -278,8 +352,11 @@ export default async function ArticlePage({
               height={800}
               className="w-full h-auto rounded-lg"
               priority
-              quality={85}
+              fetchPriority="high"
+              quality={90}
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1200px"
+              placeholder="blur"
+              blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
             />
           </div>
         )}
@@ -297,8 +374,25 @@ export default async function ArticlePage({
             </div>
           )}
 
-          {/* Mini Image */}
-          {article.miniImage?.url && (
+          {/* YouTube Video or Mini Image (Only One) */}
+          {(article.youtubeLink as string | undefined) && (() => {
+            const youtubeLink = article.youtubeLink as string
+            const videoId = extractYouTubeVideoId(youtubeLink)
+            if (videoId) {
+              return <YouTubeVideo videoId={videoId} title={article.title} />
+            }
+            // If youtubeLink exists but videoId extraction failed, show error message
+            return (
+              <div className="mb-8 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <p className="text-yellow-800 text-sm">
+                  Invalid YouTube URL format. Please check the link: {youtubeLink}
+                </p>
+              </div>
+            )
+          })()}
+          
+          {/* Mini Image - Only show if no YouTube link */}
+          {!article.youtubeLink && article.miniImage?.url && (
             <div className="mb-8">
               <Image
                 src={article.miniImage.url}
@@ -307,6 +401,9 @@ export default async function ArticlePage({
                 height={600}
                 className="w-full h-auto rounded-lg"
                 loading="lazy"
+                quality={85}
+                placeholder="blur"
+                blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
               />
             </div>
           )}
@@ -352,11 +449,22 @@ export default async function ArticlePage({
                     height={600}
                     className="w-full h-auto rounded-lg"
                     loading="lazy"
+                    quality={85}
+                    placeholder="blur"
+                    blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
                   />
                 </div>
               ))}
           </div>
         )}
+
+        {/* More Articles Section */}
+        <ViewportPrefetch articles={moreArticlesData} />
+        <MoreArticles 
+          initialArticles={moreArticlesData}
+          excludeSlug={slug}
+          totalArticles={totalMoreArticles}
+        />
       </article>
     </main>
     </>
