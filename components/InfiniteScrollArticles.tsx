@@ -118,7 +118,7 @@ export default function InfiniteScrollArticles({
     <div>
       <div className="mb-6">
         <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2 font-merriweather">
-          Articles by {authorName}
+          Articles by <span className="uppercase">{authorName}</span>
         </h1>
         <p className="text-gray-600">
           {totalArticles} {totalArticles === 1 ? 'article' : 'articles'} found

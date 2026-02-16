@@ -8,6 +8,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { formatDateShort } from '@/lib/date-utils'
 import { renderFormattedText } from '@/lib/text-formatting'
+import { getOptimizedImageUrl } from '@/lib/cloudinary-optimize'
 
 export const dynamic = 'force-dynamic'
 
@@ -67,11 +68,13 @@ export default async function ArticlePreviewPage({
           {article.mainImage?.url && (
             <div className="mb-6 flex justify-center">
               <Image
-                src={article.mainImage.url}
+                src={getOptimizedImageUrl(article.mainImage.url, 800)}
                 alt={article.mainImage.alt || article.title || 'Article main image'}
                 width={800}
                 height={400}
                 className="w-auto max-w-full max-h-96 h-auto rounded-lg object-contain"
+                loading="lazy"
+                quality={85}
               />
             </div>
           )}
@@ -113,12 +116,13 @@ export default async function ArticlePreviewPage({
             {article.miniImage?.url && (
               <div className="mb-6 flex justify-center">
                 <Image
-                  src={article.miniImage.url}
+                  src={getOptimizedImageUrl(article.miniImage.url, 800)}
                   alt={article.miniImage.alt || article.title || 'Mini image'}
                   width={800}
                   height={600}
                   className="w-full max-w-2xl h-auto rounded-lg"
                   loading="lazy"
+                  quality={85}
                 />
               </div>
             )}
@@ -156,11 +160,13 @@ export default async function ArticlePreviewPage({
               {(article.subImages || []).map((img, idx) => (
                 <div key={idx} className="my-6">
                   <Image
-                    src={img.url}
+                    src={getOptimizedImageUrl(img.url, 800)}
                     alt={img.alt || `Article image ${idx + 1}`}
                     width={800}
                     height={400}
                     className="w-full h-auto rounded-lg"
+                    loading="lazy"
+                    quality={85}
                   />
                 </div>
               ))}

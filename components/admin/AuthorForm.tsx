@@ -26,14 +26,6 @@ export default function AuthorForm({ author }: AuthorFormProps) {
   })
   const [uploading, setUploading] = useState(false)
 
-  const capitalizeFirstLetter = (text: string): string => {
-    if (!text) return ''
-    return text
-      .split(' ')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-      .join(' ')
-  }
-
   const handleImageUpload = async (file: File) => {
     setUploading(true)
     try {
@@ -105,10 +97,7 @@ export default function AuthorForm({ author }: AuthorFormProps) {
         <input
           type="text"
           value={formData.name}
-          onChange={(e) => {
-            const capitalized = capitalizeFirstLetter(e.target.value)
-            setFormData({ ...formData, name: capitalized })
-          }}
+          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
           required
           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
         />

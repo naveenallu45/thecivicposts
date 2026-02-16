@@ -2,6 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   images: {
+    // Modern image formats for better compression
     formats: ['image/avif', 'image/webp'],
     remotePatterns: [
       {
@@ -11,12 +12,19 @@ const nextConfig = {
     ],
     // CDN optimization - Cloudinary already acts as CDN
     domains: ['res.cloudinary.com'],
-    // Image optimization settings
+    // Responsive image sizes for different device breakpoints
+    // Optimized for mobile-first approach
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    // Thumbnail sizes for smaller images
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    // Enable image optimization
-    minimumCacheTTL: 60,
+    // Cache optimized images for 1 year (Cloudinary handles versioning)
+    minimumCacheTTL: 31536000,
+    // Disable SVG for security
     dangerouslyAllowSVG: false,
+    // Enable content-based image optimization
+    contentDispositionType: 'attachment',
+    // Optimize images on-demand
+    unoptimized: false,
   },
   // Production optimizations
   compress: true,

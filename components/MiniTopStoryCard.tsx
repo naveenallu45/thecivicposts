@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useTransition } from 'react'
 import { generateAuthorSlug } from '@/lib/author-utils'
+import { getOptimizedImageUrl } from '@/lib/cloudinary-optimize'
 
 interface MiniTopStoryCardProps {
   title: string
@@ -52,7 +53,7 @@ function MiniTopStoryCard({
         {/* Small Image */}
         <div className="relative w-24 md:w-28 lg:w-32 flex-shrink-0 h-20 md:h-24 lg:h-28 overflow-hidden rounded">
           <Image
-            src={mainImage}
+            src={getOptimizedImageUrl(mainImage, 128)}
             alt={title}
             fill
             className="object-cover"
@@ -72,7 +73,7 @@ function MiniTopStoryCard({
           <p className="text-[10px] md:text-[10px] lg:text-[10px] text-gray-600 font-sans leading-tight truncate">
             <span 
               onClick={handleAuthorClick}
-              className="text-orange-600 hover:text-orange-700 font-medium transition-colors cursor-pointer"
+              className="text-orange-600 hover:text-orange-700 font-medium transition-colors cursor-pointer uppercase"
             >
               {authorName}
             </span>

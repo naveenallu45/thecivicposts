@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useTransition } from 'react'
 import { generateAuthorSlug } from '@/lib/author-utils'
+import { getOptimizedImageUrl } from '@/lib/cloudinary-optimize'
 
 interface ArticleCardProps {
   title: string
@@ -56,7 +57,7 @@ function ArticleCard({
           {/* Image Side - 40% width on mobile/tablet */}
           <div className="w-2/5 md:w-2/5 flex-shrink-0 relative h-[140px] md:h-[180px] overflow-hidden">
             <Image
-              src={mainImage}
+              src={getOptimizedImageUrl(mainImage, 400)}
               alt={title}
               fill
               className="object-cover"
@@ -84,7 +85,7 @@ function ArticleCard({
               <p className="text-[10px] md:text-xs text-gray-600 font-sans truncate pr-2">
                 <span 
                   onClick={handleAuthorClick}
-                  className="text-orange-600 hover:text-orange-700 font-medium transition-colors cursor-pointer"
+                  className="text-orange-600 hover:text-orange-700 font-medium transition-colors cursor-pointer uppercase"
                 >
                   {authorName}
                 </span>
@@ -100,7 +101,7 @@ function ArticleCard({
           {/* Image Top */}
           <div className="w-full flex-shrink-0 relative h-[180px] overflow-hidden">
             <Image
-              src={mainImage}
+              src={getOptimizedImageUrl(mainImage, 500)}
               alt={title}
               fill
               className="object-cover"
@@ -128,7 +129,7 @@ function ArticleCard({
               <p className="text-xs text-gray-600 font-sans truncate min-w-0 flex-1">
                 <span 
                   onClick={handleAuthorClick}
-                  className="text-orange-600 hover:text-orange-700 font-medium transition-colors cursor-pointer"
+                  className="text-orange-600 hover:text-orange-700 font-medium transition-colors cursor-pointer uppercase"
                 >
                   {authorName}
                 </span>

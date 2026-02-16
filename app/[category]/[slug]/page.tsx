@@ -15,6 +15,7 @@ import MoreArticles from '@/components/MoreArticles'
 import ViewportPrefetch from '@/components/ViewportPrefetch'
 import YouTubeVideo from '@/components/YouTubeVideo'
 import type { ArticleListItem } from '@/lib/article-types'
+import { getOptimizedImageUrl } from '@/lib/cloudinary-optimize'
 
 // ISR: Revalidate every 60 seconds (1 minute)
 // Pages will be statically generated and revalidated in the background
@@ -268,7 +269,7 @@ export default async function ArticlePage({
         <link
           rel="preload"
           as="image"
-          href={article.mainImage.url}
+          href={getOptimizedImageUrl(article.mainImage.url, 1200)}
           fetchPriority="high"
         />
       )}
@@ -327,7 +328,7 @@ export default async function ArticlePage({
           <p className="text-base md:text-lg text-gray-600 font-sans">
             <Link 
               href={`/author/${generateAuthorSlug(authorName)}`}
-              className="text-orange-600 hover:text-orange-700 font-medium transition-colors"
+              className="text-orange-600 hover:text-orange-700 font-medium transition-colors uppercase"
             >
               {authorName}
             </Link>
@@ -346,7 +347,7 @@ export default async function ArticlePage({
         {article.mainImage?.url && (
           <div className="mb-8">
             <Image
-              src={article.mainImage.url}
+              src={getOptimizedImageUrl(article.mainImage.url, 1200)}
               alt={article.mainImage.alt || article.title || 'Article image'}
               width={1200}
               height={800}
@@ -395,7 +396,7 @@ export default async function ArticlePage({
           {!article.youtubeLink && article.miniImage?.url && (
             <div className="mb-8">
               <Image
-                src={article.miniImage.url}
+                src={getOptimizedImageUrl(article.miniImage.url, 800)}
                 alt={article.miniImage.alt || article.title || 'Mini image'}
                 width={800}
                 height={600}
@@ -443,7 +444,7 @@ export default async function ArticlePage({
               .map((img: { url: string; alt?: string }, idx: number) => (
                 <div key={idx}>
                   <Image
-                    src={img.url}
+                    src={getOptimizedImageUrl(img.url, 1200)}
                     alt={img.alt || `Article image ${idx + 1}`}
                     width={1200}
                     height={600}

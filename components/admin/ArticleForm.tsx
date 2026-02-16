@@ -8,6 +8,7 @@ import { formatDateShort } from '@/lib/date-utils'
 import { renderFormattedText } from '@/lib/text-formatting'
 import { extractYouTubeVideoId, getYouTubeEmbedUrl } from '@/lib/youtube-utils'
 import { useToast } from '@/contexts/ToastContext'
+import { getOptimizedImageUrl } from '@/lib/cloudinary-optimize'
 
 interface Author {
   _id: string
@@ -519,12 +520,13 @@ export default function ArticleForm({ authors, article, onPreviewChange }: Artic
           {formData.mainImage.url && (
             <div className="mb-8">
               <Image
-                src={formData.mainImage.url}
+                src={getOptimizedImageUrl(formData.mainImage.url, 1200)}
                 alt={formData.mainImage.alt || formData.title || 'Article main image'}
                 width={1200}
                 height={800}
                 className="w-full h-auto rounded-lg"
                 priority
+                quality={90}
               />
             </div>
           )}
@@ -567,11 +569,13 @@ export default function ArticleForm({ authors, article, onPreviewChange }: Artic
             {!formData.youtubeLink && formData.miniImage?.url && (
               <div className="mb-8">
                 <Image
-                  src={formData.miniImage.url}
+                  src={getOptimizedImageUrl(formData.miniImage.url, 800)}
                   alt={formData.miniImage.alt || 'Mini image'}
                   width={800}
                   height={600}
                   className="w-full h-auto rounded-lg"
+                  loading="lazy"
+                  quality={85}
                 />
               </div>
             )}
@@ -596,11 +600,13 @@ export default function ArticleForm({ authors, article, onPreviewChange }: Artic
                 .map((img, idx) => (
                   <div key={idx}>
                     <Image
-                      src={img.url}
+                      src={getOptimizedImageUrl(img.url, 1200)}
                       alt={img.alt || `Article image ${idx + 1}`}
                       width={1200}
                       height={600}
                       className="w-full h-auto rounded-lg"
+                      loading="lazy"
+                      quality={85}
                     />
                   </div>
                 ))}
