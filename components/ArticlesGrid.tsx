@@ -30,7 +30,6 @@ export default function ArticlesGrid({ articles }: ArticlesGridProps) {
         <ArticleCard
           key={article.id}
           title={article.title}
-          subtitle={article.subtitle}
           mainImage={article.mainImage}
           publishedDate={article.publishedDate}
           authorName={article.authorName}

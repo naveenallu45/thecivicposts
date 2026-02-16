@@ -9,7 +9,7 @@ const navItems = [
   { href: '/news', label: 'News' },
   { href: '/entertainment', label: 'Entertainment' },
   { href: '/sports', label: 'Sports' },
-  { href: '/health-fitness', label: 'Health & Fitness' },
+  { href: '/health-fitness', label: 'Health & Life Style' },
   { href: '/editorial', label: 'Editorial' },
   { href: '/technology', label: 'Technology' },
   { href: '/automobiles', label: 'Automobiles' },

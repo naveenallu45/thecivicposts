@@ -44,7 +44,6 @@ export default function TrendingSection({ articles }: TrendingSectionProps) {
           <div key={article.id} data-article-id={`${article.category}/${article.slug}`}>
             <ArticleCard
               title={article.title}
-              subtitle={article.subtitle}
               mainImage={article.mainImage}
               publishedDate={article.publishedDate}
               authorName={article.authorName}

@@ -10,7 +10,6 @@ import { getOptimizedImageUrl } from '@/lib/cloudinary-optimize'
 
 interface ArticleCardProps {
   title: string
-  subtitle?: string
   mainImage: string
   publishedDate: string
   authorName: string
@@ -20,7 +19,6 @@ interface ArticleCardProps {
 
 function ArticleCard({
   title,
-  subtitle,
   mainImage,
   publishedDate,
   authorName,
@@ -54,8 +52,8 @@ function ArticleCard({
       <div className="bg-white rounded-lg overflow-hidden h-full border border-gray-100 hover:border-gray-200 transition-colors duration-200">
         {/* Horizontal layout for mobile/tablet (1-2 columns) */}
         <div className="flex flex-row h-full lg:hidden">
-          {/* Image Side - 40% width on mobile/tablet */}
-          <div className="w-2/5 md:w-2/5 flex-shrink-0 relative h-[140px] md:h-[180px] overflow-hidden">
+          {/* Image Side - 40% width on mobile/tablet (reduced by 15%) */}
+          <div className="w-[34%] md:w-[34%] flex-shrink-0 relative h-[119px] md:h-[153px] overflow-hidden">
             <Image
               src={getOptimizedImageUrl(mainImage, 400)}
               alt={title}
@@ -69,17 +67,12 @@ function ArticleCard({
             />
           </div>
           
-          {/* Content Side - 60% width on mobile/tablet */}
-          <div className="w-3/5 md:w-3/5 p-2 md:p-4 flex flex-col h-[140px] md:h-[180px]">
+          {/* Content Side - 66% width on mobile/tablet (increased to compensate for image reduction) */}
+          <div className="w-[66%] md:w-[66%] p-2 md:p-4 flex flex-col h-[119px] md:h-[153px]">
             <div className="flex-1 flex flex-col overflow-hidden min-h-0">
-              <h3 className="text-[10px] md:text-sm font-bold text-gray-900 mb-1 md:mb-2 font-merriweather group-hover:text-red-600 transition-colors duration-200 break-words line-clamp-3 leading-tight">
+              <h3 className="text-[12px] md:text-base font-bold text-gray-900 mb-1 md:mb-2 font-merriweather group-hover:text-red-600 transition-colors duration-200 break-words line-clamp-3 leading-tight">
                 {title}
               </h3>
-              {subtitle && (
-                <p className="text-[10px] md:text-xs text-gray-600 mb-1.5 md:mb-3 font-merriweather leading-relaxed break-words line-clamp-2">
-                  {subtitle}
-                </p>
-              )}
             </div>
             <div className="mt-auto pt-2 md:pt-4 border-t border-gray-200 flex items-center justify-between flex-shrink-0">
               <p className="text-[10px] md:text-xs text-gray-600 font-sans truncate pr-2">
@@ -99,7 +92,7 @@ function ArticleCard({
         {/* Vertical layout for laptop (4 columns) - Image top, text below */}
         <div className="hidden lg:flex flex-col h-full">
           {/* Image Top */}
-          <div className="w-full flex-shrink-0 relative h-[180px] overflow-hidden">
+          <div className="w-full flex-shrink-0 relative h-[153px] overflow-hidden">
             <Image
               src={getOptimizedImageUrl(mainImage, 500)}
               alt={title}
@@ -115,30 +108,32 @@ function ArticleCard({
           
           {/* Content Bottom */}
           <div className="flex-1 p-4 flex flex-col min-h-0">
-            <div className="flex-1 flex flex-col overflow-hidden min-h-0">
-              <h3 className="text-sm font-bold text-gray-900 mb-2 font-merriweather group-hover:text-red-600 transition-colors duration-200 break-words line-clamp-3">
-                {title}
+            {/* Title with inline Read More */}
+            <div className="flex-1 flex flex-col overflow-hidden min-h-0 mb-3">
+              <h3 className="text-[12.8px] font-bold text-gray-900 font-merriweather transition-colors duration-200 break-words line-clamp-3 leading-relaxed">
+                <span className="group-hover:text-red-600 transition-colors">{title}</span>
+                <span className="text-red-600 font-medium ml-2 group-hover:text-red-700 transition-colors">
+                  Read More
+                </span>
               </h3>
-              {subtitle && (
-                <p className="text-xs text-gray-600 mb-3 font-merriweather leading-relaxed break-words line-clamp-2">
-                  {subtitle}
-                </p>
-              )}
             </div>
-            <div className="mt-auto pt-3 border-t border-gray-200 flex items-center justify-between gap-2 flex-shrink-0">
-              <p className="text-xs text-gray-600 font-sans truncate min-w-0 flex-1">
+            {/* Author and Date */}
+            <div className="mt-auto pt-3 border-t border-gray-200 flex items-center gap-2 flex-shrink-0 min-h-0">
+              <div className="flex items-center gap-1 min-w-0 flex-1">
                 <span 
                   onClick={handleAuthorClick}
-                  className="text-orange-600 hover:text-orange-700 font-medium transition-colors cursor-pointer uppercase"
+                  className="text-orange-600 hover:text-orange-700 font-medium transition-colors cursor-pointer uppercase truncate block min-w-0 text-[11.9px]"
+                  style={{ maxWidth: 'calc(100% - 80px)' }}
                 >
                   {authorName}
                 </span>
-                {' - '}
-                {publishedDate}
-              </p>
-              <span className="text-orange-600 text-xs font-sans font-medium group-hover:text-orange-700 transition-colors flex-shrink-0 whitespace-nowrap">
-                Read More
-              </span>
+                <span className="text-gray-600 whitespace-nowrap flex-shrink-0 text-[11.9px]">
+                  {' - '}
+                </span>
+                <span className="text-gray-600 whitespace-nowrap flex-shrink-0 text-[11.9px]">
+                  {publishedDate}
+                </span>
+              </div>
             </div>
           </div>
         </div>

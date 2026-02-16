@@ -32,17 +32,17 @@ const merriweather = Merriweather({
 
 export const metadata: Metadata = {
   title: 'The Civic Posts - Latest News & Articles',
-  description: 'Stay informed with the latest news, entertainment, sports, health & fitness, and editorial content',
+  description: 'Stay informed with the latest news, entertainment, sports, health & lifestyle, and editorial content',
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://www.thecivicposts.com'),
   openGraph: {
     title: 'The Civic Posts',
-    description: 'Stay informed with the latest news, entertainment, sports, health & fitness, and editorial content',
+    description: 'Stay informed with the latest news, entertainment, sports, health & lifestyle, and editorial content',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
     title: 'The Civic Posts',
-    description: 'Stay informed with the latest news, entertainment, sports, health & fitness, and editorial content',
+    description: 'Stay informed with the latest news, entertainment, sports, health & lifestyle, and editorial content',
   },
 }
 

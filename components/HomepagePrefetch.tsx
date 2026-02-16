@@ -35,8 +35,15 @@ export default function HomepagePrefetch() {
       }
     })
 
+    // Only proceed if document is available
+    if (typeof document === 'undefined') return
+
     // IMMEDIATE: Preload all category articles into cache
-    preloadAllCategories()
+    try {
+      preloadAllCategories()
+    } catch {
+      // Silently fail
+    }
 
     // IMMEDIATE: Prefetch category API endpoints for instant data loading
     categories.forEach((category) => {
@@ -52,9 +59,11 @@ export default function HomepagePrefetch() {
         document.head.appendChild(link1)
 
         // Also fetch the data immediately to cache it
-        fetch(apiUrl, { method: 'GET', cache: 'force-cache' }).catch(() => {
-          // Silently fail
-        })
+        if (typeof fetch !== 'undefined') {
+          fetch(apiUrl, { method: 'GET', cache: 'force-cache' }).catch(() => {
+            // Silently fail
+          })
+        }
       } catch {
         // Silently fail
       }
@@ -70,9 +79,11 @@ export default function HomepagePrefetch() {
       document.head.appendChild(allArticlesLink)
 
       // Also fetch immediately to cache
-      fetch('/api/articles/all?limit=10&page=1', { method: 'GET', cache: 'force-cache' }).catch(() => {
-        // Silently fail
-      })
+      if (typeof fetch !== 'undefined') {
+        fetch('/api/articles/all?limit=10&page=1', { method: 'GET', cache: 'force-cache' }).catch(() => {
+          // Silently fail
+        })
+      }
     } catch {
       // Silently fail
     }

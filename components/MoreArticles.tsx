@@ -122,7 +122,6 @@ export default function MoreArticles({
           >
             <ArticleCard
               title={article.title}
-              subtitle={article.subtitle}
               mainImage={article.mainImage}
               publishedDate={article.publishedDate}
               authorName={article.authorName}

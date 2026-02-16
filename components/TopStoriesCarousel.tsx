@@ -97,7 +97,6 @@ function TopStoriesCarousel({ articles }: TopStoriesCarouselProps) {
     return (
       <TopStoryCard
         title={articles[0].title}
-        subtitle={articles[0].subtitle}
         mainImage={articles[0].mainImage}
         publishedDate={articles[0].publishedDate}
         authorName={articles[0].authorName}
@@ -127,7 +126,6 @@ function TopStoriesCarousel({ articles }: TopStoriesCarouselProps) {
           >
             <TopStoryCard
               title={article.title}
-              subtitle={article.subtitle}
               mainImage={article.mainImage}
               publishedDate={article.publishedDate}
               authorName={article.authorName}

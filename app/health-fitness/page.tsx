@@ -67,7 +67,7 @@ export default async function HealthFitnessPage({
 
   return (
     <div className="w-[92%] lg:w-[85%] mx-auto py-6 md:py-12">
-      <ArticlesRow articles={articlesData} heading="Health & Fitness" />
+      <ArticlesRow articles={articlesData} heading="Health & Life Style" />
       <Pagination 
         currentPage={currentPage} 
         totalPages={totalPages}

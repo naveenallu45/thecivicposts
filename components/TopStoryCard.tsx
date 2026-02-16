@@ -10,7 +10,6 @@ import { getOptimizedImageUrl } from '@/lib/cloudinary-optimize'
 
 interface TopStoryCardProps {
   title: string
-  subtitle?: string
   mainImage: string
   publishedDate: string
   authorName: string
@@ -20,7 +19,6 @@ interface TopStoryCardProps {
 
 function TopStoryCard({
   title,
-  subtitle,
   mainImage,
   publishedDate,
   authorName,
@@ -69,15 +67,10 @@ function TopStoryCard({
         </div>
         
         {/* Content - Same width as image */}
-        <div className="w-full">
-          <h2 className="text-lg md:text-3xl lg:text-4xl font-bold text-gray-900 mb-2 md:mb-3 font-merriweather group-hover:text-red-600 transition-colors duration-200">
+        <div className="w-full px-4 md:px-6">
+          <h2 className="text-lg md:text-3xl lg:text-4xl font-bold text-gray-900 mb-2 md:mb-3 font-merriweather group-hover:text-red-600 transition-colors duration-200 break-words">
             {title}
           </h2>
-          {subtitle && (
-            <p className="text-sm md:text-lg text-gray-600 mb-3 md:mb-4 font-merriweather">
-              {subtitle}
-            </p>
-          )}
           <p className="text-xs md:text-base text-gray-600 font-sans">
             <span 
               onClick={handleAuthorClick}

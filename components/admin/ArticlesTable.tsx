@@ -341,7 +341,7 @@ export default function ArticlesTable({ articles }: ArticlesTableProps) {
           'news': 'News',
           'entertainment': 'Entertainment',
           'sports': 'Sports',
-          'health-fitness': 'Health & Fitness',
+          'health-fitness': 'Health & Life Style',
           'editorial': 'Editorial',
           'technology': 'Technology',
           'automobiles': 'Automobiles',

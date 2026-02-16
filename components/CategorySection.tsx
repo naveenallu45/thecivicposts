@@ -31,7 +31,7 @@ export default function CategorySection({ articles, categoryName }: CategorySect
       'News': '/news',
       'Entertainment': '/entertainment',
       'Sports': '/sports',
-      'Health & Fitness': '/health-fitness',
+      'Health & Life Style': '/health-fitness',
       'Editorial': '/editorial',
       'Technology': '/technology',
       'Automobiles': '/automobiles',
@@ -56,7 +56,6 @@ export default function CategorySection({ articles, categoryName }: CategorySect
           <div key={article.id} data-article-id={`${article.category}/${article.slug}`}>
             <ArticleCard
               title={article.title}
-              subtitle={article.subtitle}
               mainImage={article.mainImage}
               publishedDate={article.publishedDate}
               authorName={article.authorName}

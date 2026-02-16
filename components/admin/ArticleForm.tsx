@@ -456,7 +456,7 @@ export default function ArticleForm({ authors, article, onPreviewChange }: Artic
       'news': 'News',
       'entertainment': 'Entertainment',
       'sports': 'Sports',
-      'health-fitness': 'Health & Fitness',
+      'health-fitness': 'Health & Life Style',
       'editorial': 'Editorial',
       'technology': 'Technology',
       'automobiles': 'Automobiles',
@@ -672,7 +672,7 @@ export default function ArticleForm({ authors, article, onPreviewChange }: Artic
               <option value="news">News</option>
               <option value="entertainment">Entertainment</option>
               <option value="sports">Sports</option>
-              <option value="health-fitness">Health & Fitness</option>
+              <option value="health-fitness">Health & Life Style</option>
               <option value="editorial">Editorial</option>
               <option value="technology">Technology</option>
               <option value="automobiles">Automobiles</option>

@@ -14,6 +14,9 @@ export default function AggressivePrefetch() {
 
   // Prefetch all category pages AND their data
   const prefetchCategories = useCallback(() => {
+    // Only run on client side
+    if (typeof window === 'undefined' || typeof document === 'undefined') return
+
     const categories = [
       '/news',
       '/entertainment',
@@ -29,51 +32,63 @@ export default function AggressivePrefetch() {
     ]
     
     categories.forEach(category => {
-      router.prefetch(category)
+      try {
+        router.prefetch(category)
+      } catch {
+        // Silently fail
+      }
       
       // Also prefetch API data for category pages
       if (category !== '/' && 
           category !== '/about-us' && 
           category !== '/contact-us' && 
           category !== '/privacy-policy' && 
-          category !== '/terms-and-conditions' &&
-          typeof window !== 'undefined') {
-        const categoryName = category.replace('/', '')
-        const apiUrl = `/api/articles?category=${categoryName}&page=1&limit=10`
-        
-        // Prefetch API link
-        const link = document.createElement('link')
-        link.rel = 'prefetch'
-        link.href = apiUrl
-        link.as = 'fetch'
-        link.crossOrigin = 'anonymous'
-        document.head.appendChild(link)
-        
-        // Also fetch immediately to cache
-        fetch(apiUrl, { method: 'GET', cache: 'force-cache' }).catch(() => {
+          category !== '/terms-and-conditions') {
+        try {
+          const categoryName = category.replace('/', '')
+          const apiUrl = `/api/articles?category=${categoryName}&page=1&limit=10`
+          
+          // Prefetch API link
+          const link = document.createElement('link')
+          link.rel = 'prefetch'
+          link.href = apiUrl
+          link.as = 'fetch'
+          link.crossOrigin = 'anonymous'
+          document.head.appendChild(link)
+          
+          // Also fetch immediately to cache
+          fetch(apiUrl, { method: 'GET', cache: 'force-cache' }).catch(() => {
+            // Silently fail
+          })
+        } catch {
           // Silently fail
-        })
+        }
       }
     })
   }, [router])
 
   // Prefetch API routes that might be called
   const prefetchAPIs = useCallback(() => {
+    // Only run on client side
+    if (typeof window === 'undefined' || typeof document === 'undefined') return
+
     // Prefetch common API endpoints
-    if (typeof window !== 'undefined') {
-      const apiRoutes = [
-        '/api/articles',
-        '/api/articles/all',
-      ]
-      
-      apiRoutes.forEach(route => {
+    const apiRoutes = [
+      '/api/articles',
+      '/api/articles/all',
+    ]
+    
+    apiRoutes.forEach(route => {
+      try {
         const link = document.createElement('link')
         link.rel = 'prefetch'
         link.href = route
         link.as = 'fetch'
         document.head.appendChild(link)
-      })
-    }
+      } catch {
+        // Silently fail
+      }
+    })
   }, [])
 
   // Prefetch homepage

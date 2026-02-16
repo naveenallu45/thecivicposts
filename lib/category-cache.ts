@@ -44,6 +44,11 @@ export function setCachedArticles(category: string, page: number, articles: Arti
 }
 
 export function preloadCategoryArticles(category: string): Promise<void> {
+  // Only run on client side
+  if (typeof window === 'undefined' || typeof fetch === 'undefined') {
+    return Promise.resolve()
+  }
+
   return fetch(`/api/articles?category=${category}&page=1&limit=10`, {
     method: 'GET',
     cache: 'force-cache',
@@ -60,6 +65,11 @@ export function preloadCategoryArticles(category: string): Promise<void> {
 }
 
 export function preloadAllCategories(): void {
+  // Only run on client side
+  if (typeof window === 'undefined' || typeof fetch === 'undefined') {
+    return
+  }
+
   const categories = ['news', 'entertainment', 'sports', 'health-fitness', 'editorial', 'technology', 'automobiles']
   
   categories.forEach(category => {

@@ -3,7 +3,7 @@ import Link from 'next/link'
 
 export const metadata: Metadata = {
   title: 'About Us - The Civic Posts',
-  description: 'Learn about The Civic Posts - Your trusted source for news, entertainment, sports, health & fitness, and editorial content.',
+  description: 'Learn about The Civic Posts - Your trusted source for news, entertainment, sports, health & lifestyle, and editorial content.',
 }
 
 export default function AboutUsPage() {
@@ -65,7 +65,7 @@ export default function AboutUsPage() {
                 </div>
 
                 <div className="bg-orange-50 p-6 rounded-lg">
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Health & Fitness</h3>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Health & Life Style</h3>
                   <p className="text-gray-700">
                     Access expert advice on health, wellness, fitness tips, and lifestyle improvements.
                   </p>

@@ -149,7 +149,7 @@ export default async function ArticlePage({
     'news': 'News',
     'entertainment': 'Entertainment',
     'sports': 'Sports',
-    'health-fitness': 'Health & Fitness',
+    'health-fitness': 'Health & Life Style',
     'editorial': 'Editorial',
     'technology': 'Technology',
     'automobiles': 'Automobiles',
