@@ -1,35 +1,35 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import ConfirmDialog from './ConfirmDialog'
 
 export default function LogoutButton() {
   const [showDialog, setShowDialog] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
-  const router = useRouter()
 
   const handleLogout = async () => {
     setIsLoggingOut(true)
     try {
       const response = await fetch('/api/admin/logout', {
         method: 'POST',
+        credentials: 'include',
       })
 
+      // Always redirect to login page after logout attempt
+      // Clear any client-side state
       if (response.ok) {
-        // Redirect to login page
-        router.push('/admin/login')
-        router.refresh()
+        // Small delay to ensure cookie is cleared
+        setTimeout(() => {
+          window.location.href = '/admin/login'
+        }, 100)
       } else {
         // Even if logout fails, redirect to login
-        router.push('/admin/login')
-        router.refresh()
+        window.location.href = '/admin/login'
       }
     } catch (error) {
       console.error('Logout error:', error)
       // Redirect to login page even on error
-      router.push('/admin/login')
-      router.refresh()
+      window.location.href = '/admin/login'
     } finally {
       setIsLoggingOut(false)
       setShowDialog(false)

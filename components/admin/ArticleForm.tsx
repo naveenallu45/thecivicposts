@@ -784,13 +784,10 @@ export default function ArticleForm({ authors, article, onPreviewChange }: Artic
               value={formData.content[0] || ''}
               onChange={(e) => handleContentChange(0, e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-orange-500 resize-y min-h-[200px]"
-              placeholder="Enter first paragraph... Use **text** for bold formatting"
+              placeholder="Enter first paragraph..."
               rows={10}
               required
             />
-            <p className="text-xs text-gray-500 mt-1">
-              Tip: Select text and click &quot;B&quot; to make it bold, or type **text** manually
-            </p>
           </div>
 
           {/* Mini Image or YouTube Video (Optional - Choose one only or leave both empty) */}
@@ -962,13 +959,10 @@ export default function ArticleForm({ authors, article, onPreviewChange }: Artic
               value={formData.content[1] || ''}
               onChange={(e) => handleContentChange(1, e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-orange-500 resize-y min-h-[200px]"
-              placeholder="Enter second paragraph... Use **text** for bold formatting"
+              placeholder="Enter second paragraph..."
               rows={10}
               required
             />
-            <p className="text-xs text-gray-500 mt-1">
-              Tip: Select text and click &quot;B&quot; to make it bold, or type **text** manually
-            </p>
           </div>
         </div>
       </div>

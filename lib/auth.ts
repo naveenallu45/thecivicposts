@@ -32,15 +32,15 @@ export function generateToken(email: string): string {
 
 export function verifyToken(token: string): { email: string; role: string } | null {
   try {
-    if (!JWT_SECRET || JWT_SECRET === 'your-secret-key-change-in-production') {
-      // In production, this should throw an error, not just return null
-      if (process.env.NODE_ENV === 'production') {
-        throw new Error('JWT_SECRET is not properly configured')
-      }
-      return null
+    // Use JWT_SECRET even if it's the default in development
+    // Only throw error in production if it's not configured
+    const secret = JWT_SECRET || 'your-secret-key-change-in-production'
+    
+    if (process.env.NODE_ENV === 'production' && secret === 'your-secret-key-change-in-production') {
+      throw new Error('JWT_SECRET is not properly configured')
     }
     
-    const decoded = jwt.verify(token, JWT_SECRET) as { email: string; role: string }
+    const decoded = jwt.verify(token, secret) as { email: string; role: string }
     return decoded
   } catch (error) {
     // Log error only in development

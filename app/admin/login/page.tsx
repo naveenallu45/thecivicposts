@@ -39,37 +39,42 @@ export default function AdminLogin() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ email, password }),
+        credentials: 'include', // Ensure cookies are sent
       })
 
-      const data = await response.json()
-
-      if (!response.ok) {
-        setError(data.error || 'Login failed')
+      let data
+      try {
+        data = await response.json()
+      } catch {
+        setError('Invalid response from server. Please try again.')
         setLoading(false)
         return
       }
 
-      // Verify cookie was set by checking auth status
-      try {
-        const authCheck = await fetch('/api/admin/check-auth')
-        const authData = await authCheck.json()
-        
-        if (!authData.isValid) {
-          setError('Authentication failed. Please try again.')
-          setLoading(false)
-          return
-        }
-      } catch {
-        // Silent fail - will redirect anyway
+      if (!response.ok) {
+        setError(data.error || 'Login failed. Please check your credentials.')
+        setLoading(false)
+        return
       }
+
+      // Success - check if cookie was set
+      console.log('Login successful, response status:', response.status)
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()))
       
-      // Minimal delay to ensure cookie is set and processed
-      await new Promise(resolve => setTimeout(resolve, 50))
-      
-      // Force navigation with full page reload
-      window.location.href = '/admin/dashboard'
-    } catch {
-      setError('An error occurred. Please try again.')
+      // Check if Set-Cookie header is present
+      const setCookieHeader = response.headers.get('set-cookie')
+      console.log('Set-Cookie header:', setCookieHeader)
+
+      // Success - cookie is set by server in response headers
+      // Force full page reload to ensure cookie is available to middleware
+      // Small delay ensures cookie is processed by browser
+      setTimeout(() => {
+        console.log('Redirecting to dashboard...')
+        window.location.href = '/admin/dashboard'
+      }, 300)
+    } catch (err) {
+      console.error('Login error:', err)
+      setError('Network error. Please check your connection and try again.')
       setLoading(false)
     }
   }

@@ -23,6 +23,7 @@ export async function POST(request: NextRequest) {
     }
 
     const token = generateToken(email)
+    console.log('Token generated:', !!token, 'Length:', token?.length)
 
     const response = NextResponse.json({
       success: true,
@@ -37,6 +38,9 @@ export async function POST(request: NextRequest) {
       path: '/',
       maxAge: 60 * 60 * 24 * 7, // 7 days
     })
+
+    console.log('Cookie set in response:', response.cookies.get('admin_token')?.value ? 'YES' : 'NO')
+    console.log('Cookie value length:', response.cookies.get('admin_token')?.value?.length || 0)
 
     return response
   } catch (error) {
