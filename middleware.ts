@@ -55,23 +55,26 @@ export function middleware(request: NextRequest) {
 
   // Check if admin is logged in (with error handling)
   let isAdminLoggedIn = false
-  if (token) {
+  let isAuthorLoggedIn = false
+  
+  const adminToken = request.cookies.get('admin_token')?.value
+  const authorToken = request.cookies.get('author_token')?.value
+  
+  if (adminToken) {
     try {
-      const decoded = verifyToken(token)
-      isAdminLoggedIn = !!decoded
-      if (pathname.startsWith('/admin')) {
-        console.log('Middleware - Token found:', !!token, 'Decoded:', !!decoded, 'Path:', pathname)
-      }
+      const decoded = verifyToken(adminToken)
+      isAdminLoggedIn = !!decoded && decoded.role === 'admin'
     } catch (error) {
-      // If token verification fails, treat as not logged in
       isAdminLoggedIn = false
-      if (pathname.startsWith('/admin')) {
-        console.log('Middleware - Token verification failed:', error)
-      }
     }
-  } else {
-    if (pathname.startsWith('/admin')) {
-      console.log('Middleware - No token found for path:', pathname)
+  }
+  
+  if (authorToken) {
+    try {
+      const decoded = verifyToken(authorToken)
+      isAuthorLoggedIn = !!decoded && decoded.role === 'author'
+    } catch (error) {
+      isAuthorLoggedIn = false
     }
   }
 
@@ -94,10 +97,9 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // If admin is logged in, restrict them to admin routes only
-  if (isAdminLoggedIn) {
-    // Allow admin routes
-    if (pathname.startsWith('/admin')) {
+  // Handle admin routes
+  if (pathname.startsWith('/admin')) {
+    if (isAdminLoggedIn) {
       // If trying to access admin login page while logged in, redirect to dashboard
       if (pathname === '/admin/login') {
         return NextResponse.redirect(new URL('/admin/dashboard', request.url))
@@ -105,19 +107,42 @@ export function middleware(request: NextRequest) {
       return response
     }
     
-    // Admin is logged in but trying to access public/user route - redirect to admin dashboard
-    return NextResponse.redirect(new URL('/admin/dashboard', request.url))
-  }
-
-  // No token - protect admin routes
-  if (pathname.startsWith('/admin')) {
-    // Allow login page
+    // No admin token - protect admin routes
     if (pathname === '/admin/login') {
       return response
     }
-
-    // No token, redirect to login
+    
+    // No admin token, redirect to login
     return NextResponse.redirect(new URL('/admin/login', request.url))
+  }
+
+  // Handle author routes
+  if (pathname.startsWith('/author')) {
+    if (isAuthorLoggedIn) {
+      // If trying to access author login page while logged in, redirect to dashboard
+      if (pathname === '/author/login') {
+        return NextResponse.redirect(new URL('/author/dashboard', request.url))
+      }
+      return response
+    }
+    
+    // No author token - protect author routes
+    if (pathname === '/author/login') {
+      return response
+    }
+    
+    // No author token, redirect to login
+    return NextResponse.redirect(new URL('/author/login', request.url))
+  }
+
+  // If admin is logged in, restrict them to admin routes only (not author routes)
+  if (isAdminLoggedIn && pathname.startsWith('/author')) {
+    return NextResponse.redirect(new URL('/admin/dashboard', request.url))
+  }
+
+  // If author is logged in, restrict them to author routes only (not admin routes)
+  if (isAuthorLoggedIn && pathname.startsWith('/admin')) {
+    return NextResponse.redirect(new URL('/author/dashboard', request.url))
   }
 
   // Public routes - allow access for non-admin users

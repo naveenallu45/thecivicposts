@@ -9,7 +9,7 @@ import Image from 'next/image'
 import SocialShare from '@/components/SocialShare'
 import { formatDateShort } from '@/lib/date-utils'
 import { renderFormattedText } from '@/lib/text-formatting'
-import { generateAuthorSlug } from '@/lib/author-utils'
+import { generateAuthorSlug, formatAuthorName } from '@/lib/author-utils'
 import { extractYouTubeVideoId } from '@/lib/youtube-utils'
 import MoreArticles from '@/components/MoreArticles'
 import ViewportPrefetch from '@/components/ViewportPrefetch'
@@ -264,12 +264,12 @@ export default async function ArticlePage({
 
   return (
     <>
-      {/* Preload main image for faster loading */}
+      {/* Preload main image for faster loading via CDN */}
       {article.mainImage?.url && (
         <link
           rel="preload"
           as="image"
-          href={getOptimizedImageUrl(article.mainImage.url, 1200)}
+          href={getOptimizedImageUrl(article.mainImage.url, 1200, 'auto:best')}
           fetchPriority="high"
         />
       )}
@@ -328,9 +328,9 @@ export default async function ArticlePage({
           <p className="text-base md:text-lg text-gray-600 font-sans">
             <Link 
               href={`/author/${generateAuthorSlug(authorName)}`}
-              className="text-orange-600 hover:text-orange-700 font-medium transition-colors uppercase"
+              className="text-orange-600 hover:text-orange-700 font-medium transition-colors"
             >
-              {authorName}
+              {formatAuthorName(authorName)}
             </Link>
             {' - '}
             {publishedDate}
@@ -343,19 +343,19 @@ export default async function ArticlePage({
           url={articleUrl} 
         />
 
-        {/* Main Image */}
+        {/* Main Image - HD Quality via CDN */}
         {article.mainImage?.url && (
-          <div className="mb-8">
+          <div className="mb-8 lg:w-3/4 lg:mx-auto">
             <Image
-              src={getOptimizedImageUrl(article.mainImage.url, 1200)}
+              src={getOptimizedImageUrl(article.mainImage.url, 1200, 'auto:best')}
               alt={article.mainImage.alt || article.title || 'Article image'}
               width={1200}
               height={800}
               className="w-full h-auto rounded-lg"
               priority
               fetchPriority="high"
-              quality={90}
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1200px"
+              quality={95}
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 900px"
               placeholder="blur"
               blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
             />
@@ -392,17 +392,18 @@ export default async function ArticlePage({
             )
           })()}
           
-          {/* Mini Image - Only show if no YouTube link */}
+          {/* Mini Image - HD Quality via CDN - Only show if no YouTube link */}
           {!article.youtubeLink && article.miniImage?.url && (
-            <div className="mb-8">
+            <div className="mb-8 lg:w-3/4 lg:mx-auto">
               <Image
-                src={getOptimizedImageUrl(article.miniImage.url, 800)}
+                src={getOptimizedImageUrl(article.miniImage.url, 800, 'auto:best')}
                 alt={article.miniImage.alt || article.title || 'Mini image'}
                 width={800}
                 height={600}
                 className="w-full h-auto rounded-lg"
                 loading="lazy"
-                quality={85}
+                quality={90}
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 600px"
                 placeholder="blur"
                 blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
               />
@@ -436,21 +437,22 @@ export default async function ArticlePage({
           })}
         </div>
 
-        {/* Sub Images */}
+        {/* Sub Images - HD Quality via CDN */}
         {(article.subImages || []).length > 0 && (
           <div className="mt-12 space-y-8">
             {(article.subImages || [])
               .sort((a: { order: number }, b: { order: number }) => a.order - b.order)
               .map((img: { url: string; alt?: string }, idx: number) => (
-                <div key={idx}>
+                <div key={idx} className="lg:w-3/4 lg:mx-auto">
                   <Image
-                    src={getOptimizedImageUrl(img.url, 1200)}
+                    src={getOptimizedImageUrl(img.url, 1200, 'auto:best')}
                     alt={img.alt || `Article image ${idx + 1}`}
                     width={1200}
                     height={600}
                     className="w-full h-auto rounded-lg"
                     loading="lazy"
-                    quality={85}
+                    quality={90}
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 900px"
                     placeholder="blur"
                     blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
                   />

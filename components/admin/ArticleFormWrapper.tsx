@@ -20,6 +20,7 @@ interface Article {
   publishedDate: string
   mainImage: { url: string; public_id: string; alt?: string }
   miniImage?: { url: string; public_id: string; alt?: string }
+  youtubeLink?: string
   subImages: Array<{ url: string; public_id: string; alt?: string; order: number }>
   status: 'draft' | 'published'
   category: string
@@ -29,10 +30,13 @@ interface ArticleFormWrapperProps {
   authors: Author[]
   article?: Article
   isEdit?: boolean
+  isAuthor?: boolean
 }
 
-export default function ArticleFormWrapper({ authors, article, isEdit = false }: ArticleFormWrapperProps) {
+export default function ArticleFormWrapper({ authors, article, isEdit = false, isAuthor = false }: ArticleFormWrapperProps) {
   const [isPreview, setIsPreview] = useState(false)
+  const dashboardPath = isAuthor ? '/author/dashboard' : '/admin/dashboard'
+  const articlesPath = isAuthor ? '/author/articles' : '/admin/articles'
 
   return (
     <>
@@ -44,13 +48,29 @@ export default function ArticleFormWrapper({ authors, article, isEdit = false }:
             </h1>
             <div className="flex gap-4">
               <Link
-                href="/admin/dashboard"
+                href={articlesPath}
+                prefetch={true}
+                className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
+              >
+                Articles
+              </Link>
+              <Link
+                href={dashboardPath}
                 prefetch={true}
                 className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
               >
                 Dashboard
               </Link>
-              <LogoutButton />
+              {isAuthor ? (
+                <Link
+                  href="/author/logout"
+                  className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  Logout
+                </Link>
+              ) : (
+                <LogoutButton />
+              )}
             </div>
           </div>
         </div>
@@ -61,6 +81,7 @@ export default function ArticleFormWrapper({ authors, article, isEdit = false }:
           authors={authors}
           article={article}
           onPreviewChange={setIsPreview}
+          isAuthor={isAuthor}
         />
       </div>
     </>

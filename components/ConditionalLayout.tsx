@@ -16,9 +16,11 @@ export default function ConditionalLayout({
 }) {
   const pathname = usePathname()
   const isAdminRoute = pathname?.startsWith('/admin')
+  const isAuthorRoute = pathname?.startsWith('/author')
   const isHomepage = pathname === '/'
 
-  if (isAdminRoute) {
+  // Exclude admin and author routes from public layout (header/footer)
+  if (isAdminRoute || isAuthorRoute) {
     return <>{children}</>
   }
 

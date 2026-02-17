@@ -2,13 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAdminApi } from '@/lib/admin-auth'
 import connectDB from '@/lib/mongodb'
 import Author from '@/models/Author'
+import { hashPassword } from '@/lib/auth'
 
 export async function GET() {
   try {
     await requireAdminApi()
     await connectDB()
 
-    const authors = await Author.find().sort({ name: 1 }).lean()
+    const authors = await Author.find().select('-password').sort({ name: 1 }).lean()
     return NextResponse.json({ authors })
   } catch (error) {
     console.error('Error fetching authors:', error)
@@ -25,17 +26,47 @@ export async function POST(request: NextRequest) {
     await connectDB()
 
     const body = await request.json()
-    const { name, email, bio, avatar } = body
+    const { name, email, password, bio, avatar } = body
+
+    if (!name || !email || !password) {
+      return NextResponse.json(
+        { error: 'Name, email, and password are required' },
+        { status: 400 }
+      )
+    }
+
+    if (password.length < 6) {
+      return NextResponse.json(
+        { error: 'Password must be at least 6 characters' },
+        { status: 400 }
+      )
+    }
+
+    // Hash password before saving
+    const hashedPassword = hashPassword(password)
 
     const author = new Author({
       name,
-      email,
+      email: email.toLowerCase().trim(),
+      password: hashedPassword,
       bio,
       avatar,
     })
 
     await author.save()
-    return NextResponse.json({ author }, { status: 201 })
+
+    // Don't send password back in response
+    const authorResponse = {
+      _id: author._id,
+      name: author.name,
+      email: author.email,
+      bio: author.bio,
+      avatar: author.avatar,
+      createdAt: author.createdAt,
+      updatedAt: author.updatedAt,
+    }
+
+    return NextResponse.json({ author: authorResponse }, { status: 201 })
   } catch (error: unknown) {
     console.error('Error creating author:', error)
     if (error && typeof error === 'object' && 'code' in error && error.code === 11000) {

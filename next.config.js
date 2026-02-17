@@ -2,7 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    // Modern image formats for better compression
+    // Modern image formats for better compression and faster loading
     formats: ['image/avif', 'image/webp'],
     remotePatterns: [
       {
@@ -10,21 +10,27 @@ const nextConfig = {
         hostname: 'res.cloudinary.com',
       },
     ],
-    // CDN optimization - Cloudinary already acts as CDN
+    // Dual CDN Setup:
+    // 1. Cloudinary CDN: Source images stored and served from Cloudinary's global CDN
+    // 2. Vercel CDN: Next.js Image Optimization API runs through Vercel's edge network
+    // When deployed on Vercel, optimized images are cached on Vercel's CDN for instant delivery
     domains: ['res.cloudinary.com'],
     // Responsive image sizes for different device breakpoints
-    // Optimized for mobile-first approach
+    // Optimized for HD displays and fast loading
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     // Thumbnail sizes for smaller images
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    // Cache optimized images for 1 year (Cloudinary handles versioning)
+    // Cache optimized images for 1 year
+    // Vercel CDN caches optimized images, Cloudinary CDN caches source images
     minimumCacheTTL: 31536000,
     // Disable SVG for security
     dangerouslyAllowSVG: false,
     // Enable content-based image optimization
     contentDispositionType: 'attachment',
-    // Optimize images on-demand
+    // Optimize images on-demand through Vercel CDN
     unoptimized: false,
+    // Use default Next.js Image Optimization (leverages Vercel CDN when deployed)
+    loader: 'default',
   },
   // Production optimizations
   compress: true,
@@ -67,6 +73,26 @@ const nextConfig = {
           {
             key: 'Cache-Control',
             value: 'public, s-maxage=60, stale-while-revalidate=300',
+          },
+        ],
+      },
+      {
+        // Dual CDN optimization: Vercel CDN + Cloudinary CDN
+        // Next.js Image Optimization API runs through Vercel's global CDN
+        // Source images come from Cloudinary CDN
+        source: '/_next/image',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+          {
+            key: 'CDN-Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+          {
+            key: 'Vercel-CDN-Cache-Control',
+            value: 'public, max-age=31536000, immutable',
           },
         ],
       },

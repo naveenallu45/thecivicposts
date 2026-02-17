@@ -30,7 +30,7 @@ export default function YouTubeVideo({ videoId, title }: YouTubeVideoProps) {
   }, [pathname]) // Re-run when pathname changes (navigation)
 
   return (
-    <div className="mb-8">
+    <div className="mb-8 lg:w-3/4 lg:mx-auto">
       <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
         <iframe
           ref={iframeRef}

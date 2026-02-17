@@ -13,13 +13,18 @@ export const uploadImage = async (file: string, folder?: string) => {
     const result = await cloudinary.uploader.upload(file, {
       folder: folder || 'thecivicposts',
       resource_type: 'image',
-      format: 'webp', // Force WebP format
-      quality: 'auto:good', // Auto quality with good preset
-      fetch_format: 'auto', // Auto format detection
+      // Use auto format for best compression (WebP/AVIF)
+      fetch_format: 'auto',
+      // High quality for HD images - Cloudinary will optimize automatically
+      quality: 'auto:best',
+      // Enable responsive transformations
+      responsive: true,
+      // Enable automatic format conversion
       transformation: [
         {
-          format: 'webp', // Ensure WebP format
-          quality: 'auto:good', // Auto quality optimization
+          fetch_format: 'auto', // Auto format (WebP/AVIF)
+          quality: 'auto:best', // Best quality for HD
+          dpr: 'auto', // Device pixel ratio for retina displays
         },
       ],
     })

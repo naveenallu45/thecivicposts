@@ -6,6 +6,7 @@ import TopStoriesSection from '@/components/TopStoriesSection'
 import TrendingSection from '@/components/TrendingSection'
 import CategorySection from '@/components/CategorySection'
 import AutoRefreshWrapper from '@/components/AutoRefreshWrapper'
+import StructuredData from '@/components/StructuredData'
 import { formatDateShort } from '@/lib/date-utils'
 
 // ISR: Revalidate home page every 30 seconds
@@ -131,8 +132,49 @@ export default async function Home() {
     articles.map(transformArticle).filter(Boolean) as TransformedArticle[]
   )
 
+  const baseUrl = 'https://www.thecivicposts.com'
+  
+  // Structured data for SEO
+  const websiteStructuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'The Civic Posts',
+    url: baseUrl,
+    description: 'Stay informed with the latest news, entertainment, sports, health & lifestyle, and editorial content',
+    publisher: {
+      '@type': 'Organization',
+      name: 'The Civic Posts',
+      url: baseUrl,
+    },
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: {
+        '@type': 'EntryPoint',
+        urlTemplate: `${baseUrl}/search?q={search_term_string}`,
+      },
+      'query-input': 'required name=search_term_string',
+    },
+  }
+
+  const organizationStructuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'NewsMediaOrganization',
+    name: 'The Civic Posts',
+    url: baseUrl,
+    logo: `${baseUrl}/logo.png`,
+    sameAs: [
+      // Add your social media URLs here when available
+      // 'https://www.facebook.com/thecivicposts',
+      // 'https://twitter.com/thecivicposts',
+    ],
+  }
+
   return (
     <AutoRefreshWrapper interval={30}>
+      {/* Structured Data for SEO */}
+      <StructuredData data={websiteStructuredData} />
+      <StructuredData data={organizationStructuredData} />
+      
       <main className="min-h-screen bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-12">
           {/* Top Stories Section */}

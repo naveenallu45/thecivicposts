@@ -5,7 +5,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useTransition } from 'react'
-import { generateAuthorSlug } from '@/lib/author-utils'
+import { generateAuthorSlug, formatAuthorName } from '@/lib/author-utils'
 import { getOptimizedImageUrl } from '@/lib/cloudinary-optimize'
 
 interface TopStoryCardProps {
@@ -53,7 +53,7 @@ function TopStoryCard({
         {/* Large Image */}
         <div className="relative w-full h-[245px] md:h-[500px] lg:h-[600px] mb-4 overflow-hidden">
           <Image
-            src={getOptimizedImageUrl(mainImage, 1200)}
+            src={getOptimizedImageUrl(mainImage, 1200, 'auto:best')}
             alt={title}
             fill
             className="object-cover"
@@ -74,9 +74,9 @@ function TopStoryCard({
           <p className="text-xs md:text-base text-gray-600 font-sans">
             <span 
               onClick={handleAuthorClick}
-              className="text-orange-600 hover:text-orange-700 font-medium transition-colors cursor-pointer uppercase"
+              className="text-orange-600 hover:text-orange-700 font-medium transition-colors cursor-pointer"
             >
-              {authorName}
+              {formatAuthorName(authorName)}
             </span>
             {' - '}
             {publishedDate}

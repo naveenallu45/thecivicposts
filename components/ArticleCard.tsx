@@ -5,7 +5,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useTransition } from 'react'
-import { generateAuthorSlug } from '@/lib/author-utils'
+import { generateAuthorSlug, formatAuthorName } from '@/lib/author-utils'
 import { getOptimizedImageUrl } from '@/lib/cloudinary-optimize'
 
 interface ArticleCardProps {
@@ -78,9 +78,9 @@ function ArticleCard({
               <p className="text-[10px] md:text-xs text-gray-600 font-sans truncate pr-2">
                 <span 
                   onClick={handleAuthorClick}
-                  className="text-orange-600 hover:text-orange-700 font-medium transition-colors cursor-pointer uppercase"
+                  className="text-orange-600 hover:text-orange-700 font-medium transition-colors cursor-pointer"
                 >
-                  {authorName}
+                  {formatAuthorName(authorName)}
                 </span>
                 {' - '}
                 {publishedDate}
@@ -94,7 +94,7 @@ function ArticleCard({
           {/* Image Top */}
           <div className="w-full flex-shrink-0 relative h-[153px] overflow-hidden">
             <Image
-              src={getOptimizedImageUrl(mainImage, 500)}
+              src={getOptimizedImageUrl(mainImage, 500, 'auto:best')}
               alt={title}
               fill
               className="object-cover"
@@ -122,10 +122,10 @@ function ArticleCard({
               <div className="flex items-center gap-1 min-w-0 flex-1">
                 <span 
                   onClick={handleAuthorClick}
-                  className="text-orange-600 hover:text-orange-700 font-medium transition-colors cursor-pointer uppercase truncate block min-w-0 text-[11.9px]"
+                  className="text-orange-600 hover:text-orange-700 font-medium transition-colors cursor-pointer truncate block min-w-0 text-[11.9px]"
                   style={{ maxWidth: 'calc(100% - 80px)' }}
                 >
-                  {authorName}
+                  {formatAuthorName(authorName)}
                 </span>
                 <span className="text-gray-600 whitespace-nowrap flex-shrink-0 text-[11.9px]">
                   {' - '}

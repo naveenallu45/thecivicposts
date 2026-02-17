@@ -5,7 +5,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useTransition } from 'react'
-import { generateAuthorSlug } from '@/lib/author-utils'
+import { generateAuthorSlug, formatAuthorName } from '@/lib/author-utils'
 import { getOptimizedImageUrl } from '@/lib/cloudinary-optimize'
 
 interface MiniTopStoryCardProps {
@@ -73,9 +73,9 @@ function MiniTopStoryCard({
           <p className="text-[10px] md:text-[10px] lg:text-[10px] text-gray-600 font-sans leading-tight truncate">
             <span 
               onClick={handleAuthorClick}
-              className="text-orange-600 hover:text-orange-700 font-medium transition-colors cursor-pointer uppercase"
+              className="text-orange-600 hover:text-orange-700 font-medium transition-colors cursor-pointer"
             >
-              {authorName}
+              {formatAuthorName(authorName)}
             </span>
             {' - '}
             {publishedDate}

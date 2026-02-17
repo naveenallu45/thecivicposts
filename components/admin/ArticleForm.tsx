@@ -33,6 +33,7 @@ interface ArticleFormProps {
     category: string
   }
   onPreviewChange?: (isPreview: boolean) => void
+  isAuthor?: boolean
 }
 
 type FormDataState = {
@@ -49,7 +50,7 @@ type FormDataState = {
   subImages: Array<{ url: string; public_id: string; alt: string; order: number }>
 }
 
-export default function ArticleForm({ authors, article, onPreviewChange }: ArticleFormProps) {
+export default function ArticleForm({ authors, article, onPreviewChange, isAuthor = false }: ArticleFormProps) {
   const router = useRouter()
   const { showToast } = useToast()
   const [loading, setLoading] = useState(false)
@@ -374,9 +375,10 @@ export default function ArticleForm({ authors, article, onPreviewChange }: Artic
         youtubeLink: formData.youtubeLink?.trim() && !formData.miniImage?.url ? formData.youtubeLink.trim() : undefined,
       }
 
+      const apiBase = isAuthor ? '/api/author/articles' : '/api/admin/articles'
       const url = article
-        ? `/api/admin/articles/${article._id}`
-        : '/api/admin/articles'
+        ? `${apiBase}/${article._id}`
+        : apiBase
       const method = article ? 'PUT' : 'POST'
 
       const response = await fetch(url, {
@@ -433,7 +435,8 @@ export default function ArticleForm({ authors, article, onPreviewChange }: Artic
       }
 
       // Navigate on success
-      router.push('/admin/dashboard')
+      const dashboardPath = isAuthor ? '/author/dashboard' : '/admin/dashboard'
+      router.push(dashboardPath)
       router.refresh()
     } catch (err: unknown) {
       console.error('Error saving article:', err)
@@ -520,7 +523,7 @@ export default function ArticleForm({ authors, article, onPreviewChange }: Artic
           {formData.mainImage.url && (
             <div className="mb-8">
               <Image
-                src={getOptimizedImageUrl(formData.mainImage.url, 1200)}
+                src={getOptimizedImageUrl(formData.mainImage.url, 1200, 'auto:best')}
                 alt={formData.mainImage.alt || formData.title || 'Article main image'}
                 width={1200}
                 height={800}
@@ -569,7 +572,7 @@ export default function ArticleForm({ authors, article, onPreviewChange }: Artic
             {!formData.youtubeLink && formData.miniImage?.url && (
               <div className="mb-8">
                 <Image
-                  src={getOptimizedImageUrl(formData.miniImage.url, 800)}
+                  src={getOptimizedImageUrl(formData.miniImage.url, 800, 'auto:best')}
                   alt={formData.miniImage.alt || 'Mini image'}
                   width={800}
                   height={600}
@@ -600,7 +603,7 @@ export default function ArticleForm({ authors, article, onPreviewChange }: Artic
                 .map((img, idx) => (
                   <div key={idx}>
                     <Image
-                      src={getOptimizedImageUrl(img.url, 1200)}
+                      src={getOptimizedImageUrl(img.url, 1200, 'auto:best')}
                       alt={img.alt || `Article image ${idx + 1}`}
                       width={1200}
                       height={600}
