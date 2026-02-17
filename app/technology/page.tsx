@@ -19,6 +19,7 @@ export default async function TechnologyPage() {
   const currentDate = new Date()
   currentDate.setHours(0, 0, 0, 0)
 
+  // Try to connect to database, but handle errors gracefully during build
   let articles: ArticleListItem[] = []
   let totalArticles = 0
 
@@ -34,22 +35,27 @@ export default async function TechnologyPage() {
         .sort({ createdAt: -1 })
         .limit(ARTICLES_PER_PAGE)
         .select('title subtitle mainImage publishedDate authorName slug category')
-        .lean() as Promise<ArticleListItem[]>,
+        .lean()
+        .exec() as Promise<ArticleListItem[]>,
       Article.countDocuments({ 
         status: 'published',
         category: 'technology',
         publishedDate: { $lte: currentDate }
       })
+        .exec()
     ])
 
-    articles = results[0]
-    totalArticles = results[1]
+    articles = results[0] || []
+    totalArticles = results[1] || 0
   } catch (error) {
+    // Log error but don't throw - allow build to complete with empty state
     console.error('Database connection failed during build for technology page:', error)
-    // Return empty state to allow build to complete
+    // Return empty arrays to allow build to complete successfully
+    articles = []
+    totalArticles = 0
   }
 
-  const articlesData = articles.map((article) => ({
+  const articlesData = (articles || []).map((article) => ({
     id: article._id.toString(),
     title: article.title,
     subtitle: article.subtitle,

@@ -97,81 +97,58 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // Handle admin routes
-  if (pathname.startsWith('/admin')) {
-    if (isAdminLoggedIn) {
+  // STRICT ROUTE RESTRICTION: Admins and Publishers can ONLY access their respective routes
+  
+  // If admin is logged in, restrict to ONLY admin routes
+  if (isAdminLoggedIn) {
+    // Allow admin routes
+    if (pathname.startsWith('/admin')) {
       // If trying to access admin login page while logged in, redirect to dashboard
       if (pathname === '/admin/login') {
         return NextResponse.redirect(new URL('/admin/dashboard', request.url))
       }
       return response
     }
-    
-    // No admin token - protect admin routes
-    if (pathname === '/admin/login') {
-      return response
-    }
-    
-    // No admin token, redirect to login
-    return NextResponse.redirect(new URL('/admin/login', request.url))
+    // Block ALL other routes (publisher routes, public routes, etc.)
+    return NextResponse.redirect(new URL('/admin/dashboard', request.url))
   }
 
-  // Handle author routes - only public profile pages (no login needed)
-  // Author profile pages like /author/[slug] are public and don't require authentication
-  // Author login/dashboard routes have been removed since authors no longer have passwords
-
-  // Handle publisher routes
-  if (pathname.startsWith('/publisher')) {
-    if (isPublisherLoggedIn) {
+  // If publisher is logged in, restrict to ONLY publisher routes
+  if (isPublisherLoggedIn) {
+    // Allow publisher routes
+    if (pathname.startsWith('/publisher')) {
       // If trying to access publisher login page while logged in, redirect to dashboard
       if (pathname === '/publisher/login') {
         return NextResponse.redirect(new URL('/publisher/dashboard', request.url))
       }
       return response
     }
-    
-    // No publisher token - protect publisher routes
+    // Block ALL other routes (admin routes, public routes, etc.)
+    return NextResponse.redirect(new URL('/publisher/dashboard', request.url))
+  }
+
+  // Handle admin routes (when not logged in)
+  if (pathname.startsWith('/admin')) {
+    // Allow admin login page
+    if (pathname === '/admin/login') {
+      return response
+    }
+    // No admin token, redirect to login
+    return NextResponse.redirect(new URL('/admin/login', request.url))
+  }
+
+  // Handle publisher routes (when not logged in)
+  if (pathname.startsWith('/publisher')) {
+    // Allow publisher login page
     if (pathname === '/publisher/login') {
       return response
     }
-    
     // No publisher token, redirect to login
     return NextResponse.redirect(new URL('/publisher/login', request.url))
   }
 
-  // If admin is logged in, restrict them to admin routes only (not publisher routes)
-  if (isAdminLoggedIn && pathname.startsWith('/publisher')) {
-    return NextResponse.redirect(new URL('/admin/dashboard', request.url))
-  }
-
-  // If publisher is logged in, restrict them to publisher routes only (not admin routes)
-  if (isPublisherLoggedIn && pathname.startsWith('/admin')) {
-    return NextResponse.redirect(new URL('/publisher/dashboard', request.url))
-  }
-
-  // Block admins and publishers from accessing public/user routes
-  // Public routes include: homepage (/), category pages, article pages, author profile pages
-  // Allow only: admin routes, publisher routes, and API routes (already handled above)
-  const isPublicRoute = 
-    pathname === '/' ||
-    pathname.match(/^\/(news|entertainment|sports|health-fitness|editorial|technology|automobiles)$/) ||
-    pathname.match(/^\/(news|entertainment|sports|health-fitness|editorial|technology|automobiles)\/[^/]+$/) ||
-    pathname.startsWith('/author/') ||
-    pathname === '/about-us' ||
-    pathname === '/contact' ||
-    pathname === '/search' ||
-    pathname.startsWith('/search')
-
-  if (isPublicRoute) {
-    // If admin is logged in, redirect to admin dashboard
-    if (isAdminLoggedIn) {
-      return NextResponse.redirect(new URL('/admin/dashboard', request.url))
-    }
-    // If publisher is logged in, redirect to publisher dashboard
-    if (isPublisherLoggedIn) {
-      return NextResponse.redirect(new URL('/publisher/dashboard', request.url))
-    }
-  }
+  // Handle author routes - only public profile pages (no login needed)
+  // Author profile pages like /author/[slug] are public and don't require authentication
 
   // Public routes - allow access for non-admin/non-publisher users
   return response
