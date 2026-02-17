@@ -36,7 +36,7 @@ const PublisherSchema: Schema = new Schema(
     createdBy: {
       type: Schema.Types.ObjectId,
       required: true,
-      refPath: 'createdByRole', // Dynamic reference based on createdByRole
+      // Store ObjectId reference - no populate needed since we only track who created it
     },
     createdByRole: {
       type: String,
