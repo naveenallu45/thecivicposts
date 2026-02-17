@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 
-export default function AuthorLogin() {
+export default function PublisherLogin() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -15,7 +15,7 @@ export default function AuthorLogin() {
     setLoading(true)
 
     try {
-      const response = await fetch('/api/author/login', {
+      const response = await fetch('/api/publisher/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -28,9 +28,9 @@ export default function AuthorLogin() {
         throw new Error(data.error || 'Login failed')
       }
 
-      // Redirect to author dashboard after successful login
+      // Redirect to publisher dashboard after successful login
       setTimeout(() => {
-        window.location.href = '/author/dashboard'
+        window.location.href = '/publisher/dashboard'
       }, 200)
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Login failed. Please try again.'
@@ -44,8 +44,8 @@ export default function AuthorLogin() {
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-orange-100 to-orange-200 flex items-center justify-center px-4 py-12">
       <div className="max-w-md w-full bg-white rounded-lg shadow-xl p-8 border border-orange-200">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-orange-700 mb-2">Author Login</h1>
-          <p className="text-gray-600">Sign in to your author account</p>
+          <h1 className="text-3xl font-bold text-orange-700 mb-2">Publisher Login</h1>
+          <p className="text-gray-600">Sign in to your publisher account</p>
         </div>
 
         {error && (

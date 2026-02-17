@@ -3,13 +3,13 @@
 import { useEffect } from 'react'
 import { ToastProvider } from '@/contexts/ToastContext'
 
-export default function AuthorLayout({
+export default function PublisherLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
   useEffect(() => {
-    // Add noindex meta tag to block author pages from search engines
+    // Add noindex meta tag to block publisher pages from search engines
     const metaRobots = document.createElement('meta')
     metaRobots.name = 'robots'
     metaRobots.content = 'noindex, nofollow'

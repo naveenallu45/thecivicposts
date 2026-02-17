@@ -24,7 +24,7 @@ export async function verifyAdminCredentials(
   return isValid
 }
 
-export function generateToken(email: string, role: 'admin' | 'author' = 'admin'): string {
+export function generateToken(email: string, role: 'admin' | 'author' | 'publisher' = 'admin'): string {
   return jwt.sign({ email, role }, JWT_SECRET, {
     expiresIn: '7d',
   })
@@ -32,6 +32,10 @@ export function generateToken(email: string, role: 'admin' | 'author' = 'admin')
 
 export function generateAuthorToken(email: string): string {
   return generateToken(email, 'author')
+}
+
+export function generatePublisherToken(email: string): string {
+  return generateToken(email, 'publisher')
 }
 
 export function verifyToken(token: string): { email: string; role: string } | null {

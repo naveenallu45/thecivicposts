@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAdminApi } from '@/lib/admin-auth'
 import connectDB from '@/lib/mongodb'
 import Author from '@/models/Author'
-import { hashPassword } from '@/lib/auth'
 
 export async function GET() {
   try {
@@ -26,29 +25,18 @@ export async function POST(request: NextRequest) {
     await connectDB()
 
     const body = await request.json()
-    const { name, email, password, bio, avatar } = body
+    const { name, email, bio, avatar } = body
 
-    if (!name || !email || !password) {
+    if (!name || !email) {
       return NextResponse.json(
-        { error: 'Name, email, and password are required' },
+        { error: 'Name and email are required' },
         { status: 400 }
       )
     }
-
-    if (password.length < 6) {
-      return NextResponse.json(
-        { error: 'Password must be at least 6 characters' },
-        { status: 400 }
-      )
-    }
-
-    // Hash password before saving
-    const hashedPassword = hashPassword(password)
 
     const author = new Author({
       name,
       email: email.toLowerCase().trim(),
-      password: hashedPassword,
       bio,
       avatar,
     })

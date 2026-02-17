@@ -6,6 +6,7 @@ export interface IArticle extends Document {
   content: string[]
   author: mongoose.Types.ObjectId
   authorName?: string
+  publisher?: mongoose.Types.ObjectId
   publishedDate: Date
   mainImage: {
     url: string
@@ -67,6 +68,11 @@ const ArticleSchema: Schema = new Schema(
       trim: true,
       // Always store author name - required for new articles, preserved for existing ones
       // This ensures articles remain intact even if author is deleted
+    },
+    publisher: {
+      type: Schema.Types.ObjectId,
+      ref: 'Publisher',
+      // Optional - articles can be created by admin or publisher
     },
     publishedDate: {
       type: Date,

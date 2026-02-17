@@ -4,7 +4,6 @@ import connectDB from '@/lib/mongodb'
 import Author from '@/models/Author'
 import Article from '@/models/Article'
 import { queryCache } from '@/lib/query-cache'
-import { hashPassword } from '@/lib/auth'
 
 export async function GET(
   request: NextRequest,
@@ -40,7 +39,7 @@ export async function PUT(
 
     const { id } = await params
     const body = await request.json()
-    const { name, email, password, bio, avatar } = body
+    const { name, email, bio, avatar } = body
 
     // Get the old author name before updating
     const oldAuthor = await Author.findById(id)
@@ -56,19 +55,7 @@ export async function PUT(
       email?: string
       bio?: string
       avatar?: string
-      password?: string
     } = { name, email, bio, avatar }
-    
-    // Only update password if provided (for existing authors)
-    if (password && password.trim().length > 0) {
-      if (password.length < 6) {
-        return NextResponse.json(
-          { error: 'Password must be at least 6 characters' },
-          { status: 400 }
-        )
-      }
-      updateData.password = hashPassword(password)
-    }
 
     // Update the author
     const author = await Author.findByIdAndUpdate(

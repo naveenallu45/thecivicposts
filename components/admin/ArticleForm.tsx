@@ -34,6 +34,7 @@ interface ArticleFormProps {
   }
   onPreviewChange?: (isPreview: boolean) => void
   isAuthor?: boolean
+  isPublisher?: boolean
 }
 
 type FormDataState = {
@@ -50,7 +51,7 @@ type FormDataState = {
   subImages: Array<{ url: string; public_id: string; alt: string; order: number }>
 }
 
-export default function ArticleForm({ authors, article, onPreviewChange, isAuthor = false }: ArticleFormProps) {
+export default function ArticleForm({ authors, article, onPreviewChange, isAuthor = false, isPublisher = false }: ArticleFormProps) {
   const router = useRouter()
   const { showToast } = useToast()
   const [loading, setLoading] = useState(false)
@@ -375,7 +376,7 @@ export default function ArticleForm({ authors, article, onPreviewChange, isAutho
         youtubeLink: formData.youtubeLink?.trim() && !formData.miniImage?.url ? formData.youtubeLink.trim() : undefined,
       }
 
-      const apiBase = isAuthor ? '/api/author/articles' : '/api/admin/articles'
+      const apiBase = isPublisher ? '/api/publisher/articles' : (isAuthor ? '/api/author/articles' : '/api/admin/articles')
       const url = article
         ? `${apiBase}/${article._id}`
         : apiBase
@@ -435,7 +436,7 @@ export default function ArticleForm({ authors, article, onPreviewChange, isAutho
       }
 
       // Navigate on success
-      const dashboardPath = isAuthor ? '/author/dashboard' : '/admin/dashboard'
+      const dashboardPath = isPublisher ? '/publisher/dashboard' : (isAuthor ? '/author/dashboard' : '/admin/dashboard')
       router.push(dashboardPath)
       router.refresh()
     } catch (err: unknown) {

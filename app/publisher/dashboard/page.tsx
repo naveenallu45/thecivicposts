@@ -1,32 +1,33 @@
 // Import models index FIRST to ensure all models are registered before use
 import '@/models'
-import { requireAuthor } from '@/lib/author-auth'
+import { requirePublisher } from '@/lib/publisher-auth'
 import Link from 'next/link'
 import connectDB from '@/lib/mongodb'
 import Article from '@/models/Article'
-import AuthorLogoutButton from '@/components/author/LogoutButton'
+import PublisherLogoutButton from '@/components/publisher/LogoutButton'
 
 export const dynamic = 'force-dynamic'
 
-export default async function AuthorDashboard() {
-  const session = await requireAuthor()
+export default async function PublisherDashboard() {
+  const session = await requirePublisher()
 
   await connectDB()
   
-  // Get author's ObjectId to filter articles
-  const author = await (await import('@/models/Author')).default.findOne({ email: session.email })
-  if (!author) {
-    throw new Error('Author not found')
+  // Get publisher's ObjectId to filter articles
+  const Publisher = (await import('@/models/Publisher')).default
+  const publisher = await Publisher.findOne({ email: session.email })
+  if (!publisher) {
+    throw new Error('Publisher not found')
   }
 
   const [articlesCount, publishedCount, draftCount] = await Promise.all([
-    Article.countDocuments({ author: author._id }),
-    Article.countDocuments({ author: author._id, status: 'published' }),
-    Article.countDocuments({ author: author._id, status: 'draft' }),
+    Article.countDocuments({ publisher: publisher._id }),
+    Article.countDocuments({ publisher: publisher._id, status: 'published' }),
+    Article.countDocuments({ publisher: publisher._id, status: 'draft' }),
   ])
 
-  // Get recent articles by this author only
-  const recentArticles = await Article.find({ author: author._id })
+  // Get recent articles by this publisher only
+  const recentArticles = await Article.find({ publisher: publisher._id })
     .select('title authorName category status createdAt')
     .sort({ createdAt: -1 })
     .limit(10)
@@ -38,18 +39,18 @@ export default async function AuthorDashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-2xl font-bold text-orange-700 font-serif">Author Dashboard</h1>
-              <p className="text-sm text-gray-600 mt-1">Welcome, {session.authorName}</p>
+              <h1 className="text-2xl font-bold text-orange-700 font-serif">Publisher Dashboard</h1>
+              <p className="text-sm text-gray-600 mt-1">Welcome, {session.publisherName}</p>
             </div>
             <div className="flex gap-4">
               <Link
-                href="/author/articles/new"
+                href="/publisher/articles/new"
                 prefetch={true}
                 className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors font-medium shadow-md"
               >
                 New Article
               </Link>
-              <AuthorLogoutButton />
+              <PublisherLogoutButton />
             </div>
           </div>
         </div>
@@ -72,7 +73,7 @@ export default async function AuthorDashboard() {
               <p className="text-3xl font-bold text-yellow-600 mt-2">{draftCount}</p>
             </div>
             <Link
-              href="/author/articles"
+              href="/publisher/articles"
               prefetch={true}
               className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-all border-l-4 border-blue-500 hover:border-blue-600 group"
             >
@@ -97,6 +98,9 @@ export default async function AuthorDashboard() {
                         Title
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Author
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Category
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -111,16 +115,25 @@ export default async function AuthorDashboard() {
                     {recentArticles.map((article: {
                       _id: { toString: () => string }
                       title: string
+                      authorName?: string
                       category: string
                       status: string
                       createdAt: Date
                     }) => (
-                      <tr key={article._id.toString()}>
+                      <tr key={article._id.toString()} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">{article.title}</div>
+                          <Link
+                            href={`/publisher/articles/${article._id}`}
+                            className="text-sm font-medium text-gray-900 hover:text-orange-600"
+                          >
+                            {article.title}
+                          </Link>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {article.authorName || 'Unknown'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-orange-100 text-orange-800">
                             {article.category}
                           </span>
                         </td>

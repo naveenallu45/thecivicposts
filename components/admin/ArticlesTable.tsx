@@ -27,6 +27,7 @@ interface ArticleRow {
 
 interface ArticlesTableProps {
   articles: ArticleRow[]
+  basePath?: 'admin' | 'author' | 'publisher' // Default: 'admin'
 }
 
 type FieldType = 'isTopStory' | 'isMiniTopStory' | 'isTrending'
@@ -38,7 +39,7 @@ interface LoadingState {
 const API_TIMEOUT = 10000 // 10 seconds
 const DEBOUNCE_DELAY = 150 // 150ms debounce - reduced for faster response
 
-export default function ArticlesTable({ articles }: ArticlesTableProps) {
+export default function ArticlesTable({ articles, basePath = 'admin' }: ArticlesTableProps) {
   const router = useRouter()
   const { showToast } = useToast()
   const [loading, setLoading] = useState(false)
@@ -77,9 +78,10 @@ export default function ArticlesTable({ articles }: ArticlesTableProps) {
 
   const handleEdit = useCallback((id: string) => {
     // Prefetch the edit page data
-    router.prefetch(`/admin/articles/${id}`)
-    router.push(`/admin/articles/${id}`)
-  }, [router])
+    const editPath = `/${basePath}/articles/${id}`
+    router.prefetch(editPath)
+    router.push(editPath)
+  }, [router, basePath])
 
   const handleDeleteClick = (id: string) => {
     setDeleteDialog({ isOpen: true, articleId: id })
@@ -96,7 +98,8 @@ export default function ArticlesTable({ articles }: ArticlesTableProps) {
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT)
 
-      const response = await fetch(`/api/admin/articles/${articleId}`, {
+      const apiBase = `/api/${basePath}/articles`
+      const response = await fetch(`${apiBase}/${articleId}`, {
         method: 'DELETE',
         signal: controller.signal,
       })
@@ -126,7 +129,7 @@ export default function ArticlesTable({ articles }: ArticlesTableProps) {
     } finally {
       setLoading(false)
     }
-  }, [deleteDialog.articleId, router, showToast])
+  }, [deleteDialog.articleId, router, showToast, basePath])
 
   const handleDeleteCancel = () => {
     setDeleteDialog({ isOpen: false, articleId: null })
@@ -209,7 +212,8 @@ export default function ArticlesTable({ articles }: ArticlesTableProps) {
         // Create timeout for request
         const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT)
 
-        const response = await fetch(`/api/admin/articles/${id}`, {
+        const apiBase = `/api/${basePath}/articles`
+        const response = await fetch(`${apiBase}/${id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -277,7 +281,7 @@ export default function ArticlesTable({ articles }: ArticlesTableProps) {
     }, DEBOUNCE_DELAY)
 
     debounceTimersRef.current.set(requestKey, timer)
-  }, [localArticles, router, showToast])
+  }, [localArticles, router, showToast, basePath])
 
   // Memoize columns to prevent unnecessary re-renders
   const columns: GridColDef[] = useMemo(() => [

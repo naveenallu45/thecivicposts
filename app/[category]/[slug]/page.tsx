@@ -14,6 +14,7 @@ import { extractYouTubeVideoId } from '@/lib/youtube-utils'
 import MoreArticles from '@/components/MoreArticles'
 import ViewportPrefetch from '@/components/ViewportPrefetch'
 import YouTubeVideo from '@/components/YouTubeVideo'
+import ArticleCard from '@/components/ArticleCard'
 import type { ArticleListItem } from '@/lib/article-types'
 import { getOptimizedImageUrl } from '@/lib/cloudinary-optimize'
 
@@ -192,7 +193,7 @@ export default async function ArticlePage({
   const categoryLabel = categoryLabels[article.category] || article.category
   
   // Fetch initial "More Articles" (same category only, excluding current article)
-  const [moreArticles, totalMoreArticles] = await Promise.all([
+  const [moreArticles, totalMoreArticles, recentArticles] = await Promise.all([
     Article.find({ 
       status: 'published',
       category: article.category, // Only same category
@@ -208,10 +209,33 @@ export default async function ArticlePage({
       category: article.category, // Only same category
       publishedDate: { $lte: currentDate },
       slug: { $ne: slug }
+    }),
+    // Fetch recent articles from all categories (for bottom section) - fetch more to show multiple rows
+    Article.find({ 
+      status: 'published',
+      publishedDate: { $lte: currentDate },
+      slug: { $ne: slug } // Exclude current article
     })
+      .sort({ createdAt: -1 })
+      .limit(20) // Fetch 20 articles to show multiple rows (5 rows x 4 columns)
+      .select('title subtitle mainImage publishedDate authorName slug category')
+      .lean() as Promise<ArticleListItem[]>
   ])
 
   const moreArticlesData = moreArticles.map((article) => ({
+    id: article._id.toString(),
+    title: article.title,
+    subtitle: article.subtitle,
+    mainImage: article.mainImage?.url || '',
+    publishedDate: article.publishedDate
+      ? formatDateShort(article.publishedDate)
+      : '',
+    authorName: article.authorName || 'Unknown',
+    slug: article.slug,
+    category: article.category,
+  }))
+
+  const recentArticlesData = recentArticles.map((article) => ({
     id: article._id.toString(),
     title: article.title,
     subtitle: article.subtitle,
@@ -307,7 +331,7 @@ export default async function ArticlePage({
           </div>
 
           {/* Layout: Article content on left, More Articles sidebar on right (laptop) */}
-          <div className="lg:flex lg:gap-8 lg:items-start lg:min-h-screen">
+          <div className="lg:flex lg:gap-8 lg:items-stretch">
             {/* Main Article Content - Left Column */}
             <article className="lg:flex-1">
               {/* Category Tag */}
@@ -318,7 +342,7 @@ export default async function ArticlePage({
               </div>
 
               {/* Title */}
-              <h1 className="text-[22px] md:text-5xl lg:text-[45px] font-bold text-gray-900 mb-4 font-merriweather leading-tight">
+              <h1 className="text-[22px] md:text-5xl lg:text-[32.4px] font-bold text-gray-900 mb-4 font-merriweather leading-tight">
                 {article.title}
               </h1>
 
@@ -479,17 +503,39 @@ export default async function ArticlePage({
               </div>
             </article>
 
-            {/* More Articles Sidebar - Laptop: Right Column */}
-            <aside className="hidden lg:block lg:w-80 lg:flex-shrink-0 lg:self-start lg:sticky lg:top-8 lg:h-fit">
-              <ViewportPrefetch articles={moreArticlesData} />
-              <MoreArticles 
-                initialArticles={moreArticlesData}
-                excludeSlug={slug}
-                totalArticles={totalMoreArticles}
-                sidebar={true}
-                category={article.category}
-              />
+            {/* More Articles Sidebar - Laptop: Right Column - Matches article height */}
+            <aside className="hidden lg:block lg:w-80 lg:flex-shrink-0 lg:flex lg:flex-col">
+              <div className="lg:sticky lg:top-8 lg:h-full">
+                <ViewportPrefetch articles={moreArticlesData} />
+                <MoreArticles 
+                  initialArticles={moreArticlesData}
+                  excludeSlug={slug}
+                  totalArticles={totalMoreArticles}
+                  sidebar={true}
+                  category={article.category}
+                />
+              </div>
             </aside>
+          </div>
+
+          {/* Recent Articles Section - Below Full Article (Laptop: 4 in a row) */}
+          <div className="mt-16 pt-12 border-t border-gray-300">
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6 font-merriweather">
+              Recent Articles
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {recentArticlesData.map((article) => (
+                <ArticleCard
+                  key={article.id}
+                  title={article.title}
+                  mainImage={article.mainImage}
+                  publishedDate={article.publishedDate}
+                  authorName={article.authorName}
+                  slug={article.slug}
+                  category={article.category}
+                />
+              ))}
+            </div>
           </div>
         </div>
       </main>

@@ -118,7 +118,7 @@ export default function InfiniteScrollArticles({
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2 font-merriweather">
+        <h1 className="text-[1.03125rem] md:text-4xl font-bold text-gray-900 mb-2 font-merriweather">
           Articles by <span>{formatAuthorName(authorName)}</span>
         </h1>
         <p className="text-gray-600">

@@ -31,12 +31,13 @@ interface ArticleFormWrapperProps {
   article?: Article
   isEdit?: boolean
   isAuthor?: boolean
+  isPublisher?: boolean
 }
 
-export default function ArticleFormWrapper({ authors, article, isEdit = false, isAuthor = false }: ArticleFormWrapperProps) {
+export default function ArticleFormWrapper({ authors, article, isEdit = false, isAuthor = false, isPublisher = false }: ArticleFormWrapperProps) {
   const [isPreview, setIsPreview] = useState(false)
-  const dashboardPath = isAuthor ? '/author/dashboard' : '/admin/dashboard'
-  const articlesPath = isAuthor ? '/author/articles' : '/admin/articles'
+  const dashboardPath = isPublisher ? '/publisher/dashboard' : (isAuthor ? '/author/dashboard' : '/admin/dashboard')
+  const articlesPath = isPublisher ? '/publisher/articles' : (isAuthor ? '/author/articles' : '/admin/articles')
 
   return (
     <>
@@ -61,7 +62,14 @@ export default function ArticleFormWrapper({ authors, article, isEdit = false, i
               >
                 Dashboard
               </Link>
-              {isAuthor ? (
+              {isPublisher ? (
+                <Link
+                  href="/publisher/logout"
+                  className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  Logout
+                </Link>
+              ) : isAuthor ? (
                 <Link
                   href="/author/logout"
                   className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
@@ -82,6 +90,7 @@ export default function ArticleFormWrapper({ authors, article, isEdit = false, i
           article={article}
           onPreviewChange={setIsPreview}
           isAuthor={isAuthor}
+          isPublisher={isPublisher}
         />
       </div>
     </>

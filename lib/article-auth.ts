@@ -1,17 +1,18 @@
 import { requireAdminApi } from './admin-auth'
-import { requireAuthorApi } from './author-auth'
+import { requirePublisherApi } from './publisher-auth'
 
 export interface ArticleAuthResult {
   isAdmin: boolean
-  isAuthor: boolean
-  authorId?: string
-  authorEmail?: string
-  authorName?: string
+  isPublisher: boolean
+  publisherId?: string
+  publisherEmail?: string
+  publisherName?: string
 }
 
 /**
  * Check authentication for article operations
- * Returns admin session or author session
+ * Returns admin session or publisher session
+ * Note: Authors no longer have login - they are just names that publishers can select
  */
 export async function requireArticleAuth(): Promise<ArticleAuthResult> {
   try {
@@ -19,21 +20,21 @@ export async function requireArticleAuth(): Promise<ArticleAuthResult> {
     await requireAdminApi()
     return {
       isAdmin: true,
-      isAuthor: false,
+      isPublisher: false,
     }
   } catch {
-    // If not admin, try author
+    // If not admin, try publisher
     try {
-      const authorSession = await requireAuthorApi()
+      const publisherSession = await requirePublisherApi()
       return {
         isAdmin: false,
-        isAuthor: true,
-        authorId: authorSession.authorId,
-        authorEmail: authorSession.email,
-        authorName: authorSession.authorName,
+        isPublisher: true,
+        publisherId: publisherSession.publisherId,
+        publisherEmail: publisherSession.email,
+        publisherName: publisherSession.publisherName,
       }
     } catch {
-      throw new Error('Unauthorized: Admin or Author authentication required')
+      throw new Error('Unauthorized: Admin or Publisher authentication required')
     }
   }
 }

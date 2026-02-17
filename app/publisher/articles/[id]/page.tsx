@@ -1,45 +1,47 @@
 // Import models index FIRST to ensure all models are registered before use
 import '@/models'
 import { redirect } from 'next/navigation'
-import { requireAuthor } from '@/lib/author-auth'
+import { requirePublisher } from '@/lib/publisher-auth'
 import connectDB from '@/lib/mongodb'
 import Article from '@/models/Article'
 import Author from '@/models/Author'
+import Publisher from '@/models/Publisher'
 import ArticleFormWrapper from '@/components/admin/ArticleFormWrapper'
 
 export const dynamic = 'force-dynamic'
 
-export default async function EditAuthorArticlePage({
+export default async function EditPublisherArticlePage({
   params,
 }: {
   params: Promise<{ id: string }>
 }) {
-  const session = await requireAuthor()
+  const session = await requirePublisher()
   await connectDB()
 
   const { id } = await params
   
-  // Get article and author
-  const [article, author] = await Promise.all([
-    Article.findById(id)
+  // Get publisher's ObjectId
+  const publisher = await Publisher.findOne({ email: session.email })
+  if (!publisher) {
+    throw new Error('Publisher not found')
+  }
+  
+  // Optimized: Parallel queries instead of sequential
+  const [article, authors] = await Promise.all([
+    Article.findOne({
+      _id: id,
+      publisher: publisher._id, // Ensure publisher owns this article
+    })
       .select('title subtitle content author publishedDate mainImage miniImage youtubeLink subImages status category')
       .lean(),
-    Author.findOne({ email: session.email })
+    Author.find()
       .select('name email')
+      .sort({ name: 1 })
       .lean(),
   ])
 
   if (!article) {
-    redirect('/author/dashboard')
-  }
-
-  if (!author) {
-    throw new Error('Author not found')
-  }
-
-  // Check if author owns this article
-  if (article.author.toString() !== author._id.toString()) {
-    redirect('/author/dashboard')
+    redirect('/publisher/articles')
   }
 
   return (
@@ -58,13 +60,13 @@ export default async function EditAuthorArticlePage({
         status: article.status,
         category: article.category,
       }}
-      authors={[{
-        _id: author._id.toString(),
-        name: author.name,
-        email: author.email,
-      }]}
+      authors={authors.map((a) => ({
+        _id: a._id.toString(),
+        name: a.name,
+        email: a.email,
+      }))}
       isEdit={true}
-      isAuthor={true}
+      isPublisher={true}
     />
   )
 }

@@ -3,7 +3,8 @@
 
 import Author from './Author'
 import Article from './Article'
+import Publisher from './Publisher'
 
 // Export models for convenience
-export { Author, Article }
-export default { Author, Article }
+export { Author, Article, Publisher }
+export default { Author, Article, Publisher }

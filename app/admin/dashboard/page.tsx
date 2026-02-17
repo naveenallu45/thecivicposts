@@ -13,11 +13,13 @@ export default async function AdminDashboard() {
   await requireAdmin()
 
   await connectDB()
-  const [articlesCount, publishedCount, draftCount, authorsCount] = await Promise.all([
+  const Publisher = (await import('@/models/Publisher')).default
+  const [articlesCount, publishedCount, draftCount, authorsCount, publishersCount] = await Promise.all([
     Article.countDocuments(),
     Article.countDocuments({ status: 'published' }),
     Article.countDocuments({ status: 'draft' }),
     Author.countDocuments(),
+    Publisher.countDocuments(),
   ])
 
   // Optimized: Use stored authorName instead of populate
@@ -50,7 +52,7 @@ export default async function AdminDashboard() {
       <div className="bg-gray-50 min-h-screen">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
             <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-orange-500 hover:shadow-lg transition-shadow">
               <h3 className="text-sm font-medium text-gray-500">Total Articles</h3>
               <p className="text-3xl font-bold text-orange-600 mt-2">{articlesCount}</p>
@@ -67,10 +69,14 @@ export default async function AdminDashboard() {
               <h3 className="text-sm font-medium text-gray-500">Authors</h3>
               <p className="text-3xl font-bold text-blue-600 mt-2">{authorsCount}</p>
             </div>
+            <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-purple-500 hover:shadow-lg transition-shadow">
+              <h3 className="text-sm font-medium text-gray-500">Publishers</h3>
+              <p className="text-3xl font-bold text-purple-600 mt-2">{publishersCount}</p>
+            </div>
           </div>
 
           {/* Quick Links */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <Link
               href="/admin/articles"
               prefetch={true}
@@ -92,6 +98,17 @@ export default async function AdminDashboard() {
                 <h3 className="text-xl font-semibold text-gray-900 group-hover:text-orange-700 transition-colors">Manage Authors</h3>
               </div>
               <p className="text-gray-600 ml-4">Add and manage article authors</p>
+            </Link>
+            <Link
+              href="/admin/publishers"
+              prefetch={true}
+              className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-all border-2 border-transparent hover:border-orange-300 group"
+            >
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-1 h-8 bg-orange-500 rounded-full group-hover:bg-orange-600 transition-colors"></div>
+                <h3 className="text-xl font-semibold text-gray-900 group-hover:text-orange-700 transition-colors">Manage Publishers</h3>
+              </div>
+              <p className="text-gray-600 ml-4">Add and manage publishers</p>
             </Link>
           </div>
 

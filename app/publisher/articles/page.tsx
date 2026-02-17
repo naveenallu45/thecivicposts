@@ -1,11 +1,12 @@
-import { requireAuthor } from '@/lib/author-auth'
+import { requirePublisher } from '@/lib/publisher-auth'
 // Import models index FIRST to ensure all models are registered before use
 import '@/models'
 import connectDB from '@/lib/mongodb'
 import Article from '@/models/Article'
+import Publisher from '@/models/Publisher'
 import ArticlesTable from '@/components/admin/ArticlesTable'
 import Link from 'next/link'
-import AuthorLogoutButton from '@/components/author/LogoutButton'
+import PublisherLogoutButton from '@/components/publisher/LogoutButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -43,19 +44,18 @@ interface ArticleWithAuthor {
   updatedAt: Date
 }
 
-export default async function AuthorArticlesPage() {
-  const session = await requireAuthor()
+export default async function PublisherArticlesPage() {
+  const session = await requirePublisher()
   await connectDB()
 
-  // Get author's ObjectId to filter articles
-  const Author = (await import('@/models/Author')).default
-  const author = await Author.findOne({ email: session.email })
-  if (!author) {
-    throw new Error('Author not found')
+  // Get publisher's ObjectId
+  const publisher = await Publisher.findOne({ email: session.email })
+  if (!publisher) {
+    throw new Error('Publisher not found')
   }
 
-  // Only get articles by this author
-  const articles = await Article.find({ author: author._id })
+  // Get articles by this publisher only
+  const articles = await Article.find({ publisher: publisher._id })
     .select('title author authorName publishedDate createdAt status category isTopStory isMiniTopStory isTrending')
     .sort({ createdAt: -1 })
     .limit(1000)
@@ -69,27 +69,27 @@ export default async function AuthorArticlesPage() {
             <h1 className="text-2xl font-bold text-gray-900 font-serif">My Articles</h1>
             <div className="flex gap-4">
               <Link
-                href="/author/articles/new"
+                href="/publisher/articles/new"
                 prefetch={true}
-                className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors"
+                className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors font-medium"
               >
                 New Article
               </Link>
               <Link
-                href="/author/dashboard"
-                prefetch={true}
+                href="/publisher/dashboard"
                 className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
               >
                 Dashboard
               </Link>
-              <AuthorLogoutButton />
+              <PublisherLogoutButton />
             </div>
           </div>
         </div>
       </div>
 
       <div className="w-full px-4 sm:px-6 lg:px-8 py-8 overflow-x-hidden">
-        <ArticlesTable articles={articles.map((article) => {
+        <ArticlesTable basePath="publisher" articles={articles.map((article) => {
+          // Optimized: Use stored authorName directly (no populate needed)
           const authorName = article.authorName || 'Unknown'
           const publishedDate = article.publishedDate 
             ? new Date(article.publishedDate).toLocaleDateString('en-US', {
