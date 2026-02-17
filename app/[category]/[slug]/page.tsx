@@ -191,10 +191,11 @@ export default async function ArticlePage({
 
   const categoryLabel = categoryLabels[article.category] || article.category
   
-  // Fetch initial "More Articles" (latest from all categories, excluding current article)
+  // Fetch initial "More Articles" (same category only, excluding current article)
   const [moreArticles, totalMoreArticles] = await Promise.all([
     Article.find({ 
       status: 'published',
+      category: article.category, // Only same category
       publishedDate: { $lte: currentDate },
       slug: { $ne: slug } // Exclude current article
     })
@@ -204,6 +205,7 @@ export default async function ArticlePage({
       .lean() as Promise<ArticleListItem[]>,
     Article.countDocuments({ 
       status: 'published',
+      category: article.category, // Only same category
       publishedDate: { $lte: currentDate },
       slug: { $ne: slug }
     })
@@ -279,197 +281,218 @@ export default async function ArticlePage({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
       <main className="min-h-screen bg-gray-50">
-        <article className="w-[95%] lg:w-[85%] mx-auto px-2 sm:px-6 lg:px-8 py-12">
-        {/* Back Button */}
-        <div className="mb-6">
-          <Link
-            href={`/${category}`}
-            className="inline-flex items-center gap-2 text-orange-600 hover:text-orange-700 transition-colors duration-200 group"
-          >
-            <svg
-              className="w-5 h-5 transition-transform duration-200 group-hover:-translate-x-1"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
+        <div className="w-[95%] lg:w-[85%] mx-auto px-2 sm:px-6 lg:px-8 py-12">
+          {/* Back Button */}
+          <div className="mb-6">
+            <Link
+              href={`/${category}`}
+              className="inline-flex items-center gap-2 text-orange-600 hover:text-orange-700 transition-colors duration-200 group"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M10 19l-7-7m0 0l7-7m-7 7h18"
-              />
-            </svg>
-            <span className="font-medium text-sm md:text-base">Back to {categoryLabel}</span>
-          </Link>
-        </div>
-
-        {/* Category Tag */}
-        <div className="mb-4">
-          <span className="inline-block px-3 py-1 bg-orange-700 text-white text-xs md:text-sm font-semibold uppercase tracking-wide">
-            {categoryLabel}
-          </span>
-        </div>
-
-        {/* Title */}
-        <h1 className="text-[22px] md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4 font-merriweather leading-tight">
-          {article.title}
-        </h1>
-
-        {/* Subtitle */}
-        {article.subtitle && (
-          <h2 className="text-[12px] md:text-2xl text-gray-700 font-semibold mb-6 font-merriweather leading-relaxed">
-            {article.subtitle}
-          </h2>
-        )}
-
-        {/* Author and Date */}
-        <div className="mb-6">
-          <p className="text-base md:text-lg text-gray-600 font-sans">
-            <Link 
-              href={`/author/${generateAuthorSlug(authorName)}`}
-              className="text-orange-600 hover:text-orange-700 font-medium transition-colors"
-            >
-              {formatAuthorName(authorName)}
+              <svg
+                className="w-5 h-5 transition-transform duration-200 group-hover:-translate-x-1"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                />
+              </svg>
+              <span className="font-medium text-sm md:text-base">Back to {categoryLabel}</span>
             </Link>
-            {' - '}
-            {publishedDate}
-          </p>
-        </div>
-
-        {/* Social Share */}
-        <SocialShare 
-          title={article.title} 
-          url={articleUrl} 
-        />
-
-        {/* Main Image - HD Quality via CDN */}
-        {article.mainImage?.url && (
-          <div className="mb-8 lg:w-3/4 lg:mx-auto">
-            <Image
-              src={getOptimizedImageUrl(article.mainImage.url, 1200, 'auto:best')}
-              alt={article.mainImage.alt || article.title || 'Article image'}
-              width={1200}
-              height={800}
-              className="w-full h-auto rounded-lg"
-              priority
-              fetchPriority="high"
-              quality={95}
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 900px"
-              placeholder="blur"
-              blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
-            />
           </div>
-        )}
 
-        {/* Content */}
-        <div className="max-w-none">
-          {/* First Paragraph */}
-          {article.content && article.content[0] && article.content[0].trim() && (
-            <div className="mb-6">
-              {article.content[0].split('\n').filter(line => line.trim()).map((line, lineIdx) => (
-                <p key={lineIdx} className="mb-5 text-gray-800 leading-relaxed text-[13.5px] md:text-xl font-merriweather font-normal">
-                  {renderFormattedText(line.trim())}
-                </p>
-              ))}
-            </div>
-          )}
+          {/* Layout: Article content on left, More Articles sidebar on right (laptop) */}
+          <div className="lg:flex lg:gap-8 lg:items-start lg:min-h-screen">
+            {/* Main Article Content - Left Column */}
+            <article className="lg:flex-1">
+              {/* Category Tag */}
+              <div className="mb-4">
+                <span className="inline-block px-3 py-1 bg-orange-700 text-white text-xs md:text-sm font-semibold uppercase tracking-wide">
+                  {categoryLabel}
+                </span>
+              </div>
 
-          {/* YouTube Video or Mini Image (Only One) */}
-          {(article.youtubeLink as string | undefined) && (() => {
-            const youtubeLink = article.youtubeLink as string
-            const videoId = extractYouTubeVideoId(youtubeLink)
-            if (videoId) {
-              return <YouTubeVideo videoId={videoId} title={article.title} />
-            }
-            // If youtubeLink exists but videoId extraction failed, show error message
-            return (
-              <div className="mb-8 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <p className="text-yellow-800 text-sm">
-                  Invalid YouTube URL format. Please check the link: {youtubeLink}
+              {/* Title */}
+              <h1 className="text-[22px] md:text-5xl lg:text-[45px] font-bold text-gray-900 mb-4 font-merriweather leading-tight">
+                {article.title}
+              </h1>
+
+              {/* Subtitle */}
+              {article.subtitle && (
+                <h2 className="text-[12px] md:text-2xl text-gray-700 font-semibold mb-6 font-merriweather leading-relaxed">
+                  {article.subtitle}
+                </h2>
+              )}
+
+              {/* Author and Date */}
+              <div className="mb-6">
+                <p className="text-base md:text-lg text-gray-600 font-sans">
+                  <Link 
+                    href={`/author/${generateAuthorSlug(authorName)}`}
+                    className="text-orange-600 hover:text-orange-700 font-medium transition-colors"
+                  >
+                    {formatAuthorName(authorName)}
+                  </Link>
+                  {' - '}
+                  {publishedDate}
                 </p>
               </div>
-            )
-          })()}
-          
-          {/* Mini Image - HD Quality via CDN - Only show if no YouTube link */}
-          {!article.youtubeLink && article.miniImage?.url && (
-            <div className="mb-8 lg:w-3/4 lg:mx-auto">
-              <Image
-                src={getOptimizedImageUrl(article.miniImage.url, 800, 'auto:best')}
-                alt={article.miniImage.alt || article.title || 'Mini image'}
-                width={800}
-                height={600}
-                className="w-full h-auto rounded-lg"
-                loading="lazy"
-                quality={90}
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 600px"
-                placeholder="blur"
-                blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
+
+              {/* Social Share */}
+              <SocialShare 
+                title={article.title} 
+                url={articleUrl} 
               />
-            </div>
-          )}
 
-          {/* Second Paragraph */}
-          {article.content && article.content[1] && article.content[1].trim() && (
-            <div className="mb-6">
-              {article.content[1].split('\n').filter(line => line.trim()).map((line, lineIdx) => (
-                <p key={lineIdx} className="mb-5 text-gray-800 leading-relaxed text-[13.5px] md:text-xl font-merriweather font-normal">
-                  {renderFormattedText(line.trim())}
-                </p>
-              ))}
-            </div>
-          )}
-
-          {/* Additional paragraphs (if any) */}
-          {article.content && article.content.length > 2 && article.content.slice(2).map((para, idx) => {
-            if (!para || !para.trim()) return null
-            const lines = para.split('\n').filter(line => line.trim())
-            return (
-              <div key={idx + 2} className="mb-6">
-                {lines.map((line, lineIdx) => (
-                  <p key={lineIdx} className="mb-5 text-gray-800 leading-relaxed text-[13.5px] md:text-xl font-merriweather font-normal">
-                    {renderFormattedText(line.trim())}
-                  </p>
-                ))}
-              </div>
-            )
-          })}
-        </div>
-
-        {/* Sub Images - HD Quality via CDN */}
-        {(article.subImages || []).length > 0 && (
-          <div className="mt-12 space-y-8">
-            {(article.subImages || [])
-              .sort((a: { order: number }, b: { order: number }) => a.order - b.order)
-              .map((img: { url: string; alt?: string }, idx: number) => (
-                <div key={idx} className="lg:w-3/4 lg:mx-auto">
+              {/* Main Image - HD Quality via CDN */}
+              {article.mainImage?.url && (
+                <div className="mb-8 lg:w-3/4 lg:mx-auto">
                   <Image
-                    src={getOptimizedImageUrl(img.url, 1200, 'auto:best')}
-                    alt={img.alt || `Article image ${idx + 1}`}
+                    src={getOptimizedImageUrl(article.mainImage.url, 1200, 'auto:best')}
+                    alt={article.mainImage.alt || article.title || 'Article image'}
                     width={1200}
-                    height={600}
+                    height={800}
                     className="w-full h-auto rounded-lg"
-                    loading="lazy"
-                    quality={90}
+                    priority
+                    fetchPriority="high"
+                    quality={95}
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 900px"
                     placeholder="blur"
                     blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
                   />
                 </div>
-              ))}
-          </div>
-        )}
+              )}
 
-        {/* More Articles Section */}
-        <ViewportPrefetch articles={moreArticlesData} />
-        <MoreArticles 
-          initialArticles={moreArticlesData}
-          excludeSlug={slug}
-          totalArticles={totalMoreArticles}
-        />
-      </article>
-    </main>
+              {/* Content */}
+              <div className="max-w-none">
+                {/* First Paragraph */}
+                {article.content && article.content[0] && article.content[0].trim() && (
+                  <div className="mb-6">
+                    {article.content[0].split('\n').filter(line => line.trim()).map((line, lineIdx) => (
+                      <p key={lineIdx} className="mb-5 text-gray-800 leading-relaxed text-[13.5px] md:text-xl font-merriweather font-normal">
+                        {renderFormattedText(line.trim())}
+                      </p>
+                    ))}
+                  </div>
+                )}
+
+                {/* YouTube Video or Mini Image (Only One) */}
+                {(article.youtubeLink as string | undefined) && (() => {
+                  const youtubeLink = article.youtubeLink as string
+                  const videoId = extractYouTubeVideoId(youtubeLink)
+                  if (videoId) {
+                    return <YouTubeVideo videoId={videoId} title={article.title} />
+                  }
+                  // If youtubeLink exists but videoId extraction failed, show error message
+                  return (
+                    <div className="mb-8 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      <p className="text-yellow-800 text-sm">
+                        Invalid YouTube URL format. Please check the link: {youtubeLink}
+                      </p>
+                    </div>
+                  )
+                })()}
+                
+                {/* Mini Image - HD Quality via CDN - Only show if no YouTube link */}
+                {!article.youtubeLink && article.miniImage?.url && (
+                  <div className="mb-8 lg:w-3/4 lg:mx-auto">
+                    <Image
+                      src={getOptimizedImageUrl(article.miniImage.url, 800, 'auto:best')}
+                      alt={article.miniImage.alt || article.title || 'Mini image'}
+                      width={800}
+                      height={600}
+                      className="w-full h-auto rounded-lg"
+                      loading="lazy"
+                      quality={90}
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 600px"
+                      placeholder="blur"
+                      blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
+                    />
+                  </div>
+                )}
+
+                {/* Second Paragraph */}
+                {article.content && article.content[1] && article.content[1].trim() && (
+                  <div className="mb-6">
+                    {article.content[1].split('\n').filter(line => line.trim()).map((line, lineIdx) => (
+                      <p key={lineIdx} className="mb-5 text-gray-800 leading-relaxed text-[13.5px] md:text-xl font-merriweather font-normal">
+                        {renderFormattedText(line.trim())}
+                      </p>
+                    ))}
+                  </div>
+                )}
+
+                {/* Additional paragraphs (if any) */}
+                {article.content && article.content.length > 2 && article.content.slice(2).map((para, idx) => {
+                  if (!para || !para.trim()) return null
+                  const lines = para.split('\n').filter(line => line.trim())
+                  return (
+                    <div key={idx + 2} className="mb-6">
+                      {lines.map((line, lineIdx) => (
+                        <p key={lineIdx} className="mb-5 text-gray-800 leading-relaxed text-[13.5px] md:text-xl font-merriweather font-normal">
+                          {renderFormattedText(line.trim())}
+                        </p>
+                      ))}
+                    </div>
+                  )
+                })}
+              </div>
+
+              {/* Sub Images - HD Quality via CDN */}
+              {(article.subImages || []).length > 0 && (
+                <div className="mt-12 space-y-8">
+                  {(article.subImages || [])
+                    .sort((a: { order: number }, b: { order: number }) => a.order - b.order)
+                    .map((img: { url: string; alt?: string }, idx: number) => (
+                      <div key={idx} className="lg:w-3/4 lg:mx-auto">
+                        <Image
+                          src={getOptimizedImageUrl(img.url, 1200, 'auto:best')}
+                          alt={img.alt || `Article image ${idx + 1}`}
+                          width={1200}
+                          height={600}
+                          className="w-full h-auto rounded-lg"
+                          loading="lazy"
+                          quality={90}
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 900px"
+                          placeholder="blur"
+                          blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
+                        />
+                      </div>
+                    ))}
+                </div>
+              )}
+
+              {/* More Articles Section - Mobile: Show at bottom */}
+              <div className="lg:hidden mt-16 pt-12 border-t border-gray-300">
+                <ViewportPrefetch articles={moreArticlesData} />
+                <MoreArticles 
+                  initialArticles={moreArticlesData}
+                  excludeSlug={slug}
+                  totalArticles={totalMoreArticles}
+                  category={article.category}
+                />
+              </div>
+            </article>
+
+            {/* More Articles Sidebar - Laptop: Right Column */}
+            <aside className="hidden lg:block lg:w-80 lg:flex-shrink-0 lg:self-start lg:sticky lg:top-8 lg:h-fit">
+              <ViewportPrefetch articles={moreArticlesData} />
+              <MoreArticles 
+                initialArticles={moreArticlesData}
+                excludeSlug={slug}
+                totalArticles={totalMoreArticles}
+                sidebar={true}
+                category={article.category}
+              />
+            </aside>
+          </div>
+        </div>
+      </main>
     </>
   )
 }

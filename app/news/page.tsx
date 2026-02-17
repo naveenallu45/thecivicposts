@@ -2,8 +2,7 @@
 import '@/models'
 import connectDB from '@/lib/mongodb'
 import Article from '@/models/Article'
-import ArticlesRow from '@/components/ArticlesRow'
-import Pagination from '@/components/Pagination'
+import CategoryInfiniteScroll from '@/components/CategoryInfiniteScroll'
 import type { ArticleListItem } from '@/lib/article-types'
 import { formatDateShort } from '@/lib/date-utils'
 
@@ -15,44 +14,46 @@ export const dynamic = 'force-static'
 
 const ARTICLES_PER_PAGE = 10
 
-export default async function NewsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ page?: string }>
-}) {
-  // Connect to DB (cached connection - instant)
-  await connectDB()
-
-  const params = await searchParams
-  const currentPage = parseInt(params.page || '1', 10)
-  const skip = (currentPage - 1) * ARTICLES_PER_PAGE
-
+export default async function NewsPage() {
   // Current date for filtering out future-dated articles
   const currentDate = new Date()
   currentDate.setHours(0, 0, 0, 0)
 
-  // Optimized query with indexes - should be instant
-  const [articles, totalArticles] = await Promise.all([
-    Article.find({ 
-      status: 'published',
-      category: 'news',
-      publishedDate: { $lte: currentDate } // Only show articles published today or earlier
-    })
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(ARTICLES_PER_PAGE)
-      .select('title subtitle mainImage publishedDate authorName slug category')
-      .lean()
-      .exec() as Promise<ArticleListItem[]>,
-    // Use countDocuments - estimatedDocumentCount doesn't support queries
-    // For better performance, ensure indexes are used (already indexed)
-    Article.countDocuments({ 
-      status: 'published',
-      category: 'news',
-      publishedDate: { $lte: currentDate }
-    })
-      .exec()
-  ])
+  // Try to connect to database, but handle errors gracefully during build
+  let articles: ArticleListItem[] = []
+  let totalArticles = 0
+
+  try {
+    await connectDB()
+
+    // Optimized query with indexes - should be instant
+    const results = await Promise.all([
+      Article.find({ 
+        status: 'published',
+        category: 'news',
+        publishedDate: { $lte: currentDate } // Only show articles published today or earlier
+      })
+        .sort({ createdAt: -1 })
+        .limit(ARTICLES_PER_PAGE)
+        .select('title subtitle mainImage publishedDate authorName slug category')
+        .lean()
+        .exec() as Promise<ArticleListItem[]>,
+      // Use countDocuments - estimatedDocumentCount doesn't support queries
+      // For better performance, ensure indexes are used (already indexed)
+      Article.countDocuments({ 
+        status: 'published',
+        category: 'news',
+        publishedDate: { $lte: currentDate }
+      })
+        .exec()
+    ])
+
+    articles = results[0]
+    totalArticles = results[1]
+  } catch (error) {
+    console.error('Database connection failed during build for news page:', error)
+    // Return empty state to allow build to complete
+  }
 
   const articlesData = articles.map((article) => ({
     id: article._id.toString(),
@@ -67,15 +68,12 @@ export default async function NewsPage({
     category: article.category,
   }))
 
-  const totalPages = Math.ceil(totalArticles / ARTICLES_PER_PAGE)
-
   return (
-    <div className="w-[92%] lg:w-[85%] mx-auto py-6 md:py-12">
-      <ArticlesRow articles={articlesData} heading="News" />
-      <Pagination 
-        currentPage={currentPage} 
-        totalPages={totalPages}
-      />
-    </div>
+    <CategoryInfiniteScroll
+      initialArticles={articlesData}
+      category="news"
+      totalArticles={totalArticles}
+      heading="News"
+    />
   )
 }

@@ -17,11 +17,12 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url)
     const category = searchParams.get('category')
+    const excludeSlug = searchParams.get('excludeSlug') // Exclude specific article
     const limit = parseInt(searchParams.get('limit') || '12')
     const page = parseInt(searchParams.get('page') || '1')
 
     // Check cache first
-    const cacheKey = `article:${category || 'all'}:${page}:${limit}`
+    const cacheKey = `article:${category || 'all'}:${excludeSlug || 'none'}:${page}:${limit}`
     
     interface ArticleListItem {
       id: string
@@ -49,13 +50,23 @@ export async function GET(request: NextRequest) {
     const currentDate = new Date()
     currentDate.setHours(0, 0, 0, 0)
 
-    const query: { status: string; category?: string; publishedDate?: { $lte: Date } } = {
+    const query: { 
+      status: string
+      category?: string
+      publishedDate?: { $lte: Date }
+      slug?: { $ne: string }
+    } = {
       status: 'published', // Only published articles
       publishedDate: { $lte: currentDate }, // Only show articles published today or earlier
     }
     
     if (category) {
       query.category = category
+    }
+    
+    // Exclude specific article if provided
+    if (excludeSlug) {
+      query.slug = { $ne: excludeSlug }
     }
 
     const articles = await Article.find(query)
@@ -78,6 +89,7 @@ export async function GET(request: NextRequest) {
       author?: { name?: string } | string | null
       authorName?: string
       slug: string
+      category: string
       createdAt: Date
     }
 
@@ -92,6 +104,7 @@ export async function GET(request: NextRequest) {
           : '',
         authorName: article.authorName || 'Unknown',
         slug: article.slug,
+        category: article.category,
         createdAt: article.createdAt,
       })),
       pagination: {
@@ -99,6 +112,7 @@ export async function GET(request: NextRequest) {
         limit,
         total,
         pages: Math.ceil(total / limit),
+        hasMore: page < Math.ceil(total / limit),
       },
     }
 

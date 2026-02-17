@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import ArticleCard from './ArticleCard'
-import SectionHeading from './SectionHeading'
 
 interface Article {
   id: string
@@ -15,21 +14,19 @@ interface Article {
   category: string
 }
 
-interface MoreArticlesProps {
+interface CategoryInfiniteScrollProps {
   initialArticles: Article[]
-  excludeSlug: string
+  category: string
   totalArticles: number
-  sidebar?: boolean // If true, displays as single column sidebar
-  category?: string // Category filter for related articles
+  heading: string
 }
 
-export default function MoreArticles({
+export default function CategoryInfiniteScroll({
   initialArticles,
-  excludeSlug,
-  totalArticles,
-  sidebar = false,
   category,
-}: MoreArticlesProps) {
+  totalArticles,
+  heading,
+}: CategoryInfiniteScrollProps) {
   const [articles, setArticles] = useState<Article[]>(initialArticles)
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(false)
@@ -47,11 +44,7 @@ export default function MoreArticles({
 
     try {
       const nextPage = page + 1
-      // Use category-specific API if category is provided (for related articles)
-      const apiUrl = category 
-        ? `/api/articles?category=${category}&excludeSlug=${excludeSlug}&page=${nextPage}&limit=10`
-        : `/api/articles/all?excludeSlug=${excludeSlug}&page=${nextPage}&limit=10`
-      const response = await fetch(apiUrl)
+      const response = await fetch(`/api/articles?category=${category}&page=${nextPage}&limit=10`)
       
       if (!response.ok) {
         throw new Error('Failed to load articles')
@@ -62,7 +55,7 @@ export default function MoreArticles({
       if (data.articles && data.articles.length > 0) {
         setArticles((prev) => [...prev, ...data.articles])
         setPage(nextPage)
-        setHasMore(data.pagination.hasMore)
+        setHasMore(data.pagination.hasMore ?? (data.pagination.page < data.pagination.pages))
       } else {
         setHasMore(false)
       }
@@ -73,7 +66,7 @@ export default function MoreArticles({
       setLoading(false)
       loadingRef.current = false
     }
-  }, [page, hasMore, excludeSlug, category])
+  }, [page, hasMore, category])
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -116,10 +109,17 @@ export default function MoreArticles({
   const observedIndex = getObservedIndex()
 
   return (
-    <div className={sidebar ? '' : 'mt-16 pt-12 border-t border-gray-300'}>
-      <SectionHeading title="More Articles" />
-      
-      <div className={`grid grid-cols-1 gap-6 mt-6 ${sidebar ? '' : 'md:grid-cols-2 lg:grid-cols-4'}`}>
+    <div className="w-[92%] lg:w-[85%] mx-auto py-6 md:py-12">
+      <div className="mb-6">
+        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2 font-merriweather">
+          {heading}
+        </h1>
+        <p className="text-gray-600">
+          {totalArticles} {totalArticles === 1 ? 'article' : 'articles'} found
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-3 md:mt-6">
         {articles.map((article, index) => (
           <div
             key={`${article.id}-${index}`}

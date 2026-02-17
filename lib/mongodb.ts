@@ -50,15 +50,30 @@ async function connectDB(): Promise<typeof mongoose> {
       bufferCommands: false,
       maxPoolSize: 10, // Maintain up to 10 socket connections
       minPoolSize: 2, // Maintain at least 2 socket connections
-      serverSelectionTimeoutMS: 3000, // Reduced to 3 seconds for faster connection
-      socketTimeoutMS: 30000, // Reduced to 30 seconds for faster timeout detection
+      serverSelectionTimeoutMS: 5000, // Increased to 5 seconds for build stability
+      socketTimeoutMS: 45000, // Increased to 45 seconds for build stability
+      connectTimeoutMS: 10000, // 10 seconds connection timeout
       family: 4, // Use IPv4, skip trying IPv6
       // Read preference for better performance
       readPreference: 'primary', // Use primary for single database setup - faster reads
+      // Retry options
+      retryWrites: true,
+      retryReads: true,
+    }
+
+    // Only add TLS options if using mongodb+srv (Atlas)
+    if (MONGODB_URI.startsWith('mongodb+srv://')) {
+      opts.tls = true
+      opts.tlsAllowInvalidCertificates = false
+      opts.tlsAllowInvalidHostnames = false
     }
 
     cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongooseInstance) => {
       return mongooseInstance
+    }).catch((error) => {
+      // Clear promise on error to allow retry
+      cached.promise = null
+      throw error
     })
   }
 
