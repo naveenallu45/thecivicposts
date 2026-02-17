@@ -46,7 +46,7 @@ function TopStoryCard({
       href={`/${category}/${slug}`} 
       prefetch={true}
       onMouseEnter={handleMouseEnter}
-      className="block group transition-transform duration-200 hover:scale-[1.01] active:scale-[0.99]"
+      className="block group transition-transform duration-200 lg:hover:scale-[1.01]"
       aria-label={`Read article: ${title}`}
     >
       <div className="bg-white rounded-lg overflow-hidden h-full">

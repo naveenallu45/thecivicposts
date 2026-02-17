@@ -46,7 +46,7 @@ function MiniTopStoryCard({
       href={`/${category}/${slug}`} 
       prefetch={true}
       onMouseEnter={handleMouseEnter}
-      className="block group transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]"
+      className="block group transition-transform duration-200 lg:hover:scale-[1.02]"
       aria-label={`Read article: ${title}`}
     >
       <div className="bg-white rounded-lg overflow-hidden flex gap-2 md:gap-3 h-full">

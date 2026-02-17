@@ -46,7 +46,7 @@ function ArticleCard({
       href={`/${category}/${slug}`} 
       prefetch={true}
       onMouseEnter={handleMouseEnter}
-      className="block group focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 rounded-lg transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+      className="block group focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 rounded-lg transition-all duration-200 lg:hover:scale-[1.02]"
       aria-label={`Read article: ${title}`}
     >
       <div className="bg-white rounded-lg overflow-hidden h-full border border-gray-100 hover:border-gray-200 transition-colors duration-200">
