@@ -30,10 +30,13 @@ export default function MoreArticles({
   sidebar = false,
   category,
 }: MoreArticlesProps) {
-  const [articles, setArticles] = useState<Article[]>(initialArticles)
+  // For sidebar, limit to only 8 articles and disable infinite scroll
+  const sidebarArticles = sidebar ? initialArticles.slice(0, 8) : initialArticles
+  const [articles, setArticles] = useState<Article[]>(sidebarArticles)
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(false)
-  const [hasMore, setHasMore] = useState(initialArticles.length < totalArticles)
+  // Disable infinite scroll for sidebar - only show 8 articles
+  const [hasMore, setHasMore] = useState(sidebar ? false : sidebarArticles.length < totalArticles)
   const [error, setError] = useState<string | null>(null)
   const observerTarget = useRef<HTMLDivElement>(null)
   const loadingRef = useRef(false)
@@ -49,8 +52,8 @@ export default function MoreArticles({
       const nextPage = page + 1
       // Use category-specific API if category is provided (for related articles)
       const apiUrl = category 
-        ? `/api/articles?category=${category}&excludeSlug=${excludeSlug}&page=${nextPage}&limit=10`
-        : `/api/articles/all?excludeSlug=${excludeSlug}&page=${nextPage}&limit=10`
+        ? `/api/articles?category=${category}&excludeSlug=${excludeSlug}&page=${nextPage}&limit=${sidebar ? 8 : 10}`
+        : `/api/articles/all?excludeSlug=${excludeSlug}&page=${nextPage}&limit=${sidebar ? 8 : 10}`
       const response = await fetch(apiUrl)
       
       if (!response.ok) {
@@ -73,9 +76,12 @@ export default function MoreArticles({
       setLoading(false)
       loadingRef.current = false
     }
-  }, [page, hasMore, excludeSlug, category])
+  }, [page, hasMore, excludeSlug, category, sidebar])
 
   useEffect(() => {
+    // Disable infinite scroll for sidebar - only show 8 articles
+    if (sidebar) return
+
     const observer = new IntersectionObserver(
       (entries) => {
         // Trigger when the observed element (7th article) becomes visible
@@ -100,17 +106,20 @@ export default function MoreArticles({
         observer.unobserve(currentTarget)
       }
     }
-  }, [hasMore, loading, loadMoreArticles, articles.length])
+  }, [hasMore, loading, loadMoreArticles, articles.length, sidebar])
 
-  // Observe the 7th article (index 6) from the last complete batch of 10
+  // Observe the article before the last one from the last complete batch
   const getObservedIndex = () => {
-    if (articles.length < 7) return -1 // Not enough articles yet
+    const batchSize = sidebar ? 8 : 10
+    const threshold = sidebar ? 6 : 7
     
-    // Calculate the last complete batch of 10
-    const batchesLoaded = Math.floor(articles.length / 10)
+    if (articles.length < threshold) return -1 // Not enough articles yet
     
-    // Observe the 7th article (index 6) from the last complete batch
-    return (batchesLoaded - 1) * 10 + 6
+    // Calculate the last complete batch
+    const batchesLoaded = Math.floor(articles.length / batchSize)
+    
+    // Observe the article before the last one from the last complete batch
+    return (batchesLoaded - 1) * batchSize + (batchSize - 2)
   }
 
   const observedIndex = getObservedIndex()
@@ -119,11 +128,11 @@ export default function MoreArticles({
     <div className={sidebar ? '' : 'mt-16 pt-12 border-t border-gray-300'}>
       <SectionHeading title="More Articles" />
       
-      <div className={`grid grid-cols-1 gap-6 mt-6 ${sidebar ? '' : 'md:grid-cols-2 lg:grid-cols-4'}`}>
+      <div className={`grid gap-6 mt-6 ${sidebar ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4'}`}>
         {articles.map((article, index) => (
           <div
             key={`${article.id}-${index}`}
-            ref={index === observedIndex && hasMore && observedIndex >= 0 ? observerTarget : null}
+            ref={index === observedIndex && hasMore && !sidebar && observedIndex >= 0 ? observerTarget : null}
             data-article-id={`${article.category}/${article.slug}`}
             className="animate-fade-in"
             style={{ animationDelay: `${index * 50}ms` }}
@@ -154,7 +163,7 @@ export default function MoreArticles({
         </div>
       )}
 
-      {!hasMore && articles.length > 0 && (
+      {!hasMore && articles.length > 0 && !sidebar && (
         <div className="flex justify-center items-center py-8">
           <p className="text-gray-600 text-sm">You&apos;ve reached the end</p>
         </div>

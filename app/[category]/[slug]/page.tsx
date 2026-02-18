@@ -201,7 +201,7 @@ export default async function ArticlePage({
       slug: { $ne: slug } // Exclude current article
     })
       .sort({ createdAt: -1 })
-      .limit(10)
+      .limit(8)
       .select('title subtitle mainImage publishedDate authorName slug category')
       .lean() as Promise<ArticleListItem[]>,
     Article.countDocuments({ 
