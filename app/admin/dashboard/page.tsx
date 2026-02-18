@@ -6,28 +6,57 @@ import connectDB from '@/lib/mongodb'
 import Article from '@/models/Article'
 import Author from '@/models/Author'
 import LogoutButton from '@/components/admin/LogoutButton'
+import PublisherStatistics from '@/components/admin/PublisherStatistics'
 
 export const dynamic = 'force-dynamic'
 
 export default async function AdminDashboard() {
   await requireAdmin()
 
-  await connectDB()
-  const Publisher = (await import('@/models/Publisher')).default
-  const [articlesCount, publishedCount, draftCount, authorsCount, publishersCount] = await Promise.all([
-    Article.countDocuments(),
-    Article.countDocuments({ status: 'published' }),
-    Article.countDocuments({ status: 'draft' }),
-    Author.countDocuments(),
-    Publisher.countDocuments(),
-  ])
+  interface RecentArticle {
+    _id: { toString: () => string }
+    title: string
+    authorName?: string
+    category: string
+    status: string
+    createdAt: Date
+  }
 
-  // Optimized: Use stored authorName instead of populate
-  const recentArticles = await Article.find()
-    .select('title authorName category status createdAt')
-    .sort({ createdAt: -1 })
-    .limit(10)
-    .lean()
+  let articlesCount = 0
+  let publishedCount = 0
+  let draftCount = 0
+  let authorsCount = 0
+  let publishersCount = 0
+  let recentArticles: RecentArticle[] = []
+  let dbError: string | null = null
+
+  try {
+    await connectDB()
+    const Publisher = (await import('@/models/Publisher')).default
+    const [articlesCountResult, publishedCountResult, draftCountResult, authorsCountResult, publishersCountResult] = await Promise.all([
+      Article.countDocuments(),
+      Article.countDocuments({ status: 'published' }),
+      Article.countDocuments({ status: 'draft' }),
+      Author.countDocuments(),
+      Publisher.countDocuments(),
+    ])
+
+    articlesCount = articlesCountResult
+    publishedCount = publishedCountResult
+    draftCount = draftCountResult
+    authorsCount = authorsCountResult
+    publishersCount = publishersCountResult
+
+    // Optimized: Use stored authorName instead of populate
+    recentArticles = await Article.find()
+      .select('title authorName category status createdAt')
+      .sort({ createdAt: -1 })
+      .limit(10)
+      .lean() as RecentArticle[]
+  } catch (error: unknown) {
+    console.error('Database connection error:', error)
+    dbError = error instanceof Error ? error.message : 'Failed to connect to database'
+  }
 
   return (
     <>
@@ -51,6 +80,24 @@ export default async function AdminDashboard() {
 
       <div className="bg-gray-50 min-h-screen">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Database Error Banner */}
+          {dbError && (
+            <div className="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-lg">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-red-800">Database Connection Error</h3>
+                  <div className="mt-2 text-sm text-red-700">
+                    <p className="whitespace-pre-line">{dbError}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
           {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
             <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-orange-500 hover:shadow-lg transition-shadow">
@@ -112,19 +159,18 @@ export default async function AdminDashboard() {
             </Link>
           </div>
 
+          {/* Publisher Statistics */}
+          <div className="mb-8">
+            <PublisherStatistics />
+          </div>
+
           {/* Recent Articles */}
           <div className="bg-white rounded-lg shadow-md border-t-4 border-orange-500">
             <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-orange-50 to-white">
               <h2 className="text-xl font-semibold text-orange-700">Recent Articles</h2>
             </div>
             <div className="divide-y divide-gray-200">
-              {recentArticles.map((article: {
-                _id: { toString: () => string }
-                title: string
-                authorName?: string
-                category: string
-                status: string
-              }) => (
+              {recentArticles.map((article) => (
                 <Link
                   key={article._id.toString()}
                   href={`/admin/articles/${article._id}`}

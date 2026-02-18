@@ -182,6 +182,7 @@ ArticleSchema.index({ status: 1, isTrending: 1, createdAt: -1 }) // Trending art
 ArticleSchema.index({ status: 1, isLatest: 1, category: 1, createdAt: -1 }) // Latest by category
 ArticleSchema.index({ slug: 1, status: 1 }) // Article lookup by slug
 ArticleSchema.index({ createdAt: -1 }) // General sorting by creation date
+ArticleSchema.index({ status: 1, publisher: 1, publishedDate: -1 }) // Publisher statistics
 
 // Generate slug from title before saving - includes full title
 ArticleSchema.pre('save', async function (this: IArticle) {

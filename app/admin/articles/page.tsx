@@ -3,10 +3,13 @@ import { requireAdmin } from '@/lib/admin-auth'
 import '@/models'
 import connectDB from '@/lib/mongodb'
 import Article from '@/models/Article'
+import Publisher from '@/models/Publisher'
 import ArticlesTable from '@/components/admin/ArticlesTable'
 import Link from 'next/link'
 import LogoutButton from '@/components/admin/LogoutButton'
 import AuthorFilter from '@/components/admin/AuthorFilter'
+import PublisherFilter from '@/components/admin/PublisherFilter'
+import mongoose from 'mongoose'
 
 export const dynamic = 'force-dynamic'
 
@@ -47,29 +50,39 @@ interface ArticleWithAuthor {
 export default async function ManageArticlesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ author?: string }>
+  searchParams: Promise<{ author?: string; publisher?: string }>
 }) {
   await requireAdmin()
   await connectDB()
 
   const params = await searchParams
   const authorFilter = params.author
+  const publisherFilter = params.publisher
 
-  // Build query with optional author filter
-  const query: { authorName?: string } = {}
+  // Build query with optional author and publisher filters
+  const query: { authorName?: string; publisher?: mongoose.Types.ObjectId } = {}
   if (authorFilter && authorFilter !== 'all') {
     query.authorName = authorFilter
   }
+  if (publisherFilter && publisherFilter !== 'all') {
+    query.publisher = new mongoose.Types.ObjectId(publisherFilter)
+  }
 
-  // Get all unique authors for filter dropdown
-  const allAuthors = await Article.distinct('authorName', {
-    authorName: { $exists: true, $ne: '' }
-  }).sort()
+  // Get all unique authors and publishers for filter dropdowns
+  const [allAuthors, allPublishers] = await Promise.all([
+    Article.distinct('authorName', {
+      authorName: { $exists: true, $ne: '' }
+    }).sort(),
+    Publisher.find()
+      .select('_id name')
+      .sort({ name: 1 })
+      .lean()
+  ])
 
   // Optimized: Only select needed fields, no populate (authorName is already stored)
   // Parallel execution with Promise.all for better performance
   const articles = await Article.find(query)
-    .select('title author authorName publishedDate createdAt status category isTopStory isMiniTopStory isTrending')
+    .select('title author authorName publishedDate createdAt status category isTopStory isMiniTopStory isTrending publisher')
     .sort({ createdAt: -1 })
     .limit(1000)
     .lean() as unknown as ArticleWithAuthor[]
@@ -102,9 +115,16 @@ export default async function ManageArticlesPage({
       </div>
 
       <div className="w-full px-4 sm:px-6 lg:px-8 py-8 overflow-x-hidden">
-        {/* Author Filter */}
-        <div className="mb-6">
+        {/* Filters - Column wise */}
+        <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
           <AuthorFilter authors={allAuthors} selectedAuthor={authorFilter || 'all'} />
+          <PublisherFilter 
+            publishers={allPublishers.map(p => ({ 
+              id: p._id.toString(), 
+              name: p.name 
+            }))} 
+            selectedPublisher={publisherFilter || 'all'} 
+          />
         </div>
 
         <ArticlesTable articles={articles.map((article) => {

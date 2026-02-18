@@ -50,7 +50,7 @@ async function connectDB(): Promise<typeof mongoose> {
       bufferCommands: false,
       maxPoolSize: 10, // Maintain up to 10 socket connections
       minPoolSize: 2, // Maintain at least 2 socket connections
-      serverSelectionTimeoutMS: 5000, // Increased to 5 seconds for build stability
+      serverSelectionTimeoutMS: 10000, // Increased to 10 seconds for better reliability
       socketTimeoutMS: 45000, // Increased to 45 seconds for build stability
       connectTimeoutMS: 10000, // 10 seconds connection timeout
       family: 4, // Use IPv4, skip trying IPv6
@@ -70,9 +70,33 @@ async function connectDB(): Promise<typeof mongoose> {
 
     cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongooseInstance) => {
       return mongooseInstance
-    }).catch((error) => {
+    }).catch((error: unknown) => {
       // Clear promise on error to allow retry
       cached.promise = null
+      
+      // Provide helpful error messages for common issues
+      if (error && typeof error === 'object' && ('code' in error || 'syscall' in error)) {
+        const mongoError = error as { code?: string; syscall?: string; hostname?: string; name?: string }
+        if (mongoError.code === 'ECONNREFUSED' || mongoError.code === 'ENOTFOUND' || mongoError.syscall === 'querySrv') {
+          const hostname = mongoError.hostname || MONGODB_URI.match(/@([^/]+)/)?.[1] || 'unknown'
+          const enhancedError = new Error(
+            `MongoDB connection failed: Cannot connect to ${hostname}\n\n` +
+            `Possible causes:\n` +
+            `1. MongoDB Atlas cluster is paused or deleted\n` +
+            `2. Network connectivity issues or DNS resolution failure\n` +
+            `3. Incorrect connection string in .env.local\n` +
+            `4. IP address not whitelisted in MongoDB Atlas Network Access\n\n` +
+            `To fix:\n` +
+            `- Check your MongoDB Atlas dashboard to ensure the cluster is running\n` +
+            `- Verify your MONGODB_URI in .env.local is correct\n` +
+            `- Ensure your IP address is whitelisted in MongoDB Atlas Network Access\n` +
+            `- Try restarting your development server after fixing the connection string`
+          )
+          enhancedError.name = mongoError.name || 'MongoConnectionError'
+          throw enhancedError
+        }
+      }
+      
       throw error
     })
   }
@@ -82,10 +106,19 @@ async function connectDB(): Promise<typeof mongoose> {
     if (!cached.conn) {
       throw new Error('Failed to establish database connection')
     }
-  } catch (e) {
+  } catch (e: unknown) {
     // Clear cache on error to allow retry
     cached.promise = null
     cached.conn = null
+    
+    // Re-throw with enhanced error message if it's a connection error
+    if (e && typeof e === 'object' && ('code' in e || 'syscall' in e)) {
+      const mongoError = e as { code?: string; syscall?: string }
+      if (mongoError.code === 'ECONNREFUSED' || mongoError.code === 'ENOTFOUND' || mongoError.syscall === 'querySrv') {
+        throw e // Already enhanced in the promise catch block
+      }
+    }
+    
     throw e
   }
 
