@@ -293,6 +293,11 @@ export default function ArticleForm({ authors, article, onPreviewChange, isAutho
 
       if (imageType === 'main') {
         setImageLoadError(null) // Clear any previous error
+        console.log('Main image uploaded successfully:', {
+          url: data.url,
+          public_id: data.public_id,
+          urlLength: data.url?.length
+        })
         setFormData((prev) => ({
           ...prev,
           mainImage: { url: data.url, public_id: data.public_id, alt: '' },
@@ -747,15 +752,14 @@ export default function ArticleForm({ authors, article, onPreviewChange, isAutho
                   </div>
                 ) : (
                   <div className="relative max-w-md max-h-64 w-auto h-auto rounded-lg mb-2 overflow-hidden bg-gray-100">
-                    <Image
-                      src={getOptimizedImageUrl(formData.mainImage.url, 400, 'auto:best')}
+                    {/* Use regular img tag for preview to avoid Next.js Image optimization issues */}
+                    <img
+                      src={formData.mainImage.url}
                       alt={formData.mainImage.alt || formData.title || 'Article main image'}
-                      width={400}
-                      height={267}
-                      className="w-auto h-auto max-w-full max-h-64 object-contain"
+                      className="w-auto h-auto max-w-full max-h-64 object-contain rounded-lg"
                       onError={() => {
                         console.error('Image failed to load:', formData.mainImage.url)
-                        setImageLoadError('The image URL may be invalid or the image was not uploaded correctly. Please try uploading again.')
+                        setImageLoadError('The image URL may be invalid or the image was not uploaded correctly. Please check the URL and try uploading again.')
                       }}
                       onLoad={() => {
                         setImageLoadError(null)
