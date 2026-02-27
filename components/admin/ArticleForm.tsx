@@ -99,6 +99,7 @@ export default function ArticleForm({ authors, article, onPreviewChange, isAutho
 
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [imageLoadError, setImageLoadError] = useState<string | null>(null)
   
   // Track which option is selected: 'image', 'youtube', or 'none'
   const [mediaType, setMediaType] = useState<'image' | 'youtube' | 'none'>(() => {
@@ -291,6 +292,7 @@ export default function ArticleForm({ authors, article, onPreviewChange, isAutho
       }
 
       if (imageType === 'main') {
+        setImageLoadError(null) // Clear any previous error
         setFormData((prev) => ({
           ...prev,
           mainImage: { url: data.url, public_id: data.public_id, alt: '' },
@@ -728,20 +730,51 @@ export default function ArticleForm({ authors, article, onPreviewChange, isAutho
                     </p>
             {formData.mainImage.url ? (
               <div className="relative">
-                <Image
-                  src={formData.mainImage.url}
-                  alt={formData.mainImage.alt || formData.title || 'Article main image'}
-                  width={400}
-                  height={267}
-                  className="max-w-md max-h-64 w-auto h-auto rounded-lg mb-2 object-contain"
-                />
-                <button
-                  type="button"
-                  onClick={() => setFormData({ ...formData, mainImage: { url: '', public_id: '', alt: '' } })}
-                  className="absolute top-2 right-2 bg-red-600 text-white px-3 py-1 rounded"
-                >
-                  Remove
-                </button>
+                {imageLoadError ? (
+                  <div className="max-w-md p-4 border-2 border-red-300 rounded-lg bg-red-50 mb-2">
+                    <p className="text-red-600 text-sm font-medium mb-2">⚠️ Image failed to load</p>
+                    <p className="text-red-500 text-xs mb-2">{imageLoadError}</p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setImageLoadError(null)
+                        setFormData({ ...formData, mainImage: { url: '', public_id: '', alt: '' } })
+                      }}
+                      className="text-xs text-red-600 underline hover:text-red-800"
+                    >
+                      Remove and upload again
+                    </button>
+                  </div>
+                ) : (
+                  <div className="relative max-w-md max-h-64 w-auto h-auto rounded-lg mb-2 overflow-hidden bg-gray-100">
+                    <Image
+                      src={getOptimizedImageUrl(formData.mainImage.url, 400, 'auto:best')}
+                      alt={formData.mainImage.alt || formData.title || 'Article main image'}
+                      width={400}
+                      height={267}
+                      className="w-auto h-auto max-w-full max-h-64 object-contain"
+                      onError={() => {
+                        console.error('Image failed to load:', formData.mainImage.url)
+                        setImageLoadError('The image URL may be invalid or the image was not uploaded correctly. Please try uploading again.')
+                      }}
+                      onLoad={() => {
+                        setImageLoadError(null)
+                      }}
+                    />
+                  </div>
+                )}
+                {!imageLoadError && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setImageLoadError(null)
+                      setFormData({ ...formData, mainImage: { url: '', public_id: '', alt: '' } })
+                    }}
+                    className="absolute top-2 right-2 bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 transition-colors"
+                  >
+                    Remove
+                  </button>
+                )}
               </div>
             ) : (
               <input
