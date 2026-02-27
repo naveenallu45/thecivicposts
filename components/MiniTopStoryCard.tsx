@@ -1,7 +1,6 @@
 'use client'
 
 import { memo, useCallback } from 'react'
-import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useTransition } from 'react'
@@ -51,18 +50,29 @@ function MiniTopStoryCard({
     >
       <div className="bg-white rounded-lg overflow-hidden flex gap-2 md:gap-3 h-full">
         {/* Small Image */}
-        <div className="relative w-24 md:w-28 lg:w-32 flex-shrink-0 h-20 md:h-24 lg:h-28 overflow-hidden rounded">
-          <Image
-            src={getOptimizedImageUrl(mainImage, 128)}
-            alt={title}
-            fill
-            className="object-cover"
-            sizes="(max-width: 768px) 96px, (max-width: 1024px) 112px, 128px"
-            loading="lazy"
-            quality={85}
-            placeholder="blur"
-            blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
-          />
+        <div className="relative w-24 md:w-28 lg:w-32 flex-shrink-0 h-20 md:h-24 lg:h-28 overflow-hidden rounded bg-gray-100">
+          {mainImage && mainImage.trim() ? (
+            <img
+              src={getOptimizedImageUrl(mainImage, 128)}
+              alt={title}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                // Fallback to raw URL if optimized URL fails
+                const target = e.target as HTMLImageElement
+                if (target.src !== mainImage && mainImage) {
+                  target.src = mainImage
+                } else {
+                  // Hide broken image if both URLs fail
+                  target.style.display = 'none'
+                }
+              }}
+              loading="lazy"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400 text-[8px]">
+              No Image
+            </div>
+          )}
         </div>
         
         {/* Content */}
