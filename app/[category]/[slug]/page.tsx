@@ -141,10 +141,11 @@ export default async function ArticlePage({
 }: {
   params: Promise<{ category: string; slug: string }>
 }) {
-  const { category, slug } = await params
-  
-  // Connect to DB (cached connection)
-  await connectDB()
+  try {
+    const { category, slug } = await params
+    
+    // Connect to DB (cached connection)
+    await connectDB()
   
   const categoryLabels: Record<string, string> = {
     'news': 'News',
@@ -376,24 +377,17 @@ export default async function ArticlePage({
               {/* Main Image - HD Quality via CDN */}
               {article.mainImage?.url && article.mainImage.url.trim() && (
                 <div className="mb-8 lg:w-3/4 lg:mx-auto">
-                  {/* Use regular img tag with optimized URL, fallback to raw URL if optimization fails */}
                   <img
-                    src={getOptimizedImageUrl(article.mainImage.url, 1200, 'auto:best')}
+                    src={(() => {
+                      try {
+                        return getOptimizedImageUrl(article.mainImage.url, 1200, 'auto:best')
+                      } catch (error) {
+                        console.error('Error optimizing image URL, using raw URL:', error)
+                        return article.mainImage.url
+                      }
+                    })()}
                     alt={article.mainImage.alt || article.title || 'Article image'}
                     className="w-full h-auto rounded-lg"
-                    onError={(e) => {
-                      // Fallback to raw URL if optimized URL fails
-                      const target = e.target as HTMLImageElement
-                      const rawUrl = article.mainImage?.url || ''
-                      if (target.src !== rawUrl && rawUrl) {
-                        console.warn('Optimized image failed, using raw URL:', rawUrl)
-                        target.src = rawUrl
-                      } else {
-                        console.error('Image failed to load. URL:', rawUrl)
-                        // Hide broken image
-                        target.style.display = 'none'
-                      }
-                    }}
                     loading="eager"
                   />
                 </div>
@@ -548,4 +542,8 @@ export default async function ArticlePage({
       </main>
     </>
   )
+  } catch (error) {
+    console.error('Error rendering article page:', error)
+    throw error // Re-throw to show 500 error page
+  }
 }
