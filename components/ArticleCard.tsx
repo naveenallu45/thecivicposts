@@ -53,18 +53,29 @@ function ArticleCard({
         {/* Horizontal layout for mobile/tablet (1-2 columns) */}
         <div className="flex flex-row h-full lg:hidden">
           {/* Image Side - 40% width on mobile/tablet (reduced by 15%) */}
-          <div className="w-[34%] md:w-[34%] flex-shrink-0 relative h-[119px] md:h-[153px] overflow-hidden">
-            <Image
-              src={getOptimizedImageUrl(mainImage, 400)}
-              alt={title}
-              fill
-              className="object-cover"
-              sizes="(max-width: 768px) 40vw, 40vw"
-              loading="lazy"
-              quality={85}
-              placeholder="blur"
-              blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
-            />
+          <div className="w-[34%] md:w-[34%] flex-shrink-0 relative h-[119px] md:h-[153px] overflow-hidden bg-gray-100">
+            {mainImage && mainImage.trim() ? (
+              <img
+                src={getOptimizedImageUrl(mainImage, 400)}
+                alt={title}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  // Fallback to raw URL if optimized URL fails
+                  const target = e.target as HTMLImageElement
+                  if (target.src !== mainImage && mainImage) {
+                    target.src = mainImage
+                  } else {
+                    // Hide broken image if both URLs fail
+                    target.style.display = 'none'
+                  }
+                }}
+                loading="lazy"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400 text-xs">
+                No Image
+              </div>
+            )}
           </div>
           
           {/* Content Side - 66% width on mobile/tablet (increased to compensate for image reduction) */}
@@ -92,18 +103,29 @@ function ArticleCard({
         {/* Vertical layout for laptop (4 columns) - Image top, text below */}
         <div className="hidden lg:flex flex-col h-full">
           {/* Image Top */}
-          <div className="w-full flex-shrink-0 relative h-[153px] overflow-hidden">
-            <Image
-              src={getOptimizedImageUrl(mainImage, 500, 'auto:best')}
-              alt={title}
-              fill
-              className="object-cover"
-              sizes="(min-width: 1024px) 25vw, 100vw"
-              loading="lazy"
-              quality={85}
-              placeholder="blur"
-              blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
-            />
+          <div className="w-full flex-shrink-0 relative h-[153px] overflow-hidden bg-gray-100">
+            {mainImage && mainImage.trim() ? (
+              <img
+                src={getOptimizedImageUrl(mainImage, 500, 'auto:best')}
+                alt={title}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  // Fallback to raw URL if optimized URL fails
+                  const target = e.target as HTMLImageElement
+                  if (target.src !== mainImage && mainImage) {
+                    target.src = mainImage
+                  } else {
+                    // Hide broken image if both URLs fail
+                    target.style.display = 'none'
+                  }
+                }}
+                loading="lazy"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400 text-xs">
+                No Image
+              </div>
+            )}
           </div>
           
           {/* Content Bottom */}

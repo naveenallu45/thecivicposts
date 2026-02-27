@@ -374,20 +374,27 @@ export default async function ArticlePage({
               />
 
               {/* Main Image - HD Quality via CDN */}
-              {article.mainImage?.url && (
+              {article.mainImage?.url && article.mainImage.url.trim() && (
                 <div className="mb-8 lg:w-3/4 lg:mx-auto">
-                  <Image
+                  {/* Use regular img tag with optimized URL, fallback to raw URL if optimization fails */}
+                  <img
                     src={getOptimizedImageUrl(article.mainImage.url, 1200, 'auto:best')}
                     alt={article.mainImage.alt || article.title || 'Article image'}
-                    width={1200}
-                    height={800}
                     className="w-full h-auto rounded-lg"
-                    priority
-                    fetchPriority="high"
-                    quality={95}
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 900px"
-                    placeholder="blur"
-                    blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
+                    onError={(e) => {
+                      // Fallback to raw URL if optimized URL fails
+                      const target = e.target as HTMLImageElement
+                      const rawUrl = article.mainImage?.url || ''
+                      if (target.src !== rawUrl && rawUrl) {
+                        console.warn('Optimized image failed, using raw URL:', rawUrl)
+                        target.src = rawUrl
+                      } else {
+                        console.error('Image failed to load. URL:', rawUrl)
+                        // Hide broken image
+                        target.style.display = 'none'
+                      }
+                    }}
+                    loading="eager"
                   />
                 </div>
               )}
