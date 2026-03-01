@@ -5,6 +5,9 @@ export const metadata: Metadata = {
   description: 'Privacy Policy for The Civic Posts. Learn how we collect, use, and protect your personal information.',
 }
 
+export const dynamic = 'force-static'
+export const revalidate = false
+
 export default function PrivacyPolicyPage() {
   return (
     <main className="min-h-screen bg-gray-50">

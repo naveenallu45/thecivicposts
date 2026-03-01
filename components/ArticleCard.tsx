@@ -74,15 +74,15 @@ function ArticleCard({
     >
       <div className="bg-white rounded-lg overflow-hidden h-full border border-gray-100 hover:border-gray-200 transition-colors duration-200">
         {/* Horizontal layout for mobile/tablet (1-2 columns) */}
-        <div className="flex flex-row h-full lg:hidden">
-          {/* Image Side - Natural sizing without cropping */}
-          <div className="w-[34%] md:w-[34%] flex-shrink-0 flex items-center justify-center bg-gray-100">
+        <div className="flex flex-row items-stretch lg:hidden">
+          {/* Image Side - Natural sizing without cropping, card height matches image */}
+          <div className="w-[34%] md:w-[34%] flex-shrink-0 bg-gray-100 flex items-center">
             {mainImage && mainImage.trim() ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={getOptimizedImageUrl(mainImage, 400)}
                 alt={title}
-                className="max-w-full max-h-[119px] md:max-h-[153px] w-auto h-auto"
+                className="max-w-full max-h-[119px] md:max-h-[153px] w-auto h-auto block"
                 onError={(e) => {
                   // Fallback to raw URL if optimized URL fails
                   const target = e.target as HTMLImageElement
@@ -102,8 +102,8 @@ function ArticleCard({
             )}
           </div>
           
-          {/* Content Side - 66% width on mobile/tablet (increased to compensate for image reduction) */}
-          <div className="w-[66%] md:w-[66%] p-2 md:p-4 flex flex-col h-[119px] md:h-[153px]">
+          {/* Content Side - Height matches image height */}
+          <div className="w-[66%] md:w-[66%] p-2 md:p-4 flex flex-col justify-between">
             <div className="flex-1 flex flex-col overflow-hidden min-h-0">
               <h3 className="text-[12px] md:text-base font-bold text-gray-900 mb-1 md:mb-2 font-merriweather group-hover:text-red-600 transition-colors duration-200 break-words line-clamp-3 leading-tight">
                 {title}
@@ -126,14 +126,14 @@ function ArticleCard({
 
         {/* Vertical layout for laptop (4 columns) - Image top, text below */}
         <div className="hidden lg:flex flex-col h-full">
-          {/* Image Top - Natural sizing without cropping */}
-          <div className="w-full flex-shrink-0 flex items-center justify-center bg-gray-100 min-h-[153px]">
+          {/* Image Top - Natural sizing without cropping, no white space */}
+          <div className="w-full flex-shrink-0 bg-gray-100">
             {mainImage && mainImage.trim() ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={getOptimizedImageUrl(mainImage, 500, 'auto:best')}
                 alt={title}
-                className="w-full max-h-[300px] h-auto"
+                className="w-full max-h-[300px] h-auto block"
                 onError={(e) => {
                   // Fallback to raw URL if optimized URL fails
                   const target = e.target as HTMLImageElement

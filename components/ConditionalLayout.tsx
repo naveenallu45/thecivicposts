@@ -15,8 +15,8 @@ export default function ConditionalLayout({
   children: React.ReactNode
 }) {
   const pathname = usePathname()
-  const isAdminRoute = pathname?.startsWith('/admin')
-  const isPublisherRoute = pathname?.startsWith('/publisher')
+  const isAdminRoute = pathname ? pathname.startsWith('/admin') : false
+  const isPublisherRoute = pathname ? pathname.startsWith('/publisher') : false
   const isHomepage = pathname === '/'
 
   // Exclude admin and publisher routes from public layout (header/footer)

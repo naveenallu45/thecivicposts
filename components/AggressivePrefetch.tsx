@@ -94,7 +94,7 @@ export default function AggressivePrefetch() {
   // Prefetch homepage
   useEffect(() => {
     // Only run on client side
-    if (typeof window === 'undefined') return
+    if (typeof window === 'undefined' || typeof document === 'undefined') return
 
     try {
       router.prefetch('/')
@@ -109,9 +109,11 @@ export default function AggressivePrefetch() {
         // Fallback for browsers without requestIdleCallback
         setTimeout(prefetchAPIs, 2000)
       }
-    } catch {
-      // Silently fail during SSR
-      console.debug('Prefetch failed during SSR')
+    } catch (error) {
+      // Silently fail during SSR/build
+      if (process.env.NODE_ENV === 'development') {
+        console.debug('Prefetch failed:', error)
+      }
     }
   }, [router, prefetchCategories, prefetchAPIs])
 

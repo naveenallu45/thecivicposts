@@ -5,6 +5,9 @@ export const metadata: Metadata = {
   description: 'Terms and Conditions for The Civic Posts. Please read these terms carefully before using our website.',
 }
 
+export const dynamic = 'force-static'
+export const revalidate = false
+
 export default function TermsAndConditionsPage() {
   return (
     <main className="min-h-screen bg-gray-50">
