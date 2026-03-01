@@ -50,12 +50,12 @@ function TopStoryCard({
     >
       <div className="bg-white rounded-lg overflow-hidden h-full">
         {/* Large Image */}
-        <div className="relative w-full h-[245px] md:h-[500px] lg:h-[600px] mb-4 overflow-hidden bg-gray-100">
+        <div className="relative w-full h-[245px] md:h-[500px] lg:h-[600px] mb-4 overflow-hidden bg-gray-100 flex items-center justify-center">
           {mainImage && mainImage.trim() ? (
             <img
               src={getOptimizedImageUrl(mainImage, 1200, 'auto:best')}
               alt={title}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-contain"
               onError={(e) => {
                 // Fallback to raw URL if optimized URL fails
                 const target = e.target as HTMLImageElement

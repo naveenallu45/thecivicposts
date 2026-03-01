@@ -50,12 +50,12 @@ function MiniTopStoryCard({
     >
       <div className="bg-white rounded-lg overflow-hidden flex gap-2 md:gap-3 h-full">
         {/* Small Image */}
-        <div className="relative w-24 md:w-28 lg:w-32 flex-shrink-0 h-20 md:h-24 lg:h-28 overflow-hidden rounded bg-gray-100">
+        <div className="relative w-24 md:w-28 lg:w-32 flex-shrink-0 h-20 md:h-24 lg:h-28 overflow-hidden rounded bg-gray-100 flex items-center justify-center">
           {mainImage && mainImage.trim() ? (
             <img
               src={getOptimizedImageUrl(mainImage, 128)}
               alt={title}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-contain"
               onError={(e) => {
                 // Fallback to raw URL if optimized URL fails
                 const target = e.target as HTMLImageElement
