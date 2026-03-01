@@ -53,12 +53,12 @@ function ArticleCard({
         {/* Horizontal layout for mobile/tablet (1-2 columns) */}
         <div className="flex flex-row h-full lg:hidden">
           {/* Image Side - 40% width on mobile/tablet (reduced by 15%) */}
-          <div className="w-[34%] md:w-[34%] flex-shrink-0 relative h-[119px] md:h-[153px] overflow-hidden bg-gray-100">
+          <div className="w-[34%] md:w-[34%] flex-shrink-0 relative h-[119px] md:h-[153px] overflow-hidden bg-gray-100 flex items-center justify-center">
             {mainImage && mainImage.trim() ? (
               <img
                 src={getOptimizedImageUrl(mainImage, 400)}
                 alt={title}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain"
                 onError={(e) => {
                   // Fallback to raw URL if optimized URL fails
                   const target = e.target as HTMLImageElement
@@ -103,12 +103,12 @@ function ArticleCard({
         {/* Vertical layout for laptop (4 columns) - Image top, text below */}
         <div className="hidden lg:flex flex-col h-full">
           {/* Image Top */}
-          <div className="w-full flex-shrink-0 relative h-[153px] overflow-hidden bg-gray-100">
+          <div className="w-full flex-shrink-0 relative h-[153px] overflow-hidden bg-gray-100 flex items-center justify-center">
             {mainImage && mainImage.trim() ? (
               <img
                 src={getOptimizedImageUrl(mainImage, 500, 'auto:best')}
                 alt={title}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain"
                 onError={(e) => {
                   // Fallback to raw URL if optimized URL fails
                   const target = e.target as HTMLImageElement
