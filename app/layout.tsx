@@ -114,7 +114,7 @@ export const metadata: Metadata = {
     canonical: 'https://www.thecivicposts.com',
   },
   verification: {
-    google: 'YOUR-VERIFICATION-CODE-HERE',
+    google: 'google-site-verification=U5Cgn1zFv2qciE8qLIsXUdvB-PkchmHSNp81GIQ5uKk',
     // STEP 1: Go to Google Search Console (https://search.google.com/search-console)
     // STEP 2: Add property: https://www.thecivicposts.com
     // STEP 3: Choose "HTML tag" verification method

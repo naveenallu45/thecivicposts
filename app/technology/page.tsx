@@ -5,6 +5,7 @@ import Article from '@/models/Article'
 import CategoryInfiniteScroll from '@/components/CategoryInfiniteScroll'
 import type { ArticleListItem } from '@/lib/article-types'
 import { formatDateShort } from '@/lib/date-utils'
+import type { Metadata } from 'next'
 
 // ISR: Revalidate every 30 seconds for faster updates
 export const revalidate = 30
@@ -13,6 +14,24 @@ export const revalidate = 30
 export const dynamic = 'force-static'
 
 const ARTICLES_PER_PAGE = 10
+
+const baseUrl = 'https://www.thecivicposts.com'
+
+export const metadata: Metadata = {
+  title: 'Technology - Latest Tech News & Reviews | The Civic Posts',
+  description: 'Stay updated with the latest technology news, gadget reviews, tech trends, and innovation updates.',
+  keywords: ['technology', 'tech news', 'gadgets', 'tech reviews', 'innovation', 'tech trends'],
+  alternates: {
+    canonical: `${baseUrl}/technology`,
+  },
+  openGraph: {
+    title: 'Technology - Latest Tech News & Reviews | The Civic Posts',
+    description: 'Stay updated with the latest technology news, gadget reviews, and tech trends.',
+    url: `${baseUrl}/technology`,
+    siteName: 'The Civic Posts',
+    type: 'website',
+  },
+}
 
 export default async function TechnologyPage() {
   // Current date for filtering out future-dated articles

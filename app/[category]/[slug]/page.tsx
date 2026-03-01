@@ -259,6 +259,44 @@ export default async function ArticlePage({
     absoluteImageUrl = `${baseUrl}${absoluteImageUrl}`
   }
 
+  // Category name mapping for display
+  const categoryNames: Record<string, string> = {
+    'news': 'News',
+    'entertainment': 'Entertainment',
+    'sports': 'Sports',
+    'health-fitness': 'Health & Fitness',
+    'editorial': 'Editorial',
+    'technology': 'Technology',
+    'automobiles': 'Automobiles',
+  }
+  const categoryDisplayName = categoryNames[category] || category
+
+  // Generate breadcrumb structured data
+  const breadcrumbStructuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Home',
+        item: baseUrl,
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: categoryDisplayName,
+        item: `${baseUrl}/${category}`,
+      },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: article.title,
+        item: articleUrl,
+      },
+    ],
+  }
+
   // Generate structured data (JSON-LD) for better SEO and social sharing
   const structuredData = {
     '@context': 'https://schema.org',
@@ -301,6 +339,10 @@ export default async function ArticlePage({
         />
       )}
       {/* Structured Data (JSON-LD) for SEO and Social Sharing */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbStructuredData) }}
+      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}

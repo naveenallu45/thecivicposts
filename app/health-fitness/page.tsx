@@ -5,6 +5,7 @@ import Article from '@/models/Article'
 import CategoryInfiniteScroll from '@/components/CategoryInfiniteScroll'
 import type { ArticleListItem } from '@/lib/article-types'
 import { formatDateShort } from '@/lib/date-utils'
+import type { Metadata } from 'next'
 
 // ISR: Revalidate every 30 seconds for faster updates
 export const revalidate = 30
@@ -13,6 +14,24 @@ export const revalidate = 30
 export const dynamic = 'force-static'
 
 const ARTICLES_PER_PAGE = 10
+
+const baseUrl = 'https://www.thecivicposts.com'
+
+export const metadata: Metadata = {
+  title: 'Health & Fitness - Health Tips & Fitness Articles | The Civic Posts',
+  description: 'Discover health tips, fitness advice, wellness articles, and lifestyle guides. Stay healthy and fit with expert advice.',
+  keywords: ['health', 'fitness', 'wellness', 'health tips', 'fitness advice', 'lifestyle'],
+  alternates: {
+    canonical: `${baseUrl}/health-fitness`,
+  },
+  openGraph: {
+    title: 'Health & Fitness - Health Tips & Fitness Articles | The Civic Posts',
+    description: 'Discover health tips, fitness advice, and wellness articles.',
+    url: `${baseUrl}/health-fitness`,
+    siteName: 'The Civic Posts',
+    type: 'website',
+  },
+}
 
 export default async function HealthFitnessPage() {
   // Current date for filtering out future-dated articles

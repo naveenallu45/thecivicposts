@@ -5,6 +5,7 @@ import Article from '@/models/Article'
 import CategoryInfiniteScroll from '@/components/CategoryInfiniteScroll'
 import type { ArticleListItem } from '@/lib/article-types'
 import { formatDateShort } from '@/lib/date-utils'
+import type { Metadata } from 'next'
 
 // ISR: Revalidate every 30 seconds for faster updates
 export const revalidate = 30
@@ -13,6 +14,24 @@ export const revalidate = 30
 export const dynamic = 'force-static'
 
 const ARTICLES_PER_PAGE = 10
+
+const baseUrl = 'https://www.thecivicposts.com'
+
+export const metadata: Metadata = {
+  title: 'Editorial - Opinion & Editorial Articles | The Civic Posts',
+  description: 'Read editorial articles, opinion pieces, and in-depth analysis on current events and important topics.',
+  keywords: ['editorial', 'opinion', 'editorial articles', 'opinion pieces', 'analysis'],
+  alternates: {
+    canonical: `${baseUrl}/editorial`,
+  },
+  openGraph: {
+    title: 'Editorial - Opinion & Editorial Articles | The Civic Posts',
+    description: 'Read editorial articles, opinion pieces, and in-depth analysis.',
+    url: `${baseUrl}/editorial`,
+    siteName: 'The Civic Posts',
+    type: 'website',
+  },
+}
 
 export default async function EditorialPage() {
   // Current date for filtering out future-dated articles

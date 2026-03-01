@@ -5,6 +5,7 @@ import Article from '@/models/Article'
 import CategoryInfiniteScroll from '@/components/CategoryInfiniteScroll'
 import type { ArticleListItem } from '@/lib/article-types'
 import { formatDateShort } from '@/lib/date-utils'
+import type { Metadata } from 'next'
 
 // ISR: Revalidate every 30 seconds for faster updates
 export const revalidate = 30
@@ -13,6 +14,24 @@ export const revalidate = 30
 export const dynamic = 'force-static'
 
 const ARTICLES_PER_PAGE = 10
+
+const baseUrl = 'https://www.thecivicposts.com'
+
+export const metadata: Metadata = {
+  title: 'Automobiles - Car News & Reviews | The Civic Posts',
+  description: 'Get the latest automobile news, car reviews, vehicle launches, and automotive industry updates.',
+  keywords: ['automobiles', 'cars', 'car news', 'car reviews', 'automotive', 'vehicle launches'],
+  alternates: {
+    canonical: `${baseUrl}/automobiles`,
+  },
+  openGraph: {
+    title: 'Automobiles - Car News & Reviews | The Civic Posts',
+    description: 'Get the latest automobile news, car reviews, and automotive industry updates.',
+    url: `${baseUrl}/automobiles`,
+    siteName: 'The Civic Posts',
+    type: 'website',
+  },
+}
 
 export default async function AutomobilesPage() {
   // Current date for filtering out future-dated articles
