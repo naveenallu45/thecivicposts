@@ -305,7 +305,7 @@ export default async function ArticlePage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
-      <main className="min-h-screen bg-gray-50">
+      <main className="min-h-screen bg-gray-50 animate-fade-in-up">
         <div className="w-[95%] lg:w-[85%] mx-auto px-2 sm:px-6 lg:px-8 py-12">
           {/* Back Button */}
           <div className="mb-6">
@@ -377,6 +377,7 @@ export default async function ArticlePage({
               {/* Main Image - HD Quality via CDN */}
               {article.mainImage?.url && article.mainImage.url.trim() && (
                 <div className="mb-8 lg:w-3/4 lg:mx-auto">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={(() => {
                       try {
@@ -387,8 +388,10 @@ export default async function ArticlePage({
                       }
                     })()}
                     alt={article.mainImage.alt || article.title || 'Article image'}
-                    className="w-full h-auto rounded-lg"
+                    className="w-full h-auto rounded-lg image-fade-in"
                     loading="eager"
+                    fetchPriority="high"
+                    decoding="async"
                   />
                 </div>
               )}

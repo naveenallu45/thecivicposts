@@ -753,6 +753,7 @@ export default function ArticleForm({ authors, article, onPreviewChange, isAutho
                 ) : (
                   <div className="relative max-w-md max-h-64 w-auto h-auto rounded-lg mb-2 overflow-hidden bg-gray-100">
                     {/* Use regular img tag for preview to avoid Next.js Image optimization issues */}
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={formData.mainImage.url}
                       alt={formData.mainImage.alt || formData.title || 'Article main image'}

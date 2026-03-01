@@ -169,6 +169,36 @@ img {
     background-size: 1000px 100%;
   }
   
+  /* Smooth page transitions */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .animate-fade-in-up {
+    animation: fadeInUp 0.3s ease-out;
+  }
+  
+  /* Image loading fade-in */
+  @keyframes imageFadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  
+  .image-fade-in {
+    animation: imageFadeIn 0.3s ease-in;
+  }
+  
   /* Reduce motion for users who prefer it */
   @media (prefers-reduced-motion: reduce) {
     *,

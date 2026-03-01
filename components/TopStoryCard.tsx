@@ -35,27 +35,44 @@ function TopStoryCard({
     })
   }, [router, authorName])
 
-  // Prefetch on hover for instant navigation
+  // Aggressive prefetching on hover for instant navigation
   const handleMouseEnter = useCallback(() => {
+    // Prefetch article page
     router.prefetch(`/${category}/${slug}`)
-  }, [router, category, slug])
+    
+    // Preload article image for instant display
+    if (mainImage && mainImage.trim()) {
+      const link = document.createElement('link')
+      link.rel = 'preload'
+      link.as = 'image'
+      link.href = getOptimizedImageUrl(mainImage, 1200, 'auto:best')
+      link.setAttribute('fetchpriority', 'high')
+      document.head.appendChild(link)
+      
+      // Also preload the actual image to browser cache
+      const img = new window.Image()
+      img.src = getOptimizedImageUrl(mainImage, 1200, 'auto:best')
+    }
+  }, [router, category, slug, mainImage])
 
   return (
     <Link 
       href={`/${category}/${slug}`} 
       prefetch={true}
       onMouseEnter={handleMouseEnter}
-      className="block group transition-transform duration-200 lg:hover:scale-[1.01]"
+      onTouchStart={handleMouseEnter}
+      className="block group transition-transform duration-200 lg:hover:scale-[1.01] active:scale-[0.99]"
       aria-label={`Read article: ${title}`}
     >
       <div className="bg-white rounded-lg overflow-hidden h-full">
-        {/* Large Image */}
-        <div className="relative w-full h-[245px] md:h-[500px] lg:h-[600px] mb-4 overflow-hidden bg-gray-100 flex items-center justify-center">
+        {/* Large Image - Natural sizing without cropping */}
+        <div className="relative w-full mb-4 bg-gray-100">
           {mainImage && mainImage.trim() ? (
+            // eslint-disable-next-line @next/next/no-img-element
             <img
               src={getOptimizedImageUrl(mainImage, 1200, 'auto:best')}
               alt={title}
-              className="w-full h-full object-contain"
+              className="w-full max-h-[600px] h-auto block"
               onError={(e) => {
                 // Fallback to raw URL if optimized URL fails
                 const target = e.target as HTMLImageElement
@@ -69,7 +86,7 @@ function TopStoryCard({
               loading="eager"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400 text-sm">
+            <div className="w-full h-[245px] md:h-[500px] lg:h-[600px] flex items-center justify-center bg-gray-200 text-gray-400 text-sm">
               No Image
             </div>
           )}

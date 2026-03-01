@@ -1,7 +1,6 @@
 'use client'
 
 import { memo, useCallback } from 'react'
-import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useTransition } from 'react'
@@ -36,29 +35,54 @@ function ArticleCard({
     })
   }, [router, authorName])
 
-  // Prefetch on hover for instant navigation
+  // Aggressive prefetching on hover for instant navigation
   const handleMouseEnter = useCallback(() => {
+    // Prefetch article page
     router.prefetch(`/${category}/${slug}`)
-  }, [router, category, slug])
+    
+    // Preload article image for instant display
+    if (mainImage && mainImage.trim()) {
+      const link = document.createElement('link')
+      link.rel = 'preload'
+      link.as = 'image'
+      link.href = getOptimizedImageUrl(mainImage, 1200, 'auto:best')
+      link.setAttribute('fetchpriority', 'high')
+      document.head.appendChild(link)
+      
+      // Also preload the actual image to browser cache
+      const img = new window.Image()
+      img.src = getOptimizedImageUrl(mainImage, 1200, 'auto:best')
+    }
+    
+    // Prefetch article API data
+    try {
+      fetch(`/api/articles?category=${category}&excludeSlug=${slug}&page=1&limit=10`, {
+        method: 'GET',
+        cache: 'force-cache'
+      }).catch(() => {})
+    } catch {}
+  }, [router, category, slug, mainImage])
 
   return (
     <Link 
       href={`/${category}/${slug}`} 
       prefetch={true}
       onMouseEnter={handleMouseEnter}
-      className="block group focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 rounded-lg transition-all duration-200 lg:hover:scale-[1.02]"
+      onTouchStart={handleMouseEnter}
+      className="block group focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 rounded-lg transition-all duration-200 lg:hover:scale-[1.02] active:scale-[0.98]"
       aria-label={`Read article: ${title}`}
     >
       <div className="bg-white rounded-lg overflow-hidden h-full border border-gray-100 hover:border-gray-200 transition-colors duration-200">
         {/* Horizontal layout for mobile/tablet (1-2 columns) */}
         <div className="flex flex-row h-full lg:hidden">
-          {/* Image Side - 40% width on mobile/tablet (reduced by 15%) */}
-          <div className="w-[34%] md:w-[34%] flex-shrink-0 relative h-[119px] md:h-[153px] overflow-hidden bg-gray-100 flex items-center justify-center">
+          {/* Image Side - Natural sizing without cropping */}
+          <div className="w-[34%] md:w-[34%] flex-shrink-0 flex items-center justify-center bg-gray-100">
             {mainImage && mainImage.trim() ? (
+              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={getOptimizedImageUrl(mainImage, 400)}
                 alt={title}
-                className="w-full h-full object-contain"
+                className="max-w-full max-h-[119px] md:max-h-[153px] w-auto h-auto"
                 onError={(e) => {
                   // Fallback to raw URL if optimized URL fails
                   const target = e.target as HTMLImageElement
@@ -72,7 +96,7 @@ function ArticleCard({
                 loading="lazy"
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400 text-xs">
+              <div className="w-full h-[119px] md:h-[153px] flex items-center justify-center bg-gray-200 text-gray-400 text-xs">
                 No Image
               </div>
             )}
@@ -102,13 +126,14 @@ function ArticleCard({
 
         {/* Vertical layout for laptop (4 columns) - Image top, text below */}
         <div className="hidden lg:flex flex-col h-full">
-          {/* Image Top */}
-          <div className="w-full flex-shrink-0 relative h-[153px] overflow-hidden bg-gray-100 flex items-center justify-center">
+          {/* Image Top - Natural sizing without cropping */}
+          <div className="w-full flex-shrink-0 flex items-center justify-center bg-gray-100 min-h-[153px]">
             {mainImage && mainImage.trim() ? (
+              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={getOptimizedImageUrl(mainImage, 500, 'auto:best')}
                 alt={title}
-                className="w-full h-full object-contain"
+                className="w-full max-h-[300px] h-auto"
                 onError={(e) => {
                   // Fallback to raw URL if optimized URL fails
                   const target = e.target as HTMLImageElement
@@ -122,7 +147,7 @@ function ArticleCard({
                 loading="lazy"
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400 text-xs">
+              <div className="w-full h-[153px] flex items-center justify-center bg-gray-200 text-gray-400 text-xs">
                 No Image
               </div>
             )}

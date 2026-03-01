@@ -3,12 +3,14 @@
 import { useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { generateAuthorSlug } from '@/lib/author-utils'
+import { getOptimizedImageUrl } from '@/lib/cloudinary-optimize'
 
 interface ViewportPrefetchProps {
   articles: Array<{
     slug: string
     category: string
     authorName?: string
+    mainImage?: string
   }>
 }
 
@@ -35,6 +37,23 @@ export default function ViewportPrefetch({ articles }: ViewportPrefetchProps) {
               if (article) {
                 // Prefetch article page
                 router.prefetch(`/${article.category}/${article.slug}`)
+                
+                // Preload article image for instant display
+                if (article.mainImage && article.mainImage.trim()) {
+                  try {
+                    const imageUrl = getOptimizedImageUrl(article.mainImage, 1200, 'auto:best')
+                    const link = document.createElement('link')
+                    link.rel = 'preload'
+                    link.as = 'image'
+                    link.href = imageUrl
+                    link.setAttribute('fetchpriority', 'high')
+                    document.head.appendChild(link)
+                    
+                    // Also preload the actual image to browser cache
+                    const img = new window.Image()
+                    img.src = imageUrl
+                  } catch {}
+                }
                 
                 // Prefetch author page if available
                 if (article.authorName) {

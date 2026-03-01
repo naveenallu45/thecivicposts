@@ -55,7 +55,7 @@ export default function CategorySection({ articles, categoryName }: CategorySect
     <div className="mb-12">
       <ViewportPrefetch articles={articles} />
       <SectionHeading title={categoryName} />
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-3 md:mt-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6 mt-3 md:mt-6">
         {articles.map((article) => (
           <div key={article.id} data-article-id={`${article.category}/${article.slug}`}>
             <ArticleCard
