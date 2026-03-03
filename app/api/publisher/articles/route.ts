@@ -4,10 +4,11 @@ import { revalidatePath } from 'next/cache'
 import '@/models'
 import { requirePublisherApi } from '@/lib/publisher-auth'
 import connectDB from '@/lib/mongodb'
-import Article from '@/models/Article'
+import Article, { IArticle } from '@/models/Article'
 import Author from '@/models/Author'
 import Publisher from '@/models/Publisher'
 import { queryCache } from '@/lib/query-cache'
+import mongoose from 'mongoose'
 
 export async function GET(request: NextRequest) {
   try {
@@ -113,7 +114,27 @@ export async function POST(request: NextRequest) {
       slug = slug.substring(0, 200).replace(/-+$/, '')
     }
 
-    const article = new Article({
+    // Validate mainImage is required when publishing
+    const articleStatus = status || 'draft'
+    if (articleStatus === 'published' && (!mainImage || !mainImage.url || !mainImage.public_id)) {
+      return NextResponse.json(
+        { error: 'Main image is required to publish an article' },
+        { status: 400 }
+      )
+    }
+
+    // Only include mainImage if it's provided and valid (for drafts, it can be undefined)
+    const articleData: Partial<IArticle> & {
+      title: string
+      content: string[]
+      author: mongoose.Types.ObjectId
+      authorName: string
+      publisher: mongoose.Types.ObjectId
+      publishedDate: Date
+      status: 'draft' | 'published'
+      category: IArticle['category']
+      slug: string
+    } = {
       title,
       subtitle,
       content,
@@ -121,14 +142,20 @@ export async function POST(request: NextRequest) {
       authorName: authorDoc.name, // Store author name
       publisher: publisher._id, // Set publisher field
       publishedDate: new Date(publishedDate),
-      mainImage,
       miniImage: miniImage || undefined,
       youtubeLink: youtubeLink?.trim() || undefined,
       subImages: subImages || [],
-      status: status || 'draft',
+      status: articleStatus,
       category,
       slug,
-    })
+    }
+    
+    // Only set mainImage if it's provided and has valid values
+    if (mainImage && mainImage.url && mainImage.public_id) {
+      articleData.mainImage = mainImage
+    }
+
+    const article = new Article(articleData)
 
     await article.save()
 

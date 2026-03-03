@@ -8,7 +8,7 @@ export interface IArticle extends Document {
   authorName?: string
   publisher?: mongoose.Types.ObjectId
   publishedDate: Date
-  mainImage: {
+  mainImage?: {
     url: string
     public_id: string
     alt?: string
@@ -81,11 +81,9 @@ const ArticleSchema: Schema = new Schema(
     mainImage: {
       url: {
         type: String,
-        required: [true, 'Main image is required'],
       },
       public_id: {
         type: String,
-        required: true,
       },
       alt: {
         type: String,
@@ -186,6 +184,11 @@ ArticleSchema.index({ status: 1, publisher: 1, publishedDate: -1 }) // Publisher
 
 // Generate slug from title before saving - includes full title
 ArticleSchema.pre('save', async function (this: IArticle) {
+  // Validate mainImage is required when publishing
+  if (this.status === 'published' && (!this.mainImage || !this.mainImage.url || !this.mainImage.public_id)) {
+    throw new Error('Main image is required to publish an article')
+  }
+
   // Ensure authorName is always stored when saving
   if (!this.authorName && this.author) {
     try {

@@ -25,7 +25,7 @@ interface ArticleFormProps {
     content: string[]
     author: string
     publishedDate: string
-    mainImage: { url: string; public_id: string; alt?: string }
+    mainImage?: { url: string; public_id: string; alt?: string }
     miniImage?: { url: string; public_id: string; alt?: string }
     youtubeLink?: string
     subImages: Array<{ url: string; public_id: string; alt?: string; order: number }>
@@ -350,8 +350,9 @@ export default function ArticleForm({ authors, article, onPreviewChange, isAutho
       return
     }
 
-    if (!formData.mainImage.url) {
-      setError('Main Image is required')
+    // Main Image is required only when publishing, not when saving as draft
+    if (publish && (!formData.mainImage || !formData.mainImage.url)) {
+      setError('Main Image is required to publish an article')
       setLoading(false)
       return
     }
@@ -373,7 +374,15 @@ export default function ArticleForm({ authors, article, onPreviewChange, isAutho
     }
 
     try {
-      const payload = {
+      type PayloadType = Omit<FormDataState, 'miniImage' | 'youtubeLink' | 'mainImage' | 'status' | 'content'> & {
+        status: 'draft' | 'published'
+        content: string[]
+        miniImage?: { url: string; public_id: string; alt: string } | undefined
+        youtubeLink?: string | undefined
+        mainImage?: { url: string; public_id: string; alt: string } | undefined
+      }
+      
+      const payload: PayloadType = {
         ...formData,
         status: publish ? 'published' : 'draft',
         content: filteredContent,
@@ -381,6 +390,15 @@ export default function ArticleForm({ authors, article, onPreviewChange, isAutho
         miniImage: formData.miniImage?.url && !formData.youtubeLink?.trim() ? formData.miniImage : undefined,
         // Only include youtubeLink if it has a value and no mini image
         youtubeLink: formData.youtubeLink?.trim() && !formData.miniImage?.url ? formData.youtubeLink.trim() : undefined,
+      }
+      
+      // Only include mainImage if it has a valid URL (required for publishing, optional for drafts)
+      if (!formData.mainImage || !formData.mainImage.url || !formData.mainImage.public_id) {
+        // For drafts, don't include mainImage if it's empty
+        // For publishing, this would have been caught by validation above
+        if (!publish) {
+          delete payload.mainImage
+        }
       }
 
       const apiBase = isPublisher ? '/api/publisher/articles' : (isAuthor ? '/api/author/articles' : '/api/admin/articles')

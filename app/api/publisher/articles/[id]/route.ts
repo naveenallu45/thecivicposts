@@ -128,6 +128,26 @@ export async function PUT(
       }
     }
 
+    // Validate mainImage is required when publishing
+    const finalStatus = status !== undefined ? status : existingArticle.status
+    const finalMainImage = mainImage !== undefined ? mainImage : existingArticle.mainImage
+    
+    // Prevent removing mainImage from published articles
+    if (existingArticle.status === 'published' && mainImage !== undefined && (!mainImage || !mainImage.url || !mainImage.public_id)) {
+      return NextResponse.json(
+        { error: 'Cannot remove main image from a published article' },
+        { status: 400 }
+      )
+    }
+    
+    // Require mainImage when publishing
+    if (finalStatus === 'published' && (!finalMainImage || !finalMainImage.url || !finalMainImage.public_id)) {
+      return NextResponse.json(
+        { error: 'Main image is required to publish an article' },
+        { status: 400 }
+      )
+    }
+
     const updateData: {
       title?: string
       subtitle?: string
@@ -135,7 +155,7 @@ export async function PUT(
       author?: typeof author
       authorName?: string
       publishedDate?: Date
-      mainImage?: { url: string; public_id: string; alt?: string }
+      mainImage?: { url: string; public_id: string; alt?: string } | undefined
       miniImage?: { url: string; public_id: string; alt?: string }
       youtubeLink?: string
       subImages?: Array<{ url: string; public_id: string; alt?: string; order: number }>
@@ -147,13 +167,22 @@ export async function PUT(
       subtitle,
       content,
       publishedDate: new Date(publishedDate),
-      mainImage,
       miniImage: miniImage || undefined,
       youtubeLink: youtubeLink?.trim() || undefined,
       subImages: subImages || [],
       status,
       category,
       slug,
+    }
+    
+    // Only include mainImage if it's provided and valid, or explicitly undefined for drafts
+    if (mainImage !== undefined) {
+      if (mainImage && mainImage.url && mainImage.public_id) {
+        updateData.mainImage = mainImage
+      } else if (finalStatus === 'draft') {
+        // Allow removing mainImage from drafts
+        updateData.mainImage = undefined
+      }
     }
 
     if (author) {

@@ -7,9 +7,11 @@ import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked'
+import { Search } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import ConfirmDialog from './ConfirmDialog'
 import { useToast } from '@/contexts/ToastContext'
+import { Input } from '@/components/ui/input'
 
 interface ArticleRow {
   id: string
@@ -45,6 +47,7 @@ export default function ArticlesTable({ articles, basePath = 'admin' }: Articles
   const [loading, setLoading] = useState(false)
   const [rowLoading, setRowLoading] = useState<LoadingState>({})
   const [localArticles, setLocalArticles] = useState<ArticleRow[]>(articles)
+  const [searchQuery, setSearchQuery] = useState('')
   const [deleteDialog, setDeleteDialog] = useState<{ isOpen: boolean; articleId: string | null }>({
     isOpen: false,
     articleId: null,
@@ -58,6 +61,24 @@ export default function ArticlesTable({ articles, basePath = 'admin' }: Articles
   useEffect(() => {
     setLocalArticles(articles)
   }, [articles])
+
+  // Filter articles based on search query
+  const filteredArticles = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return localArticles
+    }
+
+    const query = searchQuery.toLowerCase().trim()
+    return localArticles.filter((article) => {
+      return (
+        article.title.toLowerCase().includes(query) ||
+        article.author.toLowerCase().includes(query) ||
+        article.category.toLowerCase().includes(query) ||
+        article.status.toLowerCase().includes(query) ||
+        article.publishedDate.toLowerCase().includes(query)
+      )
+    })
+  }, [localArticles, searchQuery])
 
   // Cleanup on unmount
   useEffect(() => {
@@ -509,21 +530,45 @@ export default function ArticlesTable({ articles, basePath = 'admin' }: Articles
   ], [handleToggleField, handleEdit, rowLoading])
 
   return (
-    <Box 
-      sx={{ 
-        height: 700, 
-        width: '100%', 
-        maxWidth: '100%',
-        bgcolor: 'white',
-        borderRadius: 3,
-        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-        overflow: 'hidden',
-        border: '1px solid #1f2937',
-      }}
-    >
-      <DataGrid
-        rows={localArticles}
-        columns={columns}
+    <Box sx={{ width: '100%', maxWidth: '100%' }}>
+      {/* Search Input */}
+      <Box sx={{ mb: 3 }}>
+        <div className="relative">
+          <Search 
+            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+            size={20}
+          />
+          <Input
+            type="text"
+            placeholder="Search articles by title, author, category, status, or date..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 w-full h-11 border-gray-300 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-gray-500 focus:border-gray-500 focus:outline-none"
+          />
+        </div>
+        {searchQuery && (
+          <p className="mt-2 text-sm text-gray-600">
+            Showing {filteredArticles.length} of {localArticles.length} articles
+          </p>
+        )}
+      </Box>
+
+      {/* Data Grid */}
+      <Box 
+        sx={{ 
+          height: 700, 
+          width: '100%', 
+          maxWidth: '100%',
+          bgcolor: 'white',
+          borderRadius: 3,
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+          overflow: 'hidden',
+          border: '1px solid #1f2937',
+        }}
+      >
+        <DataGrid
+          rows={filteredArticles}
+          columns={columns}
         pageSizeOptions={[10, 25, 50, 100]}
         initialState={{
           pagination: {
@@ -659,16 +704,17 @@ export default function ArticlesTable({ articles, basePath = 'admin' }: Articles
         }}
       />
       
-      <ConfirmDialog
-        isOpen={deleteDialog.isOpen}
-        title="Delete Article"
-        message="Are you sure you want to delete this article? This action cannot be undone."
-        confirmText="Delete"
-        cancelText="Cancel"
-        onConfirm={handleDeleteConfirm}
-        onCancel={handleDeleteCancel}
-        type="danger"
-      />
+        <ConfirmDialog
+          isOpen={deleteDialog.isOpen}
+          title="Delete Article"
+          message="Are you sure you want to delete this article? This action cannot be undone."
+          confirmText="Delete"
+          cancelText="Cancel"
+          onConfirm={handleDeleteConfirm}
+          onCancel={handleDeleteCancel}
+          type="danger"
+        />
+      </Box>
     </Box>
   )
 }

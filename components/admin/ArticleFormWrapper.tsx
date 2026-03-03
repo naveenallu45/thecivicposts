@@ -18,7 +18,7 @@ interface Article {
   content: string[]
   author: string
   publishedDate: string
-  mainImage: { url: string; public_id: string; alt?: string }
+  mainImage?: { url: string; public_id: string; alt?: string }
   miniImage?: { url: string; public_id: string; alt?: string }
   youtubeLink?: string
   subImages: Array<{ url: string; public_id: string; alt?: string; order: number }>

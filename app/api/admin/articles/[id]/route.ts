@@ -142,13 +142,43 @@ export async function PUT(
               }
             }
 
+    // Validate mainImage is required when publishing
+    const finalStatus = status !== undefined ? status : article.status
+    const finalMainImage = mainImage !== undefined ? mainImage : article.mainImage
+    
+    // Prevent removing mainImage from published articles
+    if (article.status === 'published' && mainImage !== undefined && (!mainImage || !mainImage.url || !mainImage.public_id)) {
+      return NextResponse.json(
+        { error: 'Cannot remove main image from a published article' },
+        { status: 400 }
+      )
+    }
+    
+    // Require mainImage when publishing
+    if (finalStatus === 'published' && (!finalMainImage || !finalMainImage.url || !finalMainImage.public_id)) {
+      return NextResponse.json(
+        { error: 'Main image is required to publish an article' },
+        { status: 400 }
+      )
+    }
+
     // Update fields only if they are provided in the request
     if (title !== undefined) article.title = title
     if (subtitle !== undefined) article.subtitle = subtitle
     if (content !== undefined) article.content = content
     if (author !== undefined) article.author = author
     if (publishedDate !== undefined) article.publishedDate = new Date(publishedDate)
-    if (mainImage !== undefined) article.mainImage = mainImage
+    // Only update mainImage if it's provided and valid, or explicitly set to undefined for drafts
+    if (mainImage !== undefined) {
+      // For drafts, allow removing mainImage (set to undefined)
+      // For published articles, mainImage removal is already prevented above
+      if (mainImage && mainImage.url && mainImage.public_id) {
+        article.mainImage = mainImage
+      } else if (finalStatus === 'draft') {
+        // Allow removing mainImage from drafts
+        article.mainImage = undefined
+      }
+    }
     if (miniImage !== undefined) article.miniImage = miniImage || undefined
     if (youtubeLink !== undefined) article.youtubeLink = youtubeLink?.trim() || undefined
     if (subImages !== undefined) article.subImages = subImages || []
@@ -241,7 +271,12 @@ export async function DELETE(
 
     // Delete images from Cloudinary
     try {
-      await deleteImage(article.mainImage.public_id)
+      if (article.mainImage && article.mainImage.public_id) {
+        await deleteImage(article.mainImage.public_id)
+      }
+      if (article.miniImage && article.miniImage.public_id) {
+        await deleteImage(article.miniImage.public_id)
+      }
       for (const subImage of article.subImages) {
         await deleteImage(subImage.public_id)
       }
