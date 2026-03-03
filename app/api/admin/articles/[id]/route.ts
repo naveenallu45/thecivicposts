@@ -164,7 +164,7 @@ export async function PUT(
 
     // Update fields only if they are provided in the request
     if (title !== undefined) article.title = title
-    if (subtitle !== undefined) article.subtitle = subtitle
+    if (subtitle !== undefined) article.subtitle = subtitle?.trim() || undefined // Subtitle is optional, allow empty string to become undefined
     if (content !== undefined) article.content = content
     if (author !== undefined) article.author = author
     if (publishedDate !== undefined) article.publishedDate = new Date(publishedDate)

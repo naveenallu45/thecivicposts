@@ -164,7 +164,7 @@ export async function PUT(
       slug?: string
     } = {
       title,
-      subtitle,
+      subtitle: subtitle?.trim() || undefined, // Subtitle is optional
       content,
       publishedDate: new Date(publishedDate),
       miniImage: miniImage || undefined,

@@ -130,7 +130,7 @@ export default async function Home() {
         .select('title subtitle mainImage publishedDate authorName slug category')
         .lean(),
       
-      // Latest articles for each category (4 per category) - exclude top story, mini top story, and trending
+      // Latest articles for each category (6 per category for laptop view) - exclude top story, mini top story, and trending
       ...categories.map(cat =>
         Article.find({ 
           status: 'published', 
@@ -141,7 +141,7 @@ export default async function Home() {
           isTrending: { $ne: true }
         })
           .sort({ createdAt: -1 })
-          .limit(4)
+          .limit(6)
           .select('title subtitle mainImage publishedDate authorName slug category')
           .lean()
       ),

@@ -136,7 +136,7 @@ export async function POST(request: NextRequest) {
       slug: string
     } = {
       title,
-      subtitle,
+      subtitle: subtitle?.trim() || undefined, // Subtitle is optional
       content,
       author,
       authorName: authorDoc.name, // Store author name

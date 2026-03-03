@@ -374,9 +374,10 @@ export default function ArticleForm({ authors, article, onPreviewChange, isAutho
     }
 
     try {
-      type PayloadType = Omit<FormDataState, 'miniImage' | 'youtubeLink' | 'mainImage' | 'status' | 'content'> & {
+      type PayloadType = Omit<FormDataState, 'miniImage' | 'youtubeLink' | 'mainImage' | 'status' | 'content' | 'subtitle'> & {
         status: 'draft' | 'published'
         content: string[]
+        subtitle?: string | undefined
         miniImage?: { url: string; public_id: string; alt: string } | undefined
         youtubeLink?: string | undefined
         mainImage?: { url: string; public_id: string; alt: string } | undefined
@@ -386,6 +387,8 @@ export default function ArticleForm({ authors, article, onPreviewChange, isAutho
         ...formData,
         status: publish ? 'published' : 'draft',
         content: filteredContent,
+        // Subtitle is optional - set to undefined if empty (especially for drafts)
+        subtitle: formData.subtitle?.trim() || undefined,
         // Only include miniImage if it has a URL and no YouTube link
         miniImage: formData.miniImage?.url && !formData.youtubeLink?.trim() ? formData.miniImage : undefined,
         // Only include youtubeLink if it has a value and no mini image
