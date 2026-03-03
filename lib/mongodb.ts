@@ -75,8 +75,34 @@ async function connectDB(): Promise<typeof mongoose> {
       cached.promise = null
       
       // Provide helpful error messages for common issues
-      if (error && typeof error === 'object' && ('code' in error || 'syscall' in error)) {
-        const mongoError = error as { code?: string; syscall?: string; hostname?: string; name?: string }
+      if (error && typeof error === 'object' && ('code' in error || 'syscall' in error || 'message' in error)) {
+        const mongoError = error as { code?: string; syscall?: string; hostname?: string; name?: string; message?: string }
+        const errorMessage = mongoError.message || ''
+        
+        // Handle SSL/TLS errors
+        if (errorMessage.includes('SSL') || errorMessage.includes('TLS') || errorMessage.includes('tlsv1') || errorMessage.includes('alert')) {
+          const enhancedError = new Error(
+            `MongoDB SSL/TLS connection error\n\n` +
+            `Error details: ${errorMessage}\n\n` +
+            `Possible causes:\n` +
+            `1. MongoDB Atlas TLS/SSL configuration issue\n` +
+            `2. Network proxy or firewall interfering with SSL handshake\n` +
+            `3. Outdated Node.js or OpenSSL version\n` +
+            `4. MongoDB Atlas cluster SSL certificate issue\n\n` +
+            `To fix:\n` +
+            `- Check your MongoDB Atlas dashboard for any SSL/TLS warnings\n` +
+            `- Verify your Node.js version is up to date (recommended: Node.js 18+)\n` +
+            `- Check if you're behind a corporate firewall/proxy that might interfere\n` +
+            `- Try updating your MongoDB connection string from Atlas dashboard\n` +
+            `- Ensure your IP address is whitelisted in MongoDB Atlas Network Access\n` +
+            `- Restart your development server\n` +
+            `- If issue persists, contact MongoDB Atlas support`
+          )
+          enhancedError.name = mongoError.name || 'MongoSSLConnectionError'
+          throw enhancedError
+        }
+        
+        // Handle connection errors
         if (mongoError.code === 'ECONNREFUSED' || mongoError.code === 'ENOTFOUND' || mongoError.syscall === 'querySrv') {
           const hostname = mongoError.hostname || MONGODB_URI.match(/@([^/]+)/)?.[1] || 'unknown'
           const enhancedError = new Error(
