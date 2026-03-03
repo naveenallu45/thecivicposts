@@ -74,15 +74,15 @@ export default function CategorySection({ articles, categoryName }: CategorySect
           <Link
             href={categoryPath}
             className="inline-flex items-center justify-center 
-                     px-4 py-2.5 md:px-5 md:py-3 lg:px-6 lg:py-3.5
-                     text-sm md:text-base lg:text-lg
+                     px-4 py-2.5 md:px-5 md:py-3 lg:px-4 lg:py-2.5
+                     text-sm md:text-base lg:text-sm
                      font-medium md:font-semibold
                      bg-orange-600 text-white 
                      rounded-lg md:rounded-xl
                      hover:bg-orange-700 active:bg-orange-800
                      transition-all duration-200 ease-in-out
                      shadow-md hover:shadow-lg active:shadow-md
-                     min-h-[44px] md:min-h-[48px] lg:min-h-[52px]
+                     min-h-[44px] md:min-h-[48px] lg:min-h-[34px]
                      touch-manipulation"
             prefetch={true}
             aria-label={`View more ${categoryName} articles`}
@@ -91,7 +91,7 @@ export default function CategorySection({ articles, categoryName }: CategorySect
               View More
             </span>
             <svg
-              className="ml-2 w-4 h-4 md:w-5 md:h-5 lg:w-6 lg:h-6 flex-shrink-0"
+              className="ml-2 w-4 h-4 md:w-5 md:h-5 lg:w-4 lg:h-4 flex-shrink-0"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
