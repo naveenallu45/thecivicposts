@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation'
 import HeaderNav from './HeaderNav'
 import Footer from './Footer'
 import AdSense from './AdSense'
+import GoogleAnalytics from './GoogleAnalytics'
 import SmoothScroll from './SmoothScroll'
 import PageTransition from './PageTransition'
 import AggressivePrefetch from './AggressivePrefetch'
@@ -30,6 +31,7 @@ export default function ConditionalLayout({
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <GoogleAnalytics />
       <SmoothScroll />
       <AggressivePrefetch />
       {isHomepage && <HomepagePrefetch />}
