@@ -157,6 +157,17 @@ export default async function AdminDashboard() {
               </div>
               <p className="text-gray-600 ml-4">Add and manage publishers</p>
             </Link>
+            <Link
+              href="/admin/live-updates"
+              prefetch={true}
+              className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-all border-2 border-transparent hover:border-orange-300 group"
+            >
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-1 h-8 bg-red-600 rounded-full group-hover:bg-red-700 transition-colors"></div>
+                <h3 className="text-xl font-semibold text-gray-900 group-hover:text-red-700 transition-colors">Live Updates</h3>
+              </div>
+              <p className="text-gray-600 ml-4">Update YouTube live stream link</p>
+            </Link>
           </div>
 
           {/* Publisher Statistics */}
@@ -185,11 +196,10 @@ export default async function AdminDashboard() {
                       </p>
                     </div>
                     <span
-                      className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        article.status === 'published'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-yellow-100 text-yellow-800'
-                      }`}
+                      className={`px-3 py-1 rounded-full text-xs font-medium ${article.status === 'published'
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-yellow-100 text-yellow-800'
+                        }`}
                     >
                       {article.status}
                     </span>

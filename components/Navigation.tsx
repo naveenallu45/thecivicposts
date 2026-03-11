@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation'
 
 const navItems = [
   { href: '/', label: 'Home' },
+  { href: '/live', label: 'Live' },
   { href: '/news', label: 'News' },
   { href: '/entertainment', label: 'Entertainment' },
   { href: '/sports', label: 'Sports' },
@@ -25,9 +26,9 @@ export default function Navigation() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex overflow-x-auto scrollbar-hide justify-start md:justify-center items-center gap-6 md:gap-8 py-3.5">
           {navItems.map((item) => {
-            const isActive = pathname === item.href || 
+            const isActive = pathname === item.href ||
               (item.href !== '/' && pathname?.startsWith(item.href))
-            
+
             return (
               <Link
                 key={item.href}
@@ -42,12 +43,12 @@ export default function Navigation() {
                 onMouseEnter={() => {
                   // Aggressive prefetch on hover for instant navigation
                   router.prefetch(item.href)
-                  
+
                   // Also prefetch the API data immediately
                   if (item.href !== '/' && typeof window !== 'undefined') {
                     const categoryName = item.href.replace('/', '')
                     const apiUrl = `/api/articles?category=${categoryName}&page=1&limit=10`
-                    
+
                     // Prefetch API link
                     const link = document.createElement('link')
                     link.rel = 'prefetch'
@@ -55,10 +56,10 @@ export default function Navigation() {
                     link.as = 'fetch'
                     link.crossOrigin = 'anonymous'
                     document.head.appendChild(link)
-                    
+
                     // Fetch immediately with highest priority
-                    fetch(apiUrl, { 
-                      method: 'GET', 
+                    fetch(apiUrl, {
+                      method: 'GET',
                       cache: 'force-cache',
                       priority: 'high'
                     }).catch(() => {
@@ -66,13 +67,20 @@ export default function Navigation() {
                     })
                   }
                 }}
-                className={`font-semibold text-sm md:text-base transition-colors duration-200 relative pb-1 whitespace-nowrap flex-shrink-0 ${
-                  isActive
+                className={`font-semibold text-sm md:text-base transition-colors duration-200 relative pb-1 whitespace-nowrap flex-shrink-0 ${isActive
                     ? 'text-orange-600'
                     : 'text-gray-900 hover:text-orange-600'
-                } ${isPending ? 'opacity-70' : ''}`}
+                  } ${isPending ? 'opacity-70' : ''}`}
               >
-                {item.label}
+                <span className="flex items-center gap-1.5">
+                  {item.label}
+                  {item.href === '/live' && (
+                    <span className="flex h-2 w-2 relative">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-red-600"></span>
+                    </span>
+                  )}
+                </span>
                 {isActive && (
                   <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-600"></span>
                 )}
