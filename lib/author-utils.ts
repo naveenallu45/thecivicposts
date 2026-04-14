@@ -14,15 +14,9 @@ export function generateAuthorSlug(authorName: string): string {
 }
 
 /**
- * Capitalize the first letter of each word in author name
- * Example: "allu naveen" -> "Allu Naveen"
+ * Preserve original author name casing.
  */
 export function formatAuthorName(authorName: string): string {
   if (!authorName) return ''
-  
   return authorName
-    .toLowerCase()
-    .split(' ')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ')
 }

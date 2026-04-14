@@ -26,8 +26,11 @@ interface ArticleFormProps {
     author: string
     publishedDate: string
     mainImage?: { url: string; public_id: string; alt?: string }
+    mainImages?: Array<{ url: string; public_id: string; alt?: string }>
     miniImage?: { url: string; public_id: string; alt?: string }
+    miniImages?: Array<{ url: string; public_id: string; alt?: string }>
     youtubeLink?: string
+    youtubeLinks?: string[]
     subImages: Array<{ url: string; public_id: string; alt?: string; order: number }>
     status: 'draft' | 'published'
     category: string
@@ -46,7 +49,9 @@ type FormDataState = {
   category: string
   status: 'draft' | 'published'
   mainImage: { url: string; public_id: string; alt: string }
+  mainImages: Array<{ url: string; public_id: string; alt: string }>
   miniImage: { url: string; public_id: string; alt: string }
+  miniImages: Array<{ url: string; public_id: string; alt: string }>
   youtubeLink: string
   subImages: Array<{ url: string; public_id: string; alt: string; order: number }>
 }
@@ -81,12 +86,40 @@ export default function ArticleForm({ authors, article, onPreviewChange, isAutho
       public_id: article.mainImage.public_id ?? '',
       alt: article.mainImage.alt ?? '',
     } : { url: '', public_id: '', alt: '' },
+    mainImages: (() => {
+      const source = Array.isArray(article?.mainImages) && article.mainImages.length > 0
+        ? article.mainImages
+        : (article?.mainImage?.url ? [article.mainImage] : [])
+      const mapped = source
+        .filter(Boolean)
+        .map((img) => ({
+          url: img.url ?? '',
+          public_id: img.public_id ?? '',
+          alt: img.alt ?? '',
+        }))
+      while (mapped.length < 4) mapped.push({ url: '', public_id: '', alt: '' })
+      return mapped.slice(0, 4)
+    })(),
     miniImage: article?.miniImage && article.miniImage.url ? {
       url: article.miniImage.url ?? '',
       public_id: article.miniImage.public_id ?? '',
       alt: article.miniImage.alt ?? '',
     } : { url: '', public_id: '', alt: '' },
-    youtubeLink: article?.youtubeLink ?? '',
+    miniImages: (() => {
+      const source = Array.isArray(article?.miniImages) && article.miniImages.length > 0
+        ? article.miniImages
+        : (article?.miniImage?.url ? [article.miniImage] : [])
+      const mapped = source
+        .filter(Boolean)
+        .map((img) => ({
+          url: img.url ?? '',
+          public_id: img.public_id ?? '',
+          alt: img.alt ?? '',
+        }))
+      while (mapped.length < 4) mapped.push({ url: '', public_id: '', alt: '' })
+      return mapped.slice(0, 4)
+    })(),
+    youtubeLink: article?.youtubeLink || (Array.isArray(article?.youtubeLinks) ? article.youtubeLinks[0] || '' : ''),
     subImages: Array.isArray(article?.subImages) 
       ? article.subImages.map(img => ({
           url: img.url ?? '',
@@ -99,15 +132,7 @@ export default function ArticleForm({ authors, article, onPreviewChange, isAutho
 
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [imageLoadError, setImageLoadError] = useState<string | null>(null)
   
-  // Track which option is selected: 'image', 'youtube', or 'none'
-  const [mediaType, setMediaType] = useState<'image' | 'youtube' | 'none'>(() => {
-    if (article?.miniImage?.url) return 'image'
-    if (article?.youtubeLink) return 'youtube'
-    return 'none'
-  })
-
   // Helper function to count words
   const countWords = (text: string): number => {
     if (!text || !text.trim()) return 0
@@ -157,7 +182,7 @@ export default function ArticleForm({ authors, article, onPreviewChange, isAutho
     }, 0)
   }
 
-  const handleImageUpload = async (file: File, imageType: 'main' | 'mini' | 'sub') => {
+  const handleImageUpload = async (file: File, imageType: 'main' | 'mini' | 'sub', imageIndex?: number) => {
     setUploading(true)
     setError(null)
 
@@ -292,22 +317,36 @@ export default function ArticleForm({ authors, article, onPreviewChange, isAutho
       }
 
       if (imageType === 'main') {
-        setImageLoadError(null) // Clear any previous error
         console.log('Main image uploaded successfully:', {
           url: data.url,
           public_id: data.public_id,
           urlLength: data.url?.length
         })
-        setFormData((prev) => ({
-          ...prev,
-          mainImage: { url: data.url, public_id: data.public_id, alt: '' },
-        }))
+        setFormData((prev) => {
+          const currentMainImages = prev.mainImages.length > 0
+            ? [...prev.mainImages]
+            : [{ url: '', public_id: '', alt: '' }, { url: '', public_id: '', alt: '' }, { url: '', public_id: '', alt: '' }, { url: '', public_id: '', alt: '' }]
+          const targetIndex = typeof imageIndex === 'number' ? imageIndex : 0
+          currentMainImages[targetIndex] = { url: data.url, public_id: data.public_id, alt: '' }
+          return {
+            ...prev,
+            mainImage: currentMainImages[0],
+            mainImages: currentMainImages,
+          }
+        })
       } else if (imageType === 'mini') {
-        setFormData((prev) => ({
-          ...prev,
-          miniImage: { url: data.url, public_id: data.public_id, alt: '' },
-        }))
-        setMediaType('image') // Set media type to image after upload
+        setFormData((prev) => {
+          const currentMiniImages = prev.miniImages.length > 0
+            ? [...prev.miniImages]
+            : [{ url: '', public_id: '', alt: '' }, { url: '', public_id: '', alt: '' }, { url: '', public_id: '', alt: '' }, { url: '', public_id: '', alt: '' }]
+          const targetIndex = typeof imageIndex === 'number' ? imageIndex : 0
+          currentMiniImages[targetIndex] = { url: data.url, public_id: data.public_id, alt: '' }
+          return {
+            ...prev,
+            miniImage: currentMiniImages[0],
+            miniImages: currentMiniImages,
+          }
+        })
       } else {
         setFormData((prev) => {
           const currentSubImages = prev.subImages || []
@@ -350,13 +389,6 @@ export default function ArticleForm({ authors, article, onPreviewChange, isAutho
       return
     }
 
-    // Main Image is required only when publishing, not when saving as draft
-    if (publish && (!formData.mainImage || !formData.mainImage.url)) {
-      setError('Main Image is required to publish an article')
-      setLoading(false)
-      return
-    }
-
     // Mini Image is optional
 
     // Validate that both paragraphs are filled
@@ -374,14 +406,24 @@ export default function ArticleForm({ authors, article, onPreviewChange, isAutho
     }
 
     try {
-      type PayloadType = Omit<FormDataState, 'miniImage' | 'youtubeLink' | 'mainImage' | 'status' | 'content' | 'subtitle'> & {
+      type PayloadType = Omit<FormDataState, 'miniImage' | 'miniImages' | 'youtubeLink' | 'mainImage' | 'mainImages' | 'status' | 'content' | 'subtitle'> & {
         status: 'draft' | 'published'
         content: string[]
         subtitle?: string | undefined
-        miniImage?: { url: string; public_id: string; alt: string } | undefined
-        youtubeLink?: string | undefined
         mainImage?: { url: string; public_id: string; alt: string } | undefined
+        mainImages?: Array<{ url: string; public_id: string; alt: string }> | undefined
+        miniImage?: { url: string; public_id: string; alt: string } | undefined
+        miniImages?: Array<{ url: string; public_id: string; alt: string }> | undefined
+        youtubeLinks?: string[]
+        youtubeLink?: string | undefined
       }
+      const cleanedYoutubeLink = formData.youtubeLink?.trim() || ''
+      const cleanedMainImages = (formData.mainImages || [])
+        .filter(img => img?.url && img?.public_id)
+        .slice(0, 4)
+      const cleanedMiniImages = (formData.miniImages || [])
+        .filter(img => img?.url && img?.public_id)
+        .slice(0, 4)
       
       const payload: PayloadType = {
         ...formData,
@@ -389,19 +431,13 @@ export default function ArticleForm({ authors, article, onPreviewChange, isAutho
         content: filteredContent,
         // Subtitle is optional - set to undefined if empty (especially for drafts)
         subtitle: formData.subtitle?.trim() || undefined,
-        // Only include miniImage if it has a URL and no YouTube link
-        miniImage: formData.miniImage?.url && !formData.youtubeLink?.trim() ? formData.miniImage : undefined,
-        // Only include youtubeLink if it has a value and no mini image
-        youtubeLink: formData.youtubeLink?.trim() && !formData.miniImage?.url ? formData.youtubeLink.trim() : undefined,
-      }
-      
-      // Only include mainImage if it has a valid URL (required for publishing, optional for drafts)
-      if (!formData.mainImage || !formData.mainImage.url || !formData.mainImage.public_id) {
-        // For drafts, don't include mainImage if it's empty
-        // For publishing, this would have been caught by validation above
-        if (!publish) {
-          delete payload.mainImage
-        }
+        mainImage: cleanedMainImages[0] || undefined,
+        mainImages: cleanedMainImages.length > 0 ? cleanedMainImages : undefined,
+        // Mini image and YouTube links can coexist.
+        miniImage: cleanedMiniImages[0] || (formData.miniImage?.url ? formData.miniImage : undefined),
+        miniImages: cleanedMiniImages.length > 0 ? cleanedMiniImages : undefined,
+        youtubeLinks: cleanedYoutubeLink ? [cleanedYoutubeLink] : [],
+        youtubeLink: cleanedYoutubeLink || undefined,
       }
 
       const apiBase = isPublisher ? '/api/publisher/articles' : (isAuthor ? '/api/author/articles' : '/api/admin/articles')
@@ -548,18 +584,27 @@ export default function ArticleForm({ authors, article, onPreviewChange, isAutho
             </p>
           </div>
 
-          {/* Main Image */}
-          {formData.mainImage.url && (
+          {/* Main Images */}
+          {(formData.mainImages || []).some((img) => img.url) && (
             <div className="mb-8">
-              <Image
-                src={getOptimizedImageUrl(formData.mainImage.url, 1200, 'auto:best')}
-                alt={formData.mainImage.alt || formData.title || 'Article main image'}
-                width={1200}
-                height={800}
-                className="w-full h-auto rounded-lg"
-                priority
-                quality={90}
-              />
+              <p className="text-xs text-gray-500 mb-2">Swipe/scroll sideways to view main images</p>
+              <div className="overflow-x-auto pb-2">
+                <div className="flex gap-3 min-w-max">
+                  {(formData.mainImages || []).filter((img) => img.url).map((img, idx) => (
+                    <div key={`preview-main-${idx}`} className="w-[280px] sm:w-[420px] lg:w-[520px] flex-shrink-0">
+                      <Image
+                        src={getOptimizedImageUrl(img.url, 1200, 'auto:best')}
+                        alt={img.alt || formData.title || `Article main image ${idx + 1}`}
+                        width={1200}
+                        height={800}
+                        className="w-full h-auto rounded-lg"
+                        priority={idx === 0}
+                        quality={90}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
 
@@ -576,33 +621,31 @@ export default function ArticleForm({ authors, article, onPreviewChange, isAutho
               </div>
             )}
 
-            {/* YouTube Video or Mini Image (Only One) */}
-            {formData.youtubeLink && (() => {
+            {/* YouTube Video */}
+            {formData.youtubeLink?.trim() && (() => {
               const videoId = extractYouTubeVideoId(formData.youtubeLink)
-              if (videoId) {
-                return (
-                  <div className="mb-8">
-                    <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
-                      <iframe
-                        src={getYouTubeEmbedUrl(videoId)}
-                        className="absolute top-0 left-0 w-full h-full rounded-lg"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                        title="YouTube video player"
-                      />
-                    </div>
+              if (!videoId) return null
+              return (
+                <div className="mb-8">
+                  <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+                    <iframe
+                      src={getYouTubeEmbedUrl(videoId)}
+                      className="absolute top-0 left-0 w-full h-full rounded-lg"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      title="YouTube video player"
+                    />
                   </div>
-                )
-              }
-              return null
+                </div>
+              )
             })()}
-            
-            {/* Mini Image - Only show if no YouTube link */}
-            {!formData.youtubeLink && formData.miniImage?.url && (
-              <div className="mb-8">
+
+            {/* Mini Images */}
+            {(formData.miniImages || []).filter(img => img.url).map((img, idx) => (
+              <div className="mb-8" key={`mini-preview-${idx}`}>
                 <Image
-                  src={getOptimizedImageUrl(formData.miniImage.url, 800, 'auto:best')}
-                  alt={formData.miniImage.alt || 'Mini image'}
+                  src={getOptimizedImageUrl(img.url, 800, 'auto:best')}
+                  alt={img.alt || `Mini image ${idx + 1}`}
                   width={800}
                   height={600}
                   className="w-full h-auto rounded-lg"
@@ -610,7 +653,7 @@ export default function ArticleForm({ authors, article, onPreviewChange, isAutho
                   quality={85}
                 />
               </div>
-            )}
+            ))}
 
             {/* Second Paragraph */}
             {formData.content[1] && formData.content[1].trim() && (
@@ -624,26 +667,6 @@ export default function ArticleForm({ authors, article, onPreviewChange, isAutho
             )}
           </div>
 
-          {/* Sub Images */}
-          {(formData.subImages || []).length > 0 && (
-            <div className="mt-12 space-y-8">
-              {(formData.subImages || [])
-                .sort((a, b) => a.order - b.order)
-                .map((img, idx) => (
-                  <div key={idx}>
-                    <Image
-                      src={getOptimizedImageUrl(img.url, 1200, 'auto:best')}
-                      alt={img.alt || `Article image ${idx + 1}`}
-                      width={1200}
-                      height={600}
-                      className="w-full h-auto rounded-lg"
-                      loading="lazy"
-                      quality={85}
-                    />
-                  </div>
-                ))}
-            </div>
-          )}
         </article>
       </div>
     )
@@ -684,7 +707,6 @@ export default function ArticleForm({ authors, article, onPreviewChange, isAutho
               onChange={(e) => {
                 setFormData({ ...formData, subtitle: e.target.value })
               }}
-              required
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-orange-500 resize-y min-h-[60px]"
               placeholder="Enter subtitle"
               rows={2}
@@ -743,77 +765,60 @@ export default function ArticleForm({ authors, article, onPreviewChange, isAutho
             />
           </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Main Image *
-                    </label>
-                    <p className="text-xs text-orange-600 font-semibold mb-2">
-                      ⚠️ Required: Exactly 1200x800 pixels (3:2 aspect ratio)
-                    </p>
-                    <p className="text-xs text-gray-500 mb-2">
-                      Images will be automatically resized to 1200x800 if they have the correct 3:2 ratio.
-                      Images with incorrect aspect ratios will be rejected.
-                    </p>
-            {formData.mainImage.url ? (
-              <div className="relative">
-                {imageLoadError ? (
-                  <div className="max-w-md p-4 border-2 border-red-300 rounded-lg bg-red-50 mb-2">
-                    <p className="text-red-600 text-sm font-medium mb-2">⚠️ Image failed to load</p>
-                    <p className="text-red-500 text-xs mb-2">{imageLoadError}</p>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setImageLoadError(null)
-                        setFormData({ ...formData, mainImage: { url: '', public_id: '', alt: '' } })
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Main Images <span className="text-gray-500 text-xs">(Up to 4, optional)</span>
+            </label>
+            <p className="text-xs text-gray-500 mb-2">
+              Recommended: 1200x800 (3:2). You can upload up to 4 main images.
+            </p>
+            {[0, 1, 2, 3].map((idx) => {
+              const mainImage = formData.mainImages[idx]
+              return (
+                <div key={`main-input-${idx}`} className="mb-3 border border-gray-200 rounded-lg p-3">
+                  <p className="text-xs text-gray-500 mb-2">Main Image {idx + 1}</p>
+                  {mainImage?.url ? (
+                    <div className="relative">
+                      <Image
+                        src={mainImage.url}
+                        alt={mainImage.alt || `Main image ${idx + 1}`}
+                        width={400}
+                        height={300}
+                        className="max-w-md max-h-64 w-auto h-auto rounded-lg mb-2 object-contain"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormData((prev) => {
+                            const nextMainImages = [...prev.mainImages]
+                            nextMainImages[idx] = { url: '', public_id: '', alt: '' }
+                            return {
+                              ...prev,
+                              mainImages: nextMainImages,
+                              mainImage: nextMainImages[0],
+                            }
+                          })
+                        }}
+                        className="absolute top-2 right-2 bg-red-600 text-white px-3 py-1 rounded"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ) : (
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0]
+                        if (file) handleImageUpload(file, 'main', idx)
                       }}
-                      className="text-xs text-red-600 underline hover:text-red-800"
-                    >
-                      Remove and upload again
-                    </button>
-                  </div>
-                ) : (
-                  <div className="relative max-w-md max-h-64 w-auto h-auto rounded-lg mb-2 overflow-hidden bg-gray-100">
-                    {/* Use regular img tag for preview to avoid Next.js Image optimization issues */}
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={formData.mainImage.url}
-                      alt={formData.mainImage.alt || formData.title || 'Article main image'}
-                      className="w-auto h-auto max-w-full max-h-64 object-contain rounded-lg"
-                      onError={() => {
-                        console.error('Image failed to load:', formData.mainImage.url)
-                        setImageLoadError('The image URL may be invalid or the image was not uploaded correctly. Please check the URL and try uploading again.')
-                      }}
-                      onLoad={() => {
-                        setImageLoadError(null)
-                      }}
+                      disabled={uploading}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg"
                     />
-                  </div>
-                )}
-                {!imageLoadError && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setImageLoadError(null)
-                      setFormData({ ...formData, mainImage: { url: '', public_id: '', alt: '' } })
-                    }}
-                    className="absolute top-2 right-2 bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 transition-colors"
-                  >
-                    Remove
-                  </button>
-                )}
-              </div>
-            ) : (
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  const file = e.target.files?.[0]
-                  if (file) handleImageUpload(file, 'main')
-                }}
-                disabled={uploading}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-              />
-            )}
+                  )}
+                </div>
+              )
+            })}
           </div>
         </div>
 
@@ -859,148 +864,86 @@ export default function ArticleForm({ authors, article, onPreviewChange, isAutho
             />
           </div>
 
-          {/* Mini Image or YouTube Video (Optional - Choose one only or leave both empty) */}
+          {/* Mini Images + YouTube */}
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Mini Image or YouTube Video <span className="text-gray-500 text-xs">(Optional - Choose one only or leave empty)</span>
+              Supporting Images <span className="text-gray-500 text-xs">(Up to 4, all optional)</span>
             </label>
-            
-            {/* Toggle between Mini Image and YouTube Link */}
-            <div className="flex gap-2 mb-4">
-              <button
-                type="button"
-                onClick={() => {
-                  setMediaType('image')
-                  setFormData({ 
-                    ...formData, 
-                    youtubeLink: '', // Clear YouTube link when selecting image
-                  })
-                }}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  mediaType === 'image'
-                    ? 'bg-orange-600 text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-              >
-                Mini Image
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setMediaType('youtube')
-                  setFormData({ 
-                    ...formData, 
-                    miniImage: { url: '', public_id: '', alt: '' }, // Clear image when selecting YouTube
-                  })
-                }}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  mediaType === 'youtube'
-                    ? 'bg-orange-600 text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-              >
-                YouTube Video
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setMediaType('none')
-                  setFormData({ 
-                    ...formData, 
-                    miniImage: { url: '', public_id: '', alt: '' },
-                    youtubeLink: '',
-                  })
-                }}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  mediaType === 'none'
-                    ? 'bg-orange-600 text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-              >
-                None
-              </button>
-            </div>
-
-            {/* Mini Image Section - Show when image is selected */}
-            {mediaType === 'image' && (
-              <div>
-                {formData.miniImage?.url ? (
-                  <div className="relative">
-                    <Image
-                      src={formData.miniImage.url}
-                      alt={formData.miniImage.alt || 'Mini image'}
-                      width={400}
-                      height={300}
-                      className="max-w-md max-h-64 w-auto h-auto rounded-lg mb-2 object-contain"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setFormData({ ...formData, miniImage: { url: '', public_id: '', alt: '' } })
-                        setMediaType('none')
+            {[0, 1, 2, 3].map((idx) => {
+              const miniImage = formData.miniImages[idx]
+              return (
+                <div key={`mini-input-${idx}`} className="mb-3 border border-gray-200 rounded-lg p-3">
+                  <p className="text-xs text-gray-500 mb-2">Mini Image {idx + 1}</p>
+                  {miniImage?.url ? (
+                    <div className="relative">
+                      <Image
+                        src={miniImage.url}
+                        alt={miniImage.alt || `Mini image ${idx + 1}`}
+                        width={400}
+                        height={300}
+                        className="max-w-md max-h-64 w-auto h-auto rounded-lg mb-2 object-contain"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormData((prev) => {
+                            const nextMiniImages = [...prev.miniImages]
+                            nextMiniImages[idx] = { url: '', public_id: '', alt: '' }
+                            return {
+                              ...prev,
+                              miniImages: nextMiniImages,
+                              miniImage: nextMiniImages[0],
+                            }
+                          })
+                        }}
+                        className="absolute top-2 right-2 bg-red-600 text-white px-3 py-1 rounded"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ) : (
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0]
+                        if (file) handleImageUpload(file, 'mini', idx)
                       }}
-                      className="absolute top-2 right-2 bg-red-600 text-white px-3 py-1 rounded"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                ) : (
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0]
-                      if (file) handleImageUpload(file, 'mini')
-                    }}
-                    disabled={uploading}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                  />
-                )}
-              </div>
-            )}
+                      disabled={uploading}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                    />
+                  )}
+                </div>
+              )
+            })}
 
-            {/* YouTube Link Section - Show when YouTube is selected */}
-            {mediaType === 'youtube' && (
-              <div>
-                <input
-                  type="text"
-                  value={formData.youtubeLink || ''}
-                  onChange={(e) => setFormData({ ...formData, youtubeLink: e.target.value })}
-                  placeholder="https://www.youtube.com/watch?v=... or https://youtu.be/..."
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-orange-500"
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Paste YouTube URL (full URL or short URL)
-                </p>
-                {formData.youtubeLink && (() => {
-                  const videoId = extractYouTubeVideoId(formData.youtubeLink)
-                  if (videoId) {
-                    return (
-                      <div className="mt-4 relative w-full" style={{ paddingBottom: '56.25%' }}>
-                        <iframe
-                          src={getYouTubeEmbedUrl(videoId)}
-                          className="absolute top-0 left-0 w-full h-full rounded-lg"
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                          allowFullScreen
-                          title="YouTube video preview"
-                        />
-                      </div>
-                    )
-                  }
-                  return null
-                })()}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setFormData({ ...formData, youtubeLink: '' })
-                    setMediaType('none')
-                  }}
-                  className="mt-2 text-sm text-red-600 hover:text-red-700"
-                >
-                  Remove YouTube Link
-                </button>
-              </div>
-            )}
+            <div className="mt-5">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                YouTube Video <span className="text-gray-500 text-xs">(Optional, one link)</span>
+              </label>
+              <input
+                type="text"
+                value={formData.youtubeLink}
+                onChange={(e) => setFormData((prev) => ({ ...prev, youtubeLink: e.target.value }))}
+                placeholder="YouTube URL (optional)"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-orange-500"
+              />
+              {formData.youtubeLink?.trim() && (() => {
+                const videoId = extractYouTubeVideoId(formData.youtubeLink)
+                if (!videoId) return null
+                return (
+                  <div className="mt-3 relative w-full" style={{ paddingBottom: '56.25%' }}>
+                    <iframe
+                      src={getYouTubeEmbedUrl(videoId)}
+                      className="absolute top-0 left-0 w-full h-full rounded-lg"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      title="YouTube video preview"
+                    />
+                  </div>
+                )
+              })()}
+            </div>
           </div>
 
           {/* Second Paragraph */}

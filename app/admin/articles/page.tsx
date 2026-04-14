@@ -25,6 +25,7 @@ interface ArticleWithAuthor {
   } | string | { _bsontype?: string; toString: () => string }
   authorName?: string
   publishedDate: Date
+  publishedAt?: Date
   mainImage: {
     url: string
     public_id: string
@@ -50,7 +51,7 @@ interface ArticleWithAuthor {
 export default async function ManageArticlesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ author?: string; publisher?: string }>
+  searchParams: Promise<{ author?: string; publisher?: string; page?: string; limit?: string }>
 }) {
   await requireAdmin()
   await connectDB()
@@ -58,6 +59,8 @@ export default async function ManageArticlesPage({
   const params = await searchParams
   const authorFilter = params.author
   const publisherFilter = params.publisher
+  const page = Math.max(parseInt(params.page || '1', 10) || 1, 1)
+  const limit = Math.min(Math.max(parseInt(params.limit || '25', 10) || 25, 10), 100)
 
   // Build query with optional author and publisher filters
   const query: { authorName?: string; publisher?: mongoose.Types.ObjectId } = {}
@@ -79,13 +82,15 @@ export default async function ManageArticlesPage({
       .lean()
   ])
 
-  // Optimized: Only select needed fields, no populate (authorName is already stored)
-  // Parallel execution with Promise.all for better performance
-  const articles = await Article.find(query)
-    .select('title author authorName publishedDate createdAt status category isTopStory isMiniTopStory isTrending publisher')
-    .sort({ createdAt: -1 })
-    .limit(1000)
-    .lean() as unknown as ArticleWithAuthor[]
+  const [articles, totalArticles] = await Promise.all([
+    Article.find(query)
+      .select('title author authorName publishedDate publishedAt views createdAt status category isTopStory isMiniTopStory isTrending publisher')
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean() as unknown as Promise<ArticleWithAuthor[]>,
+    Article.countDocuments(query),
+  ])
 
   return (
     <>
@@ -127,11 +132,13 @@ export default async function ManageArticlesPage({
           />
         </div>
 
-        <ArticlesTable articles={articles.map((article) => {
+        <ArticlesTable
+          articles={articles.map((article) => {
           // Optimized: Use stored authorName directly (no populate needed)
           const authorName = article.authorName || 'Unknown'
-          const publishedDate = article.publishedDate 
-            ? new Date(article.publishedDate).toLocaleDateString('en-US', {
+          const publishedDateValue = article.publishedAt || article.publishedDate
+          const publishedDate = publishedDateValue
+            ? new Date(publishedDateValue).toLocaleDateString('en-US', {
                 year: 'numeric',
                 month: 'short',
                 day: 'numeric',
@@ -143,6 +150,7 @@ export default async function ManageArticlesPage({
             title: article.title,
             author: authorName,
             publishedDate,
+            views: article.views || 0,
             createdAt: article.createdAt ? new Date(article.createdAt).toISOString() : new Date().toISOString(),
             isTopStory: article.isTopStory || false,
             isMiniTopStory: article.isMiniTopStory || false,
@@ -151,7 +159,13 @@ export default async function ManageArticlesPage({
             category: article.category,
             type: article.category,
           }
-        })} />
+        })}
+          serverPagination={{
+            page,
+            pageSize: limit,
+            total: totalArticles,
+          }}
+        />
       </div>
     </>
   )

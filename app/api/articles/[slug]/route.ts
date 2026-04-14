@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import '@/models'
 import connectDB from '@/lib/mongodb'
 import Article from '@/models/Article'
+import VisitorEvent from '@/models/VisitorEvent'
 import { formatDateShort } from '@/lib/date-utils'
 import { createCachedResponse } from '@/lib/cache-headers'
 import { queryCache } from '@/lib/query-cache'
@@ -31,8 +32,11 @@ export async function GET(
         authorName: string
         publishedDate: string
         mainImage: { url: string; public_id: string; alt?: string }
+        mainImages?: Array<{ url: string; public_id: string; alt?: string }>
         miniImage?: { url: string; public_id: string; alt?: string }
+        miniImages?: Array<{ url: string; public_id: string; alt?: string }>
         youtubeLink?: string
+        youtubeLinks?: string[]
         subImages: Array<{ url: string; public_id: string; alt?: string; order: number }>
         category: string
         views: number
@@ -66,6 +70,10 @@ export async function GET(
       console.error('Error incrementing views:', err)
       // Don't throw - view count is not critical
     })
+    VisitorEvent.create({ article: article._id, slug }).catch((err) => {
+      console.error('Error creating visitor event:', err)
+      // Don't throw - analytics should not break article loading
+    })
 
     const result = {
       article: {
@@ -74,12 +82,15 @@ export async function GET(
         subtitle: article.subtitle,
         content: article.content,
         authorName: article.authorName || 'Unknown',
-        publishedDate: article.publishedDate
-          ? formatDateShort(article.publishedDate)
+        publishedDate: (article.publishedAt || article.publishedDate)
+          ? formatDateShort(article.publishedAt || article.publishedDate)
           : '',
         mainImage: article.mainImage,
+        mainImages: article.mainImages || (article.mainImage ? [article.mainImage] : []),
         miniImage: article.miniImage,
+        miniImages: article.miniImages || (article.miniImage ? [article.miniImage] : []),
         youtubeLink: article.youtubeLink,
+        youtubeLinks: article.youtubeLinks || (article.youtubeLink ? [article.youtubeLink] : []),
         subImages: article.subImages || [],
         category: article.category,
         views: article.views || 0,

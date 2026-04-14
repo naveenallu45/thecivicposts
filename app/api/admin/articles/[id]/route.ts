@@ -61,8 +61,11 @@ export async function PUT(
       author,
       publishedDate,
       mainImage,
+      mainImages,
       miniImage,
+      miniImages,
       youtubeLink,
+      youtubeLinks,
       subImages,
       status,
       category,
@@ -89,6 +92,7 @@ export async function PUT(
     const oldSubtitle = article.subtitle
     const oldMainImage = article.mainImage?.url
     const oldPublishedDate = article.publishedDate
+    const oldPublishedAt = article.publishedAt
     const oldAuthorName = article.authorName
 
     // Always ensure authorName is stored (required field)
@@ -142,47 +146,42 @@ export async function PUT(
               }
             }
 
-    // Validate mainImage is required when publishing
-    const finalStatus = status !== undefined ? status : article.status
-    const finalMainImage = mainImage !== undefined ? mainImage : article.mainImage
-    
-    // Prevent removing mainImage from published articles
-    if (article.status === 'published' && mainImage !== undefined && (!mainImage || !mainImage.url || !mainImage.public_id)) {
-      return NextResponse.json(
-        { error: 'Cannot remove main image from a published article' },
-        { status: 400 }
-      )
-    }
-    
-    // Require mainImage when publishing
-    if (finalStatus === 'published' && (!finalMainImage || !finalMainImage.url || !finalMainImage.public_id)) {
-      return NextResponse.json(
-        { error: 'Main image is required to publish an article' },
-        { status: 400 }
-      )
-    }
-
     // Update fields only if they are provided in the request
     if (title !== undefined) article.title = title
     if (subtitle !== undefined) article.subtitle = subtitle?.trim() || undefined // Subtitle is optional, allow empty string to become undefined
     if (content !== undefined) article.content = content
     if (author !== undefined) article.author = author
     if (publishedDate !== undefined) article.publishedDate = new Date(publishedDate)
-    // Only update mainImage if it's provided and valid, or explicitly set to undefined for drafts
-    if (mainImage !== undefined) {
-      // For drafts, allow removing mainImage (set to undefined)
-      // For published articles, mainImage removal is already prevented above
-      if (mainImage && mainImage.url && mainImage.public_id) {
-        article.mainImage = mainImage
-      } else if (finalStatus === 'draft') {
-        // Allow removing mainImage from drafts
-        article.mainImage = undefined
-      }
+    if (mainImages !== undefined || mainImage !== undefined) {
+      const normalizedMainImages = (Array.isArray(mainImages) ? mainImages : (mainImage ? [mainImage] : []))
+        .filter((img: unknown) => Boolean((img as { url?: string; public_id?: string })?.url && (img as { url?: string; public_id?: string })?.public_id))
+        .slice(0, 4)
+      article.mainImages = normalizedMainImages
+      article.mainImage = normalizedMainImages[0] || undefined
     }
-    if (miniImage !== undefined) article.miniImage = miniImage || undefined
-    if (youtubeLink !== undefined) article.youtubeLink = youtubeLink?.trim() || undefined
+    if (miniImages !== undefined || miniImage !== undefined) {
+      const normalizedMiniImages = (Array.isArray(miniImages) ? miniImages : (miniImage ? [miniImage] : []))
+        .filter((img: unknown) => Boolean((img as { url?: string; public_id?: string })?.url && (img as { url?: string; public_id?: string })?.public_id))
+        .slice(0, 4)
+      article.miniImages = normalizedMiniImages
+      article.miniImage = normalizedMiniImages[0] || undefined
+    }
+    if (youtubeLinks !== undefined || youtubeLink !== undefined) {
+      const normalizedYoutubeLinks: string[] = Array.isArray(youtubeLinks)
+        ? youtubeLinks.map((link: unknown) => String(link || '').trim()).filter(Boolean)
+        : (youtubeLink ? [String(youtubeLink).trim()] : [])
+      article.youtubeLinks = normalizedYoutubeLinks
+      article.youtubeLink = normalizedYoutubeLinks[0] || undefined
+    }
     if (subImages !== undefined) article.subImages = subImages || []
     if (status !== undefined) article.status = status
+    if (oldStatus === 'draft' && article.status === 'published') {
+      article.publishedAt = new Date()
+    } else if (article.status === 'published' && !article.publishedAt) {
+      article.publishedAt = new Date()
+    } else if (article.status === 'draft') {
+      article.publishedAt = undefined
+    }
     if (category !== undefined) article.category = category
     if (slug) article.slug = slug
     
@@ -223,6 +222,7 @@ export async function PUT(
       (subtitle !== undefined && subtitle !== oldSubtitle) ||
       mainImageChanged ||
       (publishedDate !== undefined && new Date(publishedDate).getTime() !== oldPublishedDate?.getTime()) ||
+      (article.publishedAt?.getTime() !== oldPublishedAt?.getTime()) ||
       (author !== undefined && article.authorName !== oldAuthorName)
     
     const affectsHomePage = article.status === 'published' && 
@@ -274,8 +274,18 @@ export async function DELETE(
       if (article.mainImage && article.mainImage.public_id) {
         await deleteImage(article.mainImage.public_id)
       }
+      for (const mainImage of article.mainImages || []) {
+        if (mainImage?.public_id && mainImage.public_id !== article.mainImage?.public_id) {
+          await deleteImage(mainImage.public_id)
+        }
+      }
       if (article.miniImage && article.miniImage.public_id) {
         await deleteImage(article.miniImage.public_id)
+      }
+      for (const miniImage of article.miniImages || []) {
+        if (miniImage?.public_id && miniImage.public_id !== article.miniImage?.public_id) {
+          await deleteImage(miniImage.public_id)
+        }
       }
       for (const subImage of article.subImages) {
         await deleteImage(subImage.public_id)

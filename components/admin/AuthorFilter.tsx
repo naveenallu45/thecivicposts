@@ -20,6 +20,7 @@ export default function AuthorFilter({ authors, selectedAuthor }: AuthorFilterPr
     } else {
       params.set('author', author)
     }
+    params.delete('page')
 
     router.push(`/admin/articles?${params.toString()}`)
   }, [router, searchParams])

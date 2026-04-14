@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
-        .select('title subtitle mainImage publishedDate authorName slug category createdAt')
+        .select('title subtitle mainImage publishedDate publishedAt authorName slug category createdAt')
         .lean(),
       Article.countDocuments(query)
     ])
@@ -81,6 +81,7 @@ export async function GET(request: NextRequest) {
       subtitle?: string
       mainImage?: { url: string }
       publishedDate: Date
+      publishedAt?: Date
       authorName?: string
       slug: string
       category: string
@@ -92,8 +93,8 @@ export async function GET(request: NextRequest) {
       title: article.title,
       subtitle: article.subtitle,
       mainImage: article.mainImage?.url || '',
-      publishedDate: article.publishedDate
-        ? formatDateShort(article.publishedDate)
+      publishedDate: (article.publishedAt || article.publishedDate)
+        ? formatDateShort(article.publishedAt || article.publishedDate)
         : '',
       authorName: article.authorName || 'Unknown',
       slug: article.slug,

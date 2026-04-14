@@ -9,7 +9,7 @@ import Image from 'next/image'
 import SocialShare from '@/components/SocialShare'
 import { formatDateShort } from '@/lib/date-utils'
 import { renderFormattedText } from '@/lib/text-formatting'
-import { generateAuthorSlug, formatAuthorName } from '@/lib/author-utils'
+import { generateAuthorSlug } from '@/lib/author-utils'
 import { extractYouTubeVideoId } from '@/lib/youtube-utils'
 import MoreArticles from '@/components/MoreArticles'
 import ViewportPrefetch from '@/components/ViewportPrefetch'
@@ -170,7 +170,7 @@ export default async function ArticlePage({
     status: 'published',
     publishedDate: { $lte: currentDate } // Only show articles published today or earlier
   })
-    .select('title subtitle content mainImage miniImage youtubeLink subImages publishedDate authorName category slug updatedAt')
+    .select('title subtitle content mainImage miniImage miniImages youtubeLink youtubeLinks subImages publishedDate publishedAt authorName category slug updatedAt')
     .lean()
     .exec()
 
@@ -187,9 +187,13 @@ export default async function ArticlePage({
 
   const authorName = article.authorName || 'Unknown'
 
-  const publishedDate = article.publishedDate
-    ? formatDateShort(article.publishedDate)
+  const publishedDate = (article.publishedAt || article.publishedDate)
+    ? formatDateShort(article.publishedAt || article.publishedDate)
     : ''
+  const mainImages = ((article.mainImages as Array<{ url: string; alt?: string }> | undefined) || (article.mainImage?.url ? [article.mainImage] : []))
+    .filter((img) => img?.url)
+    .slice(0, 4)
+  const primaryMainImage = mainImages[0] || article.mainImage
 
   const categoryLabel = categoryLabels[article.category] || article.category
   
@@ -254,7 +258,7 @@ export default async function ArticlePage({
   const articleUrl = `${baseUrl}/${category}/${slug}`
   
   // Get absolute image URL
-  let absoluteImageUrl = article.mainImage?.url || ''
+  let absoluteImageUrl = primaryMainImage?.url || ''
   if (absoluteImageUrl && !absoluteImageUrl.startsWith('http')) {
     absoluteImageUrl = `${baseUrl}${absoluteImageUrl}`
   }
@@ -330,11 +334,11 @@ export default async function ArticlePage({
   return (
     <>
       {/* Preload main image for faster loading via CDN */}
-      {article.mainImage?.url && (
+      {primaryMainImage?.url && (
         <link
           rel="preload"
           as="image"
-          href={getOptimizedImageUrl(article.mainImage.url, 1200, 'auto:best')}
+          href={getOptimizedImageUrl(primaryMainImage.url, 1200, 'auto:best')}
           fetchPriority="high"
         />
       )}
@@ -403,7 +407,7 @@ export default async function ArticlePage({
                     href={`/author/${generateAuthorSlug(authorName)}`}
                     className="text-orange-600 hover:text-orange-700 font-medium transition-colors"
                   >
-                    {formatAuthorName(authorName)}
+                    {authorName}
                   </Link>
                   {' - '}
                   {publishedDate}
@@ -416,25 +420,31 @@ export default async function ArticlePage({
                 url={articleUrl} 
               />
 
-              {/* Main Image - HD Quality via CDN */}
-              {article.mainImage?.url && article.mainImage.url.trim() && (
-                <div className="mb-8 lg:w-3/4 lg:mx-auto">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={(() => {
-                      try {
-                        return getOptimizedImageUrl(article.mainImage.url, 1200, 'auto:best')
-                      } catch (error) {
-                        console.error('Error optimizing image URL, using raw URL:', error)
-                        return article.mainImage.url
-                      }
-                    })()}
-                    alt={article.mainImage.alt || article.title || 'Article image'}
-                    className="w-full h-auto rounded-lg image-fade-in"
-                    loading="eager"
-                    fetchPriority="high"
-                    decoding="async"
-                  />
+              {/* Main Images - horizontal scroll with indication */}
+              {mainImages.length > 0 && (
+                <div className="mb-8">
+                  <p className="text-xs text-gray-500 mb-2">Swipe/scroll sideways to view main images</p>
+                  <div className="relative">
+                    <div className="overflow-x-auto pb-2">
+                      <div className="flex gap-3 min-w-max">
+                        {mainImages.map((img, idx) => (
+                          <div key={`main-${idx}`} className="w-[280px] sm:w-[420px] lg:w-[520px] flex-shrink-0">
+                            <Image
+                              src={getOptimizedImageUrl(img.url, 1200, 'auto:best')}
+                              alt={img.alt || article.title || `Main image ${idx + 1}`}
+                              width={1200}
+                              height={800}
+                              className="w-full h-auto rounded-lg image-fade-in"
+                              loading={idx === 0 ? 'eager' : 'lazy'}
+                              quality={90}
+                              sizes="(max-width: 768px) 280px, (max-width: 1024px) 420px, 520px"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="absolute right-0 top-0 bottom-2 w-10 pointer-events-none bg-gradient-to-l from-gray-50 to-transparent" />
+                  </div>
                 </div>
               )}
 
@@ -451,40 +461,56 @@ export default async function ArticlePage({
                   </div>
                 )}
 
-                {/* YouTube Video or Mini Image (Only One) */}
-                {(article.youtubeLink as string | undefined) && (() => {
-                  const youtubeLink = article.youtubeLink as string
+                {/* YouTube Video */}
+                {(() => {
+                  const youtubeLink = (article.youtubeLink as string | undefined) || ((article.youtubeLinks as string[] | undefined)?.[0] || '')
+                  if (!youtubeLink) return null
                   const videoId = extractYouTubeVideoId(youtubeLink)
-                  if (videoId) {
-                    return <YouTubeVideo videoId={videoId} title={article.title} />
+                  if (!videoId) {
+                    return (
+                      <div className="mb-8 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <p className="text-yellow-800 text-sm">
+                          Invalid YouTube URL format. Please check the link: {youtubeLink}
+                        </p>
+                      </div>
+                    )
                   }
-                  // If youtubeLink exists but videoId extraction failed, show error message
+                  return <YouTubeVideo videoId={videoId} title={article.title} />
+                })()}
+
+                {/* Supporting Images - horizontal scroll with hint */}
+                {(() => {
+                  const miniImages = ((article.miniImages as Array<{ url: string; alt?: string }> | undefined) || (article.miniImage?.url ? [article.miniImage] : []))
+                    .filter((img) => img?.url)
+                    .slice(0, 4)
+                  if (miniImages.length === 0) return null
                   return (
-                    <div className="mb-8 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                      <p className="text-yellow-800 text-sm">
-                        Invalid YouTube URL format. Please check the link: {youtubeLink}
-                      </p>
+                    <div className="mb-8">
+                      <p className="text-xs text-gray-500 mb-2">Swipe/scroll sideways to view images</p>
+                      <div className="relative">
+                        <div className="overflow-x-auto pb-2">
+                          <div className="flex gap-3 min-w-max">
+                            {miniImages.map((img, idx) => (
+                              <div key={`mini-${idx}`} className="w-[280px] sm:w-[360px] lg:w-[420px] flex-shrink-0">
+                                <Image
+                                  src={getOptimizedImageUrl(img.url, 800, 'auto:best')}
+                                  alt={img.alt || article.title || `Supporting image ${idx + 1}`}
+                                  width={800}
+                                  height={600}
+                                  className="w-full h-auto rounded-lg"
+                                  loading="lazy"
+                                  quality={90}
+                                  sizes="(max-width: 768px) 280px, (max-width: 1024px) 360px, 420px"
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="absolute right-0 top-0 bottom-2 w-10 pointer-events-none bg-gradient-to-l from-gray-50 to-transparent" />
+                      </div>
                     </div>
                   )
                 })()}
-                
-                {/* Mini Image - HD Quality via CDN - Only show if no YouTube link */}
-                {!article.youtubeLink && article.miniImage?.url && (
-                  <div className="mb-8 lg:w-3/4 lg:mx-auto">
-                    <Image
-                      src={getOptimizedImageUrl(article.miniImage.url, 800, 'auto:best')}
-                      alt={article.miniImage.alt || article.title || 'Mini image'}
-                      width={800}
-                      height={600}
-                      className="w-full h-auto rounded-lg"
-                      loading="lazy"
-                      quality={90}
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 600px"
-                      placeholder="blur"
-                      blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
-                    />
-                  </div>
-                )}
 
                 {/* Second Paragraph */}
                 {article.content && article.content[1] && article.content[1].trim() && (

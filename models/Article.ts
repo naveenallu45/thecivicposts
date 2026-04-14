@@ -8,17 +8,29 @@ export interface IArticle extends Document {
   authorName?: string
   publisher?: mongoose.Types.ObjectId
   publishedDate: Date
+  publishedAt?: Date
   mainImage?: {
     url: string
     public_id: string
     alt?: string
   }
+  mainImages?: Array<{
+    url: string
+    public_id: string
+    alt?: string
+  }>
   miniImage?: {
     url: string
     public_id: string
     alt?: string
   }
+  miniImages?: Array<{
+    url: string
+    public_id: string
+    alt?: string
+  }>
   youtubeLink?: string
+  youtubeLinks?: string[]
   subImages: Array<{
     url: string
     public_id: string
@@ -78,6 +90,10 @@ const ArticleSchema: Schema = new Schema(
       type: Date,
       required: [true, 'Published date is required'],
     },
+    publishedAt: {
+      type: Date,
+      index: true,
+    },
     mainImage: {
       url: {
         type: String,
@@ -89,6 +105,19 @@ const ArticleSchema: Schema = new Schema(
         type: String,
       },
     },
+    mainImages: [
+      {
+        url: {
+          type: String,
+        },
+        public_id: {
+          type: String,
+        },
+        alt: {
+          type: String,
+        },
+      },
+    ],
     miniImage: {
       url: {
         type: String,
@@ -100,9 +129,30 @@ const ArticleSchema: Schema = new Schema(
         type: String,
       },
     },
+    miniImages: [
+      {
+        url: {
+          type: String,
+        },
+        public_id: {
+          type: String,
+        },
+        alt: {
+          type: String,
+        },
+      },
+    ],
     youtubeLink: {
       type: String,
       trim: true,
+    },
+    youtubeLinks: {
+      type: [String],
+      default: [],
+      validate: {
+        validator: (links: string[]) => Array.isArray(links) && links.every(link => typeof link === 'string'),
+        message: 'YouTube links must be an array of strings',
+      },
     },
     subImages: [
       {
@@ -184,9 +234,53 @@ ArticleSchema.index({ status: 1, publisher: 1, publishedDate: -1 }) // Publisher
 
 // Generate slug from title before saving - includes full title
 ArticleSchema.pre('save', async function (this: IArticle) {
-  // Validate mainImage is required when publishing
-  if (this.status === 'published' && (!this.mainImage || !this.mainImage.url || !this.mainImage.public_id)) {
-    throw new Error('Main image is required to publish an article')
+  // Keep legacy and new YouTube fields in sync.
+  const normalizedLinks = (this.youtubeLinks || [])
+    .map(link => String(link || '').trim())
+    .filter(Boolean)
+  if (normalizedLinks.length > 0) {
+    this.youtubeLinks = normalizedLinks
+    this.youtubeLink = normalizedLinks[0]
+  } else {
+    const singleLink = String(this.youtubeLink || '').trim()
+    this.youtubeLinks = singleLink ? [singleLink] : []
+    this.youtubeLink = singleLink || undefined
+  }
+
+  // Keep single and multiple mini image fields in sync.
+  const normalizedMiniImages = (this.miniImages || [])
+    .filter(img => img && img.url && img.public_id)
+    .slice(0, 4)
+  if (normalizedMiniImages.length > 0) {
+    this.miniImages = normalizedMiniImages
+    this.miniImage = normalizedMiniImages[0]
+  } else if (this.miniImage?.url && this.miniImage?.public_id) {
+    this.miniImages = [this.miniImage]
+  } else {
+    this.miniImages = []
+    this.miniImage = undefined
+  }
+
+  // Keep single and multiple main image fields in sync.
+  const normalizedMainImages = (this.mainImages || [])
+    .filter(img => img && img.url && img.public_id)
+    .slice(0, 4)
+  if (normalizedMainImages.length > 0) {
+    this.mainImages = normalizedMainImages
+    this.mainImage = normalizedMainImages[0]
+  } else if (this.mainImage?.url && this.mainImage?.public_id) {
+    this.mainImages = [this.mainImage]
+  } else {
+    this.mainImages = []
+    this.mainImage = undefined
+  }
+
+  // Preserve actual publish timestamp for draft -> publish transitions.
+  if (this.status === 'published' && !this.publishedAt) {
+    this.publishedAt = new Date()
+  }
+  if (this.status === 'draft') {
+    this.publishedAt = undefined
   }
 
   // Ensure authorName is always stored when saving

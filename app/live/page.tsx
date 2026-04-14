@@ -17,21 +17,27 @@ export const metadata: Metadata = {
     },
 }
 
-async function getLiveVideoId() {
+async function getLiveVideoIds() {
     try {
         await connectDB()
-        const liveSettings = await Settings.findOne({ key: 'youtube_live_link' })
-        if (liveSettings?.value) {
-            return extractYouTubeVideoId(liveSettings.value)
-        }
+        const [liveLinksSettings, liveSettings] = await Promise.all([
+            Settings.findOne({ key: 'youtube_live_links' }),
+            Settings.findOne({ key: 'youtube_live_link' }),
+        ])
+        const links = Array.isArray(liveLinksSettings?.value)
+            ? liveLinksSettings.value
+            : (liveSettings?.value ? [liveSettings.value] : [])
+        return links
+            .map((link: unknown) => extractYouTubeVideoId(String(link || '')))
+            .filter(Boolean)
     } catch (error) {
         console.error('Error fetching live settings:', error)
     }
-    return null
+    return []
 }
 
 export default async function LivePage() {
-    const videoId = await getLiveVideoId()
+    const videoIds = await getLiveVideoIds()
 
     return (
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
@@ -48,18 +54,20 @@ export default async function LivePage() {
                 </p>
             </div>
 
-            {videoId ? (
+            {videoIds.length > 0 ? (
                 <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-200 lg:max-w-5xl lg:mx-auto">
-                    <div className="aspect-video w-full bg-black">
-                        <iframe
-                            className="w-full h-full"
-                            src={`https://www.youtube.com/embed/${videoId}?autoplay=1`}
-                            title="Live Stream"
-                            frameBorder="0"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowFullScreen
-                        ></iframe>
-                    </div>
+                    {videoIds.map((videoId: string, idx: number) => (
+                        <div key={`${videoId}-${idx}`} className="aspect-video w-full bg-black border-b border-gray-200 last:border-b-0">
+                            <iframe
+                                className="w-full h-full"
+                                src={`https://www.youtube.com/embed/${videoId}?autoplay=0`}
+                                title={`Live Stream ${idx + 1}`}
+                                frameBorder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                            ></iframe>
+                        </div>
+                    ))}
                 </div>
             ) : (
                 <div className="bg-white rounded-2xl shadow-inner border-2 border-dashed border-gray-300 py-24 px-6 text-center">

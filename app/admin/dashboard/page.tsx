@@ -5,8 +5,10 @@ import Link from 'next/link'
 import connectDB from '@/lib/mongodb'
 import Article from '@/models/Article'
 import Author from '@/models/Author'
+import VisitorEvent from '@/models/VisitorEvent'
 import LogoutButton from '@/components/admin/LogoutButton'
 import PublisherStatistics from '@/components/admin/PublisherStatistics'
+import { Suspense } from 'react'
 
 export const dynamic = 'force-dynamic'
 
@@ -27,25 +29,84 @@ export default async function AdminDashboard() {
   let draftCount = 0
   let authorsCount = 0
   let publishersCount = 0
+  let visitorsLast24h = 0
+  let visitorsLast7d = 0
+  let visitorsLast30d = 0
+  let visitorsTotal = 0
   let recentArticles: RecentArticle[] = []
   let dbError: string | null = null
 
   try {
     await connectDB()
+    const now = new Date()
+    const last24Hours = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+    const last7Days = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+    const last30Days = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+
     const Publisher = (await import('@/models/Publisher')).default
-    const [articlesCountResult, publishedCountResult, draftCountResult, authorsCountResult, publishersCountResult] = await Promise.all([
-      Article.countDocuments(),
-      Article.countDocuments({ status: 'published' }),
-      Article.countDocuments({ status: 'draft' }),
+    const [articleStatusStats, visitorStatsAgg, authorsCountResult, publishersCountResult] = await Promise.all([
+      Article.aggregate([
+        {
+          $group: {
+            _id: null,
+            total: { $sum: 1 },
+            published: {
+              $sum: {
+                $cond: [{ $eq: ['$status', 'published'] }, 1, 0],
+              },
+            },
+            draft: {
+              $sum: {
+                $cond: [{ $eq: ['$status', 'draft'] }, 1, 0],
+              },
+            },
+          },
+        },
+      ]),
+      VisitorEvent.aggregate([
+        {
+          $match: {
+            slug: '__home__',
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            total: { $sum: 1 },
+            last24h: {
+              $sum: {
+                $cond: [{ $gte: ['$createdAt', last24Hours] }, 1, 0],
+              },
+            },
+            last7d: {
+              $sum: {
+                $cond: [{ $gte: ['$createdAt', last7Days] }, 1, 0],
+              },
+            },
+            last30d: {
+              $sum: {
+                $cond: [{ $gte: ['$createdAt', last30Days] }, 1, 0],
+              },
+            },
+          },
+        },
+      ]),
       Author.countDocuments(),
       Publisher.countDocuments(),
     ])
 
-    articlesCount = articlesCountResult
-    publishedCount = publishedCountResult
-    draftCount = draftCountResult
+    const articleStats = articleStatusStats[0] || { total: 0, published: 0, draft: 0 }
+    const visitorStats = visitorStatsAgg[0] || { total: 0, last24h: 0, last7d: 0, last30d: 0 }
+
+    articlesCount = articleStats.total
+    publishedCount = articleStats.published
+    draftCount = articleStats.draft
     authorsCount = authorsCountResult
     publishersCount = publishersCountResult
+    visitorsLast24h = visitorStats.last24h
+    visitorsLast7d = visitorStats.last7d
+    visitorsLast30d = visitorStats.last30d
+    visitorsTotal = visitorStats.total
 
     // Optimized: Use stored authorName instead of populate
     recentArticles = await Article.find()
@@ -122,6 +183,26 @@ export default async function AdminDashboard() {
             </div>
           </div>
 
+          {/* Visitor Counts */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-indigo-500 hover:shadow-lg transition-shadow">
+              <h3 className="text-sm font-medium text-gray-500">Visitors (Last 24 Hours)</h3>
+              <p className="text-3xl font-bold text-indigo-600 mt-2">{visitorsLast24h}</p>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-cyan-500 hover:shadow-lg transition-shadow">
+              <h3 className="text-sm font-medium text-gray-500">Visitors (Last 7 Days)</h3>
+              <p className="text-3xl font-bold text-cyan-600 mt-2">{visitorsLast7d}</p>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-teal-500 hover:shadow-lg transition-shadow">
+              <h3 className="text-sm font-medium text-gray-500">Visitors (Last 30 Days)</h3>
+              <p className="text-3xl font-bold text-teal-600 mt-2">{visitorsLast30d}</p>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-emerald-500 hover:shadow-lg transition-shadow">
+              <h3 className="text-sm font-medium text-gray-500">Visitors (Total)</h3>
+              <p className="text-3xl font-bold text-emerald-600 mt-2">{visitorsTotal}</p>
+            </div>
+          </div>
+
           {/* Quick Links */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <Link
@@ -172,7 +253,16 @@ export default async function AdminDashboard() {
 
           {/* Publisher Statistics */}
           <div className="mb-8">
-            <PublisherStatistics />
+            <Suspense
+              fallback={
+                <div className="bg-white rounded-lg shadow-md border-t-4 border-orange-500 p-6">
+                  <h2 className="text-xl font-semibold text-orange-700 mb-2">Publisher Statistics</h2>
+                  <p className="text-gray-500">Loading publisher statistics...</p>
+                </div>
+              }
+            >
+              <PublisherStatistics />
+            </Suspense>
           </div>
 
           {/* Recent Articles */}

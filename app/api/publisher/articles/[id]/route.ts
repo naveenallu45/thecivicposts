@@ -92,8 +92,11 @@ export async function PUT(
       author,
       publishedDate,
       mainImage,
+      mainImages,
       miniImage,
+      miniImages,
       youtubeLink,
+      youtubeLinks,
       subImages,
       status,
       category,
@@ -128,24 +131,24 @@ export async function PUT(
       }
     }
 
-    // Validate mainImage is required when publishing
-    const finalStatus = status !== undefined ? status : existingArticle.status
-    const finalMainImage = mainImage !== undefined ? mainImage : existingArticle.mainImage
-    
-    // Prevent removing mainImage from published articles
-    if (existingArticle.status === 'published' && mainImage !== undefined && (!mainImage || !mainImage.url || !mainImage.public_id)) {
-      return NextResponse.json(
-        { error: 'Cannot remove main image from a published article' },
-        { status: 400 }
-      )
-    }
-    
-    // Require mainImage when publishing
-    if (finalStatus === 'published' && (!finalMainImage || !finalMainImage.url || !finalMainImage.public_id)) {
-      return NextResponse.json(
-        { error: 'Main image is required to publish an article' },
-        { status: 400 }
-      )
+    const normalizedYoutubeLinks: string[] = Array.isArray(youtubeLinks)
+      ? youtubeLinks.map((link: unknown) => String(link || '').trim()).filter(Boolean)
+      : (youtubeLink ? [String(youtubeLink).trim()] : [])
+    const normalizedMainImages = (Array.isArray(mainImages) ? mainImages : (mainImage ? [mainImage] : []))
+      .filter((img: unknown) => Boolean((img as { url?: string; public_id?: string })?.url && (img as { url?: string; public_id?: string })?.public_id))
+      .slice(0, 4)
+    const normalizedMiniImages = (Array.isArray(miniImages) ? miniImages : (miniImage ? [miniImage] : []))
+      .filter((img: unknown) => Boolean((img as { url?: string; public_id?: string })?.url && (img as { url?: string; public_id?: string })?.public_id))
+      .slice(0, 4)
+
+    const nextStatus = status !== undefined ? status : existingArticle.status
+    let nextPublishedAt = existingArticle.publishedAt
+    if (existingArticle.status === 'draft' && nextStatus === 'published') {
+      nextPublishedAt = new Date()
+    } else if (nextStatus === 'published' && !nextPublishedAt) {
+      nextPublishedAt = new Date()
+    } else if (nextStatus === 'draft') {
+      nextPublishedAt = undefined
     }
 
     const updateData: {
@@ -156,35 +159,33 @@ export async function PUT(
       authorName?: string
       publishedDate?: Date
       mainImage?: { url: string; public_id: string; alt?: string } | undefined
+      mainImages?: Array<{ url: string; public_id: string; alt?: string }>
       miniImage?: { url: string; public_id: string; alt?: string }
+      miniImages?: Array<{ url: string; public_id: string; alt?: string }>
       youtubeLink?: string
+      youtubeLinks?: string[]
       subImages?: Array<{ url: string; public_id: string; alt?: string; order: number }>
       status?: 'draft' | 'published'
       category?: string
       slug?: string
+      publishedAt?: Date
     } = {
       title,
       subtitle: subtitle?.trim() || undefined, // Subtitle is optional
       content,
       publishedDate: new Date(publishedDate),
-      miniImage: miniImage || undefined,
-      youtubeLink: youtubeLink?.trim() || undefined,
+      mainImage: normalizedMainImages[0] || undefined,
+      mainImages: normalizedMainImages,
+      miniImage: normalizedMiniImages[0] || undefined,
+      miniImages: normalizedMiniImages,
+      youtubeLink: normalizedYoutubeLinks[0] || undefined,
+      youtubeLinks: normalizedYoutubeLinks,
       subImages: subImages || [],
       status,
       category,
       slug,
+      publishedAt: nextPublishedAt,
     }
-    
-    // Only include mainImage if it's provided and valid, or explicitly undefined for drafts
-    if (mainImage !== undefined) {
-      if (mainImage && mainImage.url && mainImage.public_id) {
-        updateData.mainImage = mainImage
-      } else if (finalStatus === 'draft') {
-        // Allow removing mainImage from drafts
-        updateData.mainImage = undefined
-      }
-    }
-
     if (author) {
       updateData.author = author
       updateData.authorName = authorName

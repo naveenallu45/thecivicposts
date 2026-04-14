@@ -22,7 +22,7 @@ export default async function EditArticlePage({
   // Optimized: Parallel queries instead of sequential
   const [article, authors] = await Promise.all([
     Article.findById(id)
-      .select('title subtitle content author publishedDate mainImage miniImage subImages status category')
+      .select('title subtitle content author publishedDate mainImage miniImage miniImages youtubeLink youtubeLinks subImages status category')
       .lean(),
     Author.find()
       .select('name email')
@@ -44,7 +44,11 @@ export default async function EditArticlePage({
         author: article.author.toString(),
         publishedDate: article.publishedDate.toISOString(),
         mainImage: article.mainImage,
+        mainImages: article.mainImages || (article.mainImage?.url ? [article.mainImage] : []),
         miniImage: article.miniImage && article.miniImage.url ? article.miniImage : undefined,
+        miniImages: article.miniImages || (article.miniImage?.url ? [article.miniImage] : []),
+        youtubeLink: article.youtubeLink,
+        youtubeLinks: article.youtubeLinks || [],
         subImages: article.subImages,
         status: article.status,
         category: article.category,

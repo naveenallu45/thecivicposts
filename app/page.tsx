@@ -7,6 +7,7 @@ import TrendingSection from '@/components/TrendingSection'
 import CategorySection from '@/components/CategorySection'
 import AutoRefreshWrapper from '@/components/AutoRefreshWrapper'
 import StructuredData from '@/components/StructuredData'
+import HomeVisitTracker from '@/components/HomeVisitTracker'
 import { formatDateShort } from '@/lib/date-utils'
 
 // ISR: Revalidate home page every 30 seconds
@@ -233,6 +234,7 @@ export default async function Home() {
       {/* Structured Data for SEO */}
       <StructuredData data={websiteStructuredData} />
       <StructuredData data={organizationStructuredData} />
+      <HomeVisitTracker />
       
       <main className="min-h-screen bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-12">

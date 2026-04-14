@@ -22,6 +22,7 @@ interface ArticleWithAuthor {
   } | string | { _bsontype?: string; toString: () => string }
   authorName?: string
   publishedDate: Date
+  publishedAt?: Date
   mainImage: {
     url: string
     public_id: string
@@ -56,7 +57,7 @@ export default async function PublisherArticlesPage() {
 
   // Get articles by this publisher only
   const articles = await Article.find({ publisher: publisher._id })
-    .select('title author authorName publishedDate createdAt status category isTopStory isMiniTopStory isTrending')
+    .select('title author authorName publishedDate publishedAt views createdAt status category isTopStory isMiniTopStory isTrending')
     .sort({ createdAt: -1 })
     .limit(1000)
     .lean() as unknown as ArticleWithAuthor[]
@@ -91,8 +92,9 @@ export default async function PublisherArticlesPage() {
         <ArticlesTable basePath="publisher" articles={articles.map((article) => {
           // Optimized: Use stored authorName directly (no populate needed)
           const authorName = article.authorName || 'Unknown'
-          const publishedDate = article.publishedDate 
-            ? new Date(article.publishedDate).toLocaleDateString('en-US', {
+          const publishedDateValue = article.publishedAt || article.publishedDate
+          const publishedDate = publishedDateValue
+            ? new Date(publishedDateValue).toLocaleDateString('en-US', {
                 year: 'numeric',
                 month: 'short',
                 day: 'numeric',
@@ -104,6 +106,7 @@ export default async function PublisherArticlesPage() {
             title: article.title,
             author: authorName,
             publishedDate,
+            views: article.views || 0,
             createdAt: article.createdAt ? new Date(article.createdAt).toISOString() : new Date().toISOString(),
             isTopStory: article.isTopStory || false,
             isMiniTopStory: article.isMiniTopStory || false,

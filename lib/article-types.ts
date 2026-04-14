@@ -8,6 +8,7 @@ export interface ArticleListItem {
     alt?: string
   }
   publishedDate: Date
+  publishedAt?: Date
   author?: {
     name?: string
   } | string | null

@@ -85,8 +85,11 @@ export async function POST(request: NextRequest) {
       author,
       publishedDate,
       mainImage,
+      mainImages,
       miniImage,
+      miniImages,
       youtubeLink,
+      youtubeLinks,
       subImages,
       status,
       category,
@@ -114,16 +117,17 @@ export async function POST(request: NextRequest) {
       slug = slug.substring(0, 200).replace(/-+$/, '')
     }
 
-    // Validate mainImage is required when publishing
     const articleStatus = status || 'draft'
-    if (articleStatus === 'published' && (!mainImage || !mainImage.url || !mainImage.public_id)) {
-      return NextResponse.json(
-        { error: 'Main image is required to publish an article' },
-        { status: 400 }
-      )
-    }
+    const normalizedYoutubeLinks: string[] = Array.isArray(youtubeLinks)
+      ? youtubeLinks.map((link: unknown) => String(link || '').trim()).filter(Boolean)
+      : (youtubeLink ? [String(youtubeLink).trim()] : [])
+    const normalizedMainImages = (Array.isArray(mainImages) ? mainImages : (mainImage ? [mainImage] : []))
+      .filter((img: unknown) => Boolean((img as { url?: string; public_id?: string })?.url && (img as { url?: string; public_id?: string })?.public_id))
+      .slice(0, 4)
+    const normalizedMiniImages = (Array.isArray(miniImages) ? miniImages : (miniImage ? [miniImage] : []))
+      .filter((img: unknown) => Boolean((img as { url?: string; public_id?: string })?.url && (img as { url?: string; public_id?: string })?.public_id))
+      .slice(0, 4)
 
-    // Only include mainImage if it's provided and valid (for drafts, it can be undefined)
     const articleData: Partial<IArticle> & {
       title: string
       content: string[]
@@ -142,19 +146,18 @@ export async function POST(request: NextRequest) {
       authorName: authorDoc.name, // Store author name
       publisher: publisher._id, // Set publisher field
       publishedDate: new Date(publishedDate),
-      miniImage: miniImage || undefined,
-      youtubeLink: youtubeLink?.trim() || undefined,
+      publishedAt: articleStatus === 'published' ? new Date() : undefined,
+      mainImage: normalizedMainImages[0] || undefined,
+      mainImages: normalizedMainImages,
+      miniImage: normalizedMiniImages[0] || undefined,
+      miniImages: normalizedMiniImages,
+      youtubeLink: normalizedYoutubeLinks[0] || undefined,
+      youtubeLinks: normalizedYoutubeLinks,
       subImages: subImages || [],
       status: articleStatus,
       category,
       slug,
     }
-    
-    // Only set mainImage if it's provided and has valid values
-    if (mainImage && mainImage.url && mainImage.public_id) {
-      articleData.mainImage = mainImage
-    }
-
     const article = new Article(articleData)
 
     await article.save()

@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import DesktopOnly from '@/components/admin/DesktopOnly'
 
 export default function AdminLogin() {
   const [email, setEmail] = useState('')
@@ -80,9 +79,8 @@ export default function AdminLogin() {
   }
 
   return (
-    <DesktopOnly>
-      <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-white via-orange-50 to-orange-100">
-        <div className="max-w-md w-full bg-white/90 backdrop-blur-sm rounded-lg shadow-xl p-8 border border-orange-100">
+      <div className="min-h-screen flex items-center justify-center px-4 py-6 bg-gradient-to-br from-white via-orange-50 to-orange-100">
+        <div className="max-w-md w-full bg-white/90 backdrop-blur-sm rounded-lg shadow-xl p-5 sm:p-8 border border-orange-100">
           <div className="text-center mb-8">
             <Link href="/" className="inline-block">
               <h1 className="text-3xl font-bold text-orange-600 font-serif mb-2">
@@ -164,6 +162,5 @@ export default function AdminLogin() {
           </div>
         </div>
       </div>
-    </DesktopOnly>
   )
 }

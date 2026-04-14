@@ -20,6 +20,7 @@ export default function PublisherFilter({ publishers, selectedPublisher }: Publi
     } else {
       params.set('publisher', publisherId)
     }
+    params.delete('page')
 
     router.push(`/admin/articles?${params.toString()}`)
   }, [router, searchParams])

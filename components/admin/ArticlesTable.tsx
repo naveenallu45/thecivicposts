@@ -8,7 +8,7 @@ import DeleteIcon from '@mui/icons-material/Delete'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked'
 import { Search } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import ConfirmDialog from './ConfirmDialog'
 import { useToast } from '@/contexts/ToastContext'
 import { Input } from '@/components/ui/input'
@@ -18,6 +18,7 @@ interface ArticleRow {
   title: string
   author: string
   publishedDate: string
+  views?: number
   createdAt: string
   isTopStory: boolean
   isMiniTopStory: boolean
@@ -30,6 +31,11 @@ interface ArticleRow {
 interface ArticlesTableProps {
   articles: ArticleRow[]
   basePath?: 'admin' | 'author' | 'publisher' // Default: 'admin'
+  serverPagination?: {
+    page: number
+    pageSize: number
+    total: number
+  }
 }
 
 type FieldType = 'isTopStory' | 'isMiniTopStory' | 'isTrending'
@@ -41,13 +47,18 @@ interface LoadingState {
 const API_TIMEOUT = 10000 // 10 seconds
 const DEBOUNCE_DELAY = 150 // 150ms debounce - reduced for faster response
 
-export default function ArticlesTable({ articles, basePath = 'admin' }: ArticlesTableProps) {
+export default function ArticlesTable({ articles, basePath = 'admin', serverPagination }: ArticlesTableProps) {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { showToast } = useToast()
   const [loading, setLoading] = useState(false)
   const [rowLoading, setRowLoading] = useState<LoadingState>({})
   const [localArticles, setLocalArticles] = useState<ArticleRow[]>(articles)
   const [searchQuery, setSearchQuery] = useState('')
+  const [paginationModel, setPaginationModel] = useState({
+    page: Math.max((serverPagination?.page || 1) - 1, 0),
+    pageSize: serverPagination?.pageSize || 25,
+  })
   const [deleteDialog, setDeleteDialog] = useState<{ isOpen: boolean; articleId: string | null }>({
     isOpen: false,
     articleId: null,
@@ -62,6 +73,14 @@ export default function ArticlesTable({ articles, basePath = 'admin' }: Articles
     setLocalArticles(articles)
   }, [articles])
 
+  useEffect(() => {
+    if (!serverPagination) return
+    setPaginationModel({
+      page: Math.max(serverPagination.page - 1, 0),
+      pageSize: serverPagination.pageSize,
+    })
+  }, [serverPagination])
+
   // Filter articles based on search query
   const filteredArticles = useMemo(() => {
     if (!searchQuery.trim()) {
@@ -75,10 +94,23 @@ export default function ArticlesTable({ articles, basePath = 'admin' }: Articles
         article.author.toLowerCase().includes(query) ||
         article.category.toLowerCase().includes(query) ||
         article.status.toLowerCase().includes(query) ||
-        article.publishedDate.toLowerCase().includes(query)
+        article.publishedDate.toLowerCase().includes(query) ||
+        String(article.views || 0).includes(query)
       )
     })
   }, [localArticles, searchQuery])
+
+  const handlePaginationModelChange = useCallback((model: { page: number; pageSize: number }) => {
+    if (!serverPagination || basePath !== 'admin') {
+      setPaginationModel(model)
+      return
+    }
+
+    const params = new URLSearchParams(searchParams.toString())
+    params.set('page', String(model.page + 1))
+    params.set('limit', String(model.pageSize))
+    router.push(`/admin/articles?${params.toString()}`)
+  }, [serverPagination, basePath, searchParams, router])
 
   // Cleanup on unmount
   useEffect(() => {
@@ -398,6 +430,17 @@ export default function ArticlesTable({ articles, basePath = 'admin' }: Articles
       ),
     },
     {
+      field: 'views',
+      headerName: 'Views',
+      flex: 0.8,
+      minWidth: 100,
+      align: 'center',
+      headerAlign: 'center',
+      renderCell: (params) => (
+        <span className="text-gray-700 text-sm font-semibold">{params.value ?? 0}</span>
+      ),
+    },
+    {
       field: 'isTopStory',
       headerName: 'Top Story',
       flex: 0.8,
@@ -570,11 +613,10 @@ export default function ArticlesTable({ articles, basePath = 'admin' }: Articles
           rows={filteredArticles}
           columns={columns}
         pageSizeOptions={[10, 25, 50, 100]}
-        initialState={{
-          pagination: {
-            paginationModel: { pageSize: 25 },
-          },
-        }}
+        paginationModel={paginationModel}
+        onPaginationModelChange={handlePaginationModelChange}
+        paginationMode={serverPagination ? 'server' : 'client'}
+        rowCount={serverPagination?.total || filteredArticles.length}
         // Note: Articles are already sorted by createdAt descending (newest first) from server
         // Since sorting is disabled, DataGrid displays rows in the order provided
         disableRowSelectionOnClick
@@ -611,7 +653,7 @@ export default function ArticlesTable({ articles, basePath = 'admin' }: Articles
             display: 'flex',
             alignItems: 'center',
           },
-          '& .MuiDataGrid-cell[data-field="author"], & .MuiDataGrid-cell[data-field="status"], & .MuiDataGrid-cell[data-field="type"], & .MuiDataGrid-cell[data-field="publishedDate"], & .MuiDataGrid-cell[data-field="isTopStory"], & .MuiDataGrid-cell[data-field="isMiniTopStory"], & .MuiDataGrid-cell[data-field="isTrending"], & .MuiDataGrid-cell[data-field="actions"]': {
+          '& .MuiDataGrid-cell[data-field="author"], & .MuiDataGrid-cell[data-field="status"], & .MuiDataGrid-cell[data-field="type"], & .MuiDataGrid-cell[data-field="publishedDate"], & .MuiDataGrid-cell[data-field="views"], & .MuiDataGrid-cell[data-field="isTopStory"], & .MuiDataGrid-cell[data-field="isMiniTopStory"], & .MuiDataGrid-cell[data-field="isTrending"], & .MuiDataGrid-cell[data-field="actions"]': {
             justifyContent: 'center',
           },
           '& .MuiDataGrid-cell[data-field="title"]': {
@@ -640,7 +682,7 @@ export default function ArticlesTable({ articles, basePath = 'admin' }: Articles
             display: 'flex',
             alignItems: 'center',
           },
-          '& .MuiDataGrid-columnHeader[data-field="author"], & .MuiDataGrid-columnHeader[data-field="status"], & .MuiDataGrid-columnHeader[data-field="type"], & .MuiDataGrid-columnHeader[data-field="publishedDate"], & .MuiDataGrid-columnHeader[data-field="isTopStory"], & .MuiDataGrid-columnHeader[data-field="isMiniTopStory"], & .MuiDataGrid-columnHeader[data-field="isTrending"], & .MuiDataGrid-columnHeader[data-field="actions"]': {
+          '& .MuiDataGrid-columnHeader[data-field="author"], & .MuiDataGrid-columnHeader[data-field="status"], & .MuiDataGrid-columnHeader[data-field="type"], & .MuiDataGrid-columnHeader[data-field="publishedDate"], & .MuiDataGrid-columnHeader[data-field="views"], & .MuiDataGrid-columnHeader[data-field="isTopStory"], & .MuiDataGrid-columnHeader[data-field="isMiniTopStory"], & .MuiDataGrid-columnHeader[data-field="isTrending"], & .MuiDataGrid-columnHeader[data-field="actions"]': {
             justifyContent: 'center',
           },
           '& .MuiDataGrid-columnHeader[data-field="title"]': {
