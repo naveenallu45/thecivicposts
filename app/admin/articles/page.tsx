@@ -51,7 +51,7 @@ interface ArticleWithAuthor {
 export default async function ManageArticlesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ author?: string; publisher?: string; page?: string; limit?: string }>
+  searchParams: Promise<{ author?: string; publisher?: string; page?: string; limit?: string; q?: string }>
 }) {
   await requireAdmin()
   await connectDB()
@@ -59,16 +59,31 @@ export default async function ManageArticlesPage({
   const params = await searchParams
   const authorFilter = params.author
   const publisherFilter = params.publisher
+  const searchQuery = (params.q || '').trim()
   const page = Math.max(parseInt(params.page || '1', 10) || 1, 1)
   const limit = Math.min(Math.max(parseInt(params.limit || '25', 10) || 25, 10), 100)
 
   // Build query with optional author and publisher filters
-  const query: { authorName?: string; publisher?: mongoose.Types.ObjectId } = {}
+  const query: {
+    authorName?: string
+    publisher?: mongoose.Types.ObjectId
+    $or?: Array<Record<string, unknown>>
+  } = {}
   if (authorFilter && authorFilter !== 'all') {
     query.authorName = authorFilter
   }
   if (publisherFilter && publisherFilter !== 'all') {
     query.publisher = new mongoose.Types.ObjectId(publisherFilter)
+  }
+  if (searchQuery) {
+    const escaped = searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const regex = new RegExp(escaped, 'i')
+    query.$or = [
+      { title: regex },
+      { authorName: regex },
+      { category: regex },
+      { status: regex },
+    ]
   }
 
   // Get all unique authors and publishers for filter dropdowns

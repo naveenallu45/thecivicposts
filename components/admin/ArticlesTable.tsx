@@ -54,7 +54,7 @@ export default function ArticlesTable({ articles, basePath = 'admin', serverPagi
   const [loading, setLoading] = useState(false)
   const [rowLoading, setRowLoading] = useState<LoadingState>({})
   const [localArticles, setLocalArticles] = useState<ArticleRow[]>(articles)
-  const [searchQuery, setSearchQuery] = useState('')
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '')
   const [paginationModel, setPaginationModel] = useState({
     page: Math.max((serverPagination?.page || 1) - 1, 0),
     pageSize: serverPagination?.pageSize || 25,
@@ -81,8 +81,16 @@ export default function ArticlesTable({ articles, basePath = 'admin', serverPagi
     })
   }, [serverPagination])
 
+  useEffect(() => {
+    if (!(serverPagination && basePath === 'admin')) return
+    setSearchQuery(searchParams.get('q') || '')
+  }, [searchParams, serverPagination, basePath])
+
   // Filter articles based on search query
   const filteredArticles = useMemo(() => {
+    if (serverPagination && basePath === 'admin') {
+      return localArticles
+    }
     if (!searchQuery.trim()) {
       return localArticles
     }
@@ -98,7 +106,7 @@ export default function ArticlesTable({ articles, basePath = 'admin', serverPagi
         String(article.views || 0).includes(query)
       )
     })
-  }, [localArticles, searchQuery])
+  }, [localArticles, searchQuery, serverPagination, basePath])
 
   const handlePaginationModelChange = useCallback((model: { page: number; pageSize: number }) => {
     if (!serverPagination || basePath !== 'admin') {
@@ -111,6 +119,23 @@ export default function ArticlesTable({ articles, basePath = 'admin', serverPagi
     params.set('limit', String(model.pageSize))
     router.push(`/admin/articles?${params.toString()}`)
   }, [serverPagination, basePath, searchParams, router])
+
+  useEffect(() => {
+    if (!(serverPagination && basePath === 'admin')) return
+    const timeout = setTimeout(() => {
+      const currentQ = searchParams.get('q') || ''
+      if (searchQuery === currentQ) return
+      const params = new URLSearchParams(searchParams.toString())
+      if (searchQuery.trim()) {
+        params.set('q', searchQuery.trim())
+      } else {
+        params.delete('q')
+      }
+      params.set('page', '1')
+      router.push(`/admin/articles?${params.toString()}`)
+    }, 300)
+    return () => clearTimeout(timeout)
+  }, [searchQuery, serverPagination, basePath, searchParams, router])
 
   // Cleanup on unmount
   useEffect(() => {
@@ -591,7 +616,7 @@ export default function ArticlesTable({ articles, basePath = 'admin', serverPagi
         </div>
         {searchQuery && (
           <p className="mt-2 text-sm text-gray-600">
-            Showing {filteredArticles.length} of {localArticles.length} articles
+            Showing {filteredArticles.length} of {serverPagination?.total || localArticles.length} articles
           </p>
         )}
       </Box>

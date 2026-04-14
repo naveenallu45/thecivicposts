@@ -1,6 +1,7 @@
 import mongoose, { Schema, Document, Model } from 'mongoose'
 
 export interface IVisitorEvent extends Document {
+  visitorId?: string
   article?: mongoose.Types.ObjectId
   slug?: string
   createdAt: Date
@@ -9,6 +10,11 @@ export interface IVisitorEvent extends Document {
 
 const VisitorEventSchema: Schema = new Schema(
   {
+    visitorId: {
+      type: String,
+      trim: true,
+      index: true,
+    },
     article: {
       type: Schema.Types.ObjectId,
       ref: 'Article',
@@ -26,6 +32,7 @@ const VisitorEventSchema: Schema = new Schema(
 )
 
 VisitorEventSchema.index({ createdAt: -1 })
+VisitorEventSchema.index({ visitorId: 1, slug: 1 }, { unique: true, sparse: true })
 
 const VisitorEvent: Model<IVisitorEvent> =
   mongoose.models.VisitorEvent || mongoose.model<IVisitorEvent>('VisitorEvent', VisitorEventSchema)

@@ -67,6 +67,7 @@ export default async function AdminDashboard() {
         {
           $match: {
             slug: '__home__',
+            visitorId: { $exists: true, $ne: null },
           },
         },
         {
