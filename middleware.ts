@@ -78,25 +78,6 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // Block admin access on mobile/tablet devices (check User-Agent)
-  if (pathname.startsWith('/admin')) {
-    const userAgent = request.headers.get('user-agent') || ''
-    const isMobileOrTablet = /Mobile|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent)
-    
-    // Also check for viewport width header if available (some browsers send this)
-    const viewportWidth = request.headers.get('viewport-width')
-    const isSmallScreen = viewportWidth ? parseInt(viewportWidth) < 1024 : false
-    
-    if (isMobileOrTablet || isSmallScreen) {
-      // Allow login page to show the desktop-only message
-      if (pathname === '/admin/login') {
-        return response
-      }
-      // Block all other admin routes on mobile/tablet
-      return NextResponse.redirect(new URL('/admin/login', request.url))
-    }
-  }
-
   // STRICT ROUTE RESTRICTION: Admins and Publishers can ONLY access their respective routes
   
   // If admin is logged in, restrict to ONLY admin routes

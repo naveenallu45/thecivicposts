@@ -50,6 +50,13 @@ export default async function PublisherDashboard() {
               >
                 New Article
               </Link>
+              <Link
+                href="/publisher/live-updates"
+                prefetch={true}
+                className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors font-medium shadow-md"
+              >
+                Live Updates
+              </Link>
               <PublisherLogoutButton />
             </div>
           </div>

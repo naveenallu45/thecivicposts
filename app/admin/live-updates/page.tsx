@@ -121,20 +121,20 @@ export default function LiveUpdatesPage() {
                     <Typography color="text.primary">Live Updates</Typography>
                 </Breadcrumbs>
 
-                <Box display="flex" alignItems="center" gap={2}>
+                <Box display="flex" alignItems="center" gap={2} flexWrap="wrap">
                     <Button component={Link} href="/admin/dashboard" startIcon={<ArrowBackIcon />} variant="outlined" size="small">
                         Back
                     </Button>
-                    <Typography variant="h4" component="h1" fontWeight="bold" color="primary">
+                    <Typography variant="h4" component="h1" fontWeight="bold" color="primary" sx={{ fontSize: { xs: '1.5rem', md: '2.125rem' } }}>
                         Live Stream Settings
                     </Typography>
                 </Box>
             </Box>
 
-            <Paper elevation={0} sx={{ p: 4, borderRadius: 3, border: '2px solid', borderColor: 'orange.100', mb: 4 }}>
+            <Paper elevation={0} sx={{ p: { xs: 2, sm: 4 }, borderRadius: 3, border: '2px solid', borderColor: 'orange.100', mb: 4 }}>
                 <Box display="flex" alignItems="center" gap={1} mb={3}>
-                    <YouTubeIcon sx={{ color: '#ff0000', fontSize: 32 }} />
-                    <Typography variant="h6">YouTube Live Embed</Typography>
+                    <YouTubeIcon sx={{ color: '#ff0000', fontSize: { xs: 24, sm: 32 } }} />
+                    <Typography variant="h6" sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>YouTube Live Embed</Typography>
                 </Box>
 
                 <Typography variant="body2" color="text.secondary" mb={3}>
@@ -143,11 +143,12 @@ export default function LiveUpdatesPage() {
                 </Typography>
 
                 {youtubeLinks.map((link, idx) => (
-                    <Box key={`live-link-${idx}`} display="flex" gap={1.5} alignItems="flex-start" sx={{ mb: 2 }}>
+                    <Box key={`live-link-${idx}`} display="flex" flexDirection={{ xs: 'column', sm: 'row' }} gap={1.5} alignItems={{ xs: 'stretch', sm: 'flex-start' }} sx={{ mb: 2 }}>
                         <TextField
                             fullWidth
                             label={`YouTube Live URL ${idx + 1}`}
                             variant="outlined"
+                            size="small"
                             placeholder="https://www.youtube.com/watch?v=..."
                             value={link}
                             onChange={(e) => {
@@ -162,7 +163,7 @@ export default function LiveUpdatesPage() {
                             startIcon={<DeleteIcon />}
                             onClick={() => handleRemoveLive(idx)}
                             disabled={saving || !link.trim()}
-                            sx={{ minWidth: 132, height: 56 }}
+                            sx={{ minWidth: { xs: '100%', sm: 132 }, height: { xs: 40, sm: 56 } }}
                         >
                             Remove
                         </Button>
@@ -184,7 +185,8 @@ export default function LiveUpdatesPage() {
                             boxShadow: '0 4px 12px rgba(234, 88, 12, 0.3)',
                             '&:hover': {
                                 background: 'linear-gradient(45deg, #d9480f 30%, #ea580c 90%)',
-                            }
+                            },
+                            fontSize: { xs: '0.875rem', sm: '0.9375rem' }
                         }}
                     >
                         {saving ? 'Updating...' : 'Update Live Stream'}
@@ -193,20 +195,22 @@ export default function LiveUpdatesPage() {
             </Paper>
 
             {currentVideoIds.length > 0 && (
-                <Paper elevation={0} sx={{ p: 4, borderRadius: 3, border: '1px solid #e5e7eb' }}>
+                <Paper elevation={0} sx={{ p: { xs: 2, sm: 4 }, borderRadius: 3, border: '1px solid #e5e7eb' }}>
                     <Typography variant="h6" mb={2}>Preview</Typography>
-                    {currentVideoIds.map((videoId) => (
-                        <Box key={videoId} sx={{ position: 'relative', paddingBottom: '56.25%', height: 0, overflow: 'hidden', borderRadius: 2, mb: 2 }}>
-                            <iframe
-                                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
-                                src={`https://www.youtube.com/embed/${videoId}?autoplay=0`}
-                                title="YouTube Live Preview"
-                                frameBorder="0"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                allowFullScreen
-                            ></iframe>
-                        </Box>
-                    ))}
+                    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
+                        {currentVideoIds.map((videoId) => (
+                            <Box key={videoId} sx={{ position: 'relative', paddingBottom: '56.25%', height: 0, overflow: 'hidden', borderRadius: 2 }}>
+                                <iframe
+                                    style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+                                    src={`https://www.youtube.com/embed/${videoId}?autoplay=0`}
+                                    title="YouTube Live Preview"
+                                    frameBorder="0"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                    allowFullScreen
+                                ></iframe>
+                            </Box>
+                        ))}
+                    </Box>
                 </Paper>
             )}
 

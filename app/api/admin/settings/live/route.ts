@@ -2,7 +2,20 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Settings from '@/models/Settings';
 import { requireAdminApi } from '@/lib/admin-auth';
+import { requirePublisherApi } from '@/lib/publisher-auth';
 import { extractYouTubeVideoId } from '@/lib/youtube-utils';
+
+async function requireAdminOrPublisherApi() {
+  try {
+    return await requireAdminApi();
+  } catch {
+    try {
+      return await requirePublisherApi();
+    } catch {
+      throw new Error('Unauthorized: Admin or Publisher authentication required');
+    }
+  }
+}
 
 export async function GET() {
     try {
@@ -28,7 +41,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
     try {
-        await requireAdminApi();
+        await requireAdminOrPublisherApi();
         const body = await request.json();
         const incomingLinks = Array.isArray(body.youtubeLinks)
             ? body.youtubeLinks
