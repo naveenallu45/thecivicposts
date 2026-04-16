@@ -980,18 +980,18 @@ export default function ArticleForm({ authors, article, onPreviewChange, isAutho
       </div>
 
       {/* Action Buttons */}
-      <div className="flex gap-4 pt-6 border-t border-gray-200 mt-6">
+      <div className="flex flex-wrap gap-3 pt-6 border-t border-gray-200 mt-6">
           <button
             type="button"
             onClick={() => handlePreviewToggle(true)}
-            className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+            className="px-5 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 text-sm sm:text-base"
           >
             Preview
           </button>
           <button
             type="submit"
             disabled={loading}
-            className="px-6 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 disabled:opacity-50"
+            className="px-5 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 disabled:opacity-50 text-sm sm:text-base"
           >
             {loading ? 'Saving...' : 'Save Draft'}
           </button>
@@ -999,7 +999,7 @@ export default function ArticleForm({ authors, article, onPreviewChange, isAutho
             type="button"
             onClick={(e) => handleSubmit(e, true)}
             disabled={loading}
-            className="px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50"
+            className="px-5 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50 text-sm sm:text-base"
           >
             {loading ? (article ? 'Updating...' : 'Publishing...') : (article ? 'Update Article' : 'Publish')}
           </button>

@@ -45,37 +45,37 @@ export default function ArticleFormWrapper({ authors, article, isEdit = false, i
   return (
     <>
       <div className="bg-white border-b border-gray-200 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-gray-900 font-serif">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 font-serif">
               {isPreview ? 'Preview Article' : isEdit ? 'Edit Article' : 'Create New Article'}
             </h1>
-            <div className="flex gap-4">
+            <div className="flex flex-wrap gap-2">
               <Link
                 href={articlesPath}
                 prefetch={true}
-                className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
+                className="bg-gray-600 text-white px-3 py-1.5 text-sm rounded-lg hover:bg-gray-700 transition-colors"
               >
                 Articles
               </Link>
               <Link
                 href={dashboardPath}
                 prefetch={true}
-                className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
+                className="bg-gray-600 text-white px-3 py-1.5 text-sm rounded-lg hover:bg-gray-700 transition-colors"
               >
                 Dashboard
               </Link>
               {isPublisher ? (
                 <Link
                   href="/publisher/logout"
-                  className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
+                  className="bg-red-600 text-white px-3 py-1.5 text-sm rounded-lg hover:bg-red-700 transition-colors"
                 >
                   Logout
                 </Link>
               ) : isAuthor ? (
                 <Link
                   href="/author/logout"
-                  className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
+                  className="bg-red-600 text-white px-3 py-1.5 text-sm rounded-lg hover:bg-red-700 transition-colors"
                 >
                   Logout
                 </Link>
@@ -87,7 +87,7 @@ export default function ArticleFormWrapper({ authors, article, isEdit = false, i
         </div>
       </div>
 
-      <div className="w-[85%] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <ArticleForm
           authors={authors}
           article={article}
