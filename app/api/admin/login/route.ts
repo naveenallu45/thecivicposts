@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     if (!isValid) {
       // Don't reveal whether email exists or not (security best practice)
       return NextResponse.json(
-        { error: 'Invalid email or password' },
+        { error: 'Error: Login failed. Something went wrong.' },
         { status: 401 }
       )
     }

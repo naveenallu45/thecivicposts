@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
 
     if (!publisher) {
       return NextResponse.json(
-        { error: 'Invalid email or password' },
+        { error: 'Error: Login failed. Something went wrong.' },
         { status: 401 }
       )
     }
