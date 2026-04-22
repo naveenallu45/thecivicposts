@@ -55,17 +55,22 @@ export default async function LivePage() {
             </div>
 
             {videoIds.length > 0 ? (
-                <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-200 lg:max-w-5xl lg:mx-auto">
+                <div className="flex flex-col gap-6 md:gap-8 lg:max-w-5xl lg:mx-auto">
                     {videoIds.map((videoId: string, idx: number) => (
-                        <div key={`${videoId}-${idx}`} className="aspect-video w-full bg-black border-b border-gray-200 last:border-b-0">
-                            <iframe
-                                className="w-full h-full"
-                                src={`https://www.youtube.com/embed/${videoId}?autoplay=0`}
-                                title={`Live Stream ${idx + 1}`}
-                                frameBorder="0"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                allowFullScreen
-                            ></iframe>
+                        <div
+                            key={`${videoId}-${idx}`}
+                            className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-200"
+                        >
+                            <div className="aspect-video w-full bg-black">
+                                <iframe
+                                    className="w-full h-full"
+                                    src={`https://www.youtube.com/embed/${videoId}?autoplay=0`}
+                                    title={`Live Stream ${idx + 1}`}
+                                    frameBorder="0"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                    allowFullScreen
+                                ></iframe>
+                            </div>
                         </div>
                     ))}
                 </div>
