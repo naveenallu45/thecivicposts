@@ -5,7 +5,6 @@ import { verifyToken } from '@/lib/auth'
 export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
   const response = NextResponse.next()
-  const token = request.cookies.get('admin_token')?.value
 
   // Production-level cache headers for static assets
   if (pathname.startsWith('/_next/static')) {
@@ -61,20 +60,18 @@ export function middleware(request: NextRequest) {
   const publisherToken = request.cookies.get('publisher_token')?.value
   
   if (adminToken) {
-    try {
-      const decoded = verifyToken(adminToken)
-      isAdminLoggedIn = !!decoded && decoded.role === 'admin'
-    } catch (error) {
-      isAdminLoggedIn = false
+    const decoded = verifyToken(adminToken)
+    isAdminLoggedIn = !!decoded && decoded.role === 'admin'
+    if (!isAdminLoggedIn) {
+      response.cookies.delete('admin_token')
     }
   }
-  
+
   if (publisherToken) {
-    try {
-      const decoded = verifyToken(publisherToken)
-      isPublisherLoggedIn = !!decoded && decoded.role === 'publisher'
-    } catch (error) {
-      isPublisherLoggedIn = false
+    const decoded = verifyToken(publisherToken)
+    isPublisherLoggedIn = !!decoded && decoded.role === 'publisher'
+    if (!isPublisherLoggedIn) {
+      response.cookies.delete('publisher_token')
     }
   }
 

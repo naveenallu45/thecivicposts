@@ -18,9 +18,9 @@ export default function AdSense({ adClient }: AdSenseProps) {
         async
         src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adClient}`}
         crossOrigin="anonymous"
-        strategy="afterInteractive"
+        strategy="lazyOnload"
       />
-      <Script id="adsense-init" strategy="afterInteractive">
+      <Script id="adsense-init" strategy="lazyOnload">
         {`
           (adsbygoogle = window.adsbygoogle || []).push({});
         `}

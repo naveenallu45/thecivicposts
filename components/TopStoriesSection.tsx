@@ -1,12 +1,10 @@
 'use client'
 
-import { useEffect, useMemo } from 'react'
-import { useRouter } from 'next/navigation'
+import { useMemo } from 'react'
 import TopStoriesCarousel from './TopStoriesCarousel'
 import MiniTopStoryCard from './MiniTopStoryCard'
 import SectionHeading from './SectionHeading'
 import ViewportPrefetch from './ViewportPrefetch'
-import { getOptimizedImageUrl } from '@/lib/cloudinary-optimize'
 
 interface Article {
   id: string
@@ -25,35 +23,7 @@ interface TopStoriesSectionProps {
 }
 
 export default function TopStoriesSection({ topStories, miniTopStories }: TopStoriesSectionProps) {
-  const router = useRouter()
   const allArticles = useMemo(() => [...topStories, ...miniTopStories], [topStories, miniTopStories])
-
-  // Aggressively prefetch all articles and images immediately
-  useEffect(() => {
-    allArticles.forEach((article) => {
-      // Prefetch article page
-      router.prefetch(`/${article.category}/${article.slug}`)
-      
-      // Preload article images immediately for instant display
-      if (article.mainImage && article.mainImage.trim()) {
-        try {
-          const imageUrl = getOptimizedImageUrl(article.mainImage, 1200, 'auto:best')
-          
-          // Preload link
-          const link = document.createElement('link')
-          link.rel = 'preload'
-          link.as = 'image'
-          link.href = imageUrl
-          link.setAttribute('fetchpriority', 'high')
-          document.head.appendChild(link)
-          
-          // Preload actual image to browser cache
-          const img = new window.Image()
-          img.src = imageUrl
-        } catch {}
-      }
-    })
-  }, [allArticles, router])
 
   if (topStories.length === 0 && miniTopStories.length === 0) {
     return null

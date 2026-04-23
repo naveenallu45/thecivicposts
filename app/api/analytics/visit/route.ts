@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
       await VisitorEvent.findOneAndUpdate(
         { visitorId, slug: '__home__' },
         { $setOnInsert: { visitorId, slug: '__home__' } },
-        { upsert: true, new: true }
+        { upsert: true, returnDocument: 'after' }
       )
 
       const response = NextResponse.json({ success: true })

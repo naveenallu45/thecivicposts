@@ -4,6 +4,7 @@ const nextConfig = {
   images: {
     // Modern image formats for better compression and faster loading
     formats: ['image/avif', 'image/webp'],
+    qualities: [75, 85, 90],
     remotePatterns: [
       {
         protocol: 'https',
@@ -14,7 +15,6 @@ const nextConfig = {
     // 1. Cloudinary CDN: Source images stored and served from Cloudinary's global CDN
     // 2. Vercel CDN: Next.js Image Optimization API runs through Vercel's edge network
     // When deployed on Vercel, optimized images are cached on Vercel's CDN for instant delivery
-    domains: ['res.cloudinary.com'],
     // Responsive image sizes for different device breakpoints
     // Optimized for HD displays and fast loading
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],

@@ -192,7 +192,7 @@ export async function PUT(
     }
 
     const article = await Article.findByIdAndUpdate(id, updateData, {
-      new: true,
+      returnDocument: 'after',
       runValidators: true,
     })
 

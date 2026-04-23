@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Inter, Roboto, Playfair_Display, Merriweather } from 'next/font/google'
+import { Inter, Playfair_Display, Merriweather } from 'next/font/google'
 import './globals.css'
 import ConditionalLayout from '@/components/ConditionalLayout'
 
@@ -7,27 +7,23 @@ const inter = Inter({
   subsets: ['latin'],
   variable: '--font-inter',
   display: 'swap',
-})
-
-const roboto = Roboto({
-  weight: ['300', '400', '500', '700'],
-  subsets: ['latin'],
-  variable: '--font-roboto',
-  display: 'swap',
+  adjustFontFallback: true,
 })
 
 const playfair = Playfair_Display({
-  weight: ['700', '900'],
+  weight: ['700'],
   subsets: ['latin'],
   variable: '--font-playfair',
   display: 'swap',
+  adjustFontFallback: true,
 })
 
 const merriweather = Merriweather({
-  weight: ['300', '400', '700', '900'],
+  weight: ['400', '700'],
   subsets: ['latin'],
   variable: '--font-merriweather',
   display: 'swap',
+  adjustFontFallback: true,
 })
 
 export const metadata: Metadata = {
@@ -114,7 +110,7 @@ export const metadata: Metadata = {
     canonical: 'https://www.thecivicposts.com',
   },
   verification: {
-    google: 'google-site-verification=U5Cgn1zFv2qciE8qLIsXUdvB-PkchmHSNp81GIQ5uKk',
+    google: 'U5Cgn1zFv2qciE8qLIsXUdvB-PkchmHSNp81GIQ5uKk',
     // STEP 1: Go to Google Search Console (https://search.google.com/search-console)
     // STEP 2: Add property: https://www.thecivicposts.com
     // STEP 3: Choose "HTML tag" verification method
@@ -133,7 +129,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={`${inter.variable} ${roboto.variable} ${playfair.variable} ${merriweather.variable}`}>
+    <html lang="en" className={`${inter.variable} ${playfair.variable} ${merriweather.variable}`}>
       <head>
         {/* Browser Search Optimization - Help users find the site easily */}
         <meta name="application-name" content="The Civic Posts" />
@@ -156,38 +152,8 @@ export default function RootLayout({
         <meta name="geo.region" content="IN" />
         <meta name="geo.placename" content="India" />
         
-        {/* Dual CDN Preconnect for fastest image loading */}
-        {/* Cloudinary CDN: Source images */}
         <link rel="preconnect" href="https://res.cloudinary.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://res.cloudinary.com" />
-        {/* Vercel CDN: Optimized images via Next.js Image Optimization API */}
-        {/* Vercel automatically handles CDN preconnect when deployed */}
-        {/* Preconnect to Google Fonts */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        {/* Production-level aggressive prefetching for instant loading */}
-        <link rel="prefetch" href="/news" as="document" />
-        <link rel="prefetch" href="/entertainment" as="document" />
-        <link rel="prefetch" href="/sports" as="document" />
-        <link rel="prefetch" href="/health-fitness" as="document" />
-        <link rel="prefetch" href="/editorial" as="document" />
-        <link rel="prefetch" href="/technology" as="document" />
-        <link rel="prefetch" href="/automobiles" as="document" />
-        <link rel="prefetch" href="/about-us" as="document" />
-        <link rel="prefetch" href="/contact-us" as="document" />
-        <link rel="prefetch" href="/privacy-policy" as="document" />
-        <link rel="prefetch" href="/terms-and-conditions" as="document" />
-        {/* Prefetch category API routes for instant data loading */}
-        <link rel="prefetch" href="/api/articles?category=news&page=1&limit=10" as="fetch" crossOrigin="anonymous" />
-        <link rel="prefetch" href="/api/articles?category=entertainment&page=1&limit=10" as="fetch" crossOrigin="anonymous" />
-        <link rel="prefetch" href="/api/articles?category=sports&page=1&limit=10" as="fetch" crossOrigin="anonymous" />
-        <link rel="prefetch" href="/api/articles?category=health-fitness&page=1&limit=10" as="fetch" crossOrigin="anonymous" />
-        <link rel="prefetch" href="/api/articles?category=editorial&page=1&limit=10" as="fetch" crossOrigin="anonymous" />
-        <link rel="prefetch" href="/api/articles?category=technology&page=1&limit=10" as="fetch" crossOrigin="anonymous" />
-        <link rel="prefetch" href="/api/articles?category=automobiles&page=1&limit=10" as="fetch" crossOrigin="anonymous" />
-        {/* Prefetch API routes */}
-        <link rel="prefetch" href="/api/articles" as="fetch" crossOrigin="anonymous" />
-        <link rel="prefetch" href="/api/articles/all?limit=10&page=1" as="fetch" crossOrigin="anonymous" />
       </head>
       <body className="antialiased font-sans flex flex-col min-h-screen">
         <ConditionalLayout>{children}</ConditionalLayout>

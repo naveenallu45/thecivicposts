@@ -51,7 +51,6 @@ const config: Config = {
       fontFamily: {
         sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
         serif: ['var(--font-playfair)', 'Georgia', 'serif'],
-        roboto: ['var(--font-roboto)', 'sans-serif'],
         merriweather: ['var(--font-merriweather)', 'Georgia', 'serif'],
       },
     },

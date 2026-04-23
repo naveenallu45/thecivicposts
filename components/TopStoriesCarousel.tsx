@@ -102,6 +102,7 @@ function TopStoriesCarousel({ articles }: TopStoriesCarouselProps) {
         authorName={articles[0].authorName}
         slug={articles[0].slug}
         category={articles[0].category}
+        priorityImage
       />
     )
   }
@@ -119,7 +120,7 @@ function TopStoriesCarousel({ articles }: TopStoriesCarouselProps) {
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
-        {articles.map((article) => (
+        {articles.map((article, index) => (
           <div
             key={article.id}
             className="w-full flex-shrink-0 snap-start"
@@ -131,6 +132,7 @@ function TopStoriesCarousel({ articles }: TopStoriesCarouselProps) {
               authorName={article.authorName}
               slug={article.slug}
               category={article.category}
+              priorityImage={index === 0}
             />
           </div>
         ))}

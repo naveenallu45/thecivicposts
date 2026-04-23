@@ -17,6 +17,7 @@ import YouTubeVideo from '@/components/YouTubeVideo'
 import ArticleCard from '@/components/ArticleCard'
 import type { ArticleListItem } from '@/lib/article-types'
 import { getOptimizedImageUrl } from '@/lib/cloudinary-optimize'
+import ArticleMainImageCarousel from '@/components/ArticleMainImageCarousel'
 
 // ISR: Revalidate every 60 seconds (1 minute)
 // Pages will be statically generated and revalidated in the background
@@ -420,32 +421,9 @@ export default async function ArticlePage({
                 url={articleUrl} 
               />
 
-              {/* Main Images - horizontal scroll with indication */}
+              {/* Main images: full column width; multiple images use snap scroll + dots */}
               {mainImages.length > 0 && (
-                <div className="mb-8">
-                  <p className="text-xs text-gray-500 mb-2">Swipe/scroll sideways to view main images</p>
-                  <div className="relative">
-                    <div className="overflow-x-auto pb-2">
-                      <div className="flex gap-3 min-w-max">
-                        {mainImages.map((img, idx) => (
-                          <div key={`main-${idx}`} className="w-[280px] sm:w-[420px] lg:w-[520px] flex-shrink-0">
-                            <Image
-                              src={getOptimizedImageUrl(img.url, 1200, 'auto:best')}
-                              alt={img.alt || article.title || `Main image ${idx + 1}`}
-                              width={1200}
-                              height={800}
-                              className="w-full h-auto rounded-lg image-fade-in"
-                              loading={idx === 0 ? 'eager' : 'lazy'}
-                              quality={90}
-                              sizes="(max-width: 768px) 280px, (max-width: 1024px) 420px, 520px"
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="absolute right-0 top-0 bottom-2 w-10 pointer-events-none bg-gradient-to-l from-gray-50 to-transparent" />
-                  </div>
-                </div>
+                <ArticleMainImageCarousel images={mainImages} title={article.title} />
               )}
 
               {/* Content */}

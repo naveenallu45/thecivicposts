@@ -63,7 +63,7 @@ export async function PUT(
     const publisher = await Publisher.findByIdAndUpdate(
       id,
       updateData,
-      { new: true, runValidators: true }
+      { returnDocument: 'after', runValidators: true }
     )
 
     if (!publisher) {

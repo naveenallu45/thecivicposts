@@ -37,23 +37,8 @@ function MiniTopStoryCard({
 
   // Aggressive prefetching on hover for instant navigation
   const handleMouseEnter = useCallback(() => {
-    // Prefetch article page
     router.prefetch(`/${category}/${slug}`)
-    
-    // Preload article image for instant display
-    if (mainImage && mainImage.trim()) {
-      const link = document.createElement('link')
-      link.rel = 'preload'
-      link.as = 'image'
-      link.href = getOptimizedImageUrl(mainImage, 1200, 'auto:best')
-      link.setAttribute('fetchpriority', 'high')
-      document.head.appendChild(link)
-      
-      // Also preload the actual image to browser cache
-      const img = new window.Image()
-      img.src = getOptimizedImageUrl(mainImage, 1200, 'auto:best')
-    }
-  }, [router, category, slug, mainImage])
+  }, [router, category, slug])
 
   return (
     <Link 
@@ -72,6 +57,8 @@ function MiniTopStoryCard({
             <img
               src={getOptimizedImageUrl(mainImage, 128)}
               alt={title}
+              width={128}
+              height={128}
               className="max-w-full max-h-[112px] md:max-h-[128px] w-auto h-auto rounded"
               onError={(e) => {
                 // Fallback to raw URL if optimized URL fails

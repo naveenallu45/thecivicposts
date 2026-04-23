@@ -61,7 +61,7 @@ export async function PUT(
     const author = await Author.findByIdAndUpdate(
       id,
       updateData,
-      { new: true, runValidators: true }
+      { returnDocument: 'after', runValidators: true }
     )
 
     if (!author) {

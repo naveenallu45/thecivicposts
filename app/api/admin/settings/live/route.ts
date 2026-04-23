@@ -60,12 +60,12 @@ export async function POST(request: NextRequest) {
             Settings.findOneAndUpdate(
                 { key: 'youtube_live_links' },
                 { value: youtubeLinks },
-                { upsert: true, new: true }
+                { upsert: true, returnDocument: 'after' }
             ),
             Settings.findOneAndUpdate(
                 { key: 'youtube_live_link' },
                 { value: youtubeLinks[0] || '' },
-                { upsert: true, new: true }
+                { upsert: true, returnDocument: 'after' }
             ),
         ]);
 
