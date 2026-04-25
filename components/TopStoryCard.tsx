@@ -31,7 +31,7 @@ function TopStoryCard({
   const router = useRouter()
   const [, startTransition] = useTransition()
   const [imgSrc, setImgSrc] = useState(() =>
-    mainImage?.trim() ? getOptimizedImageUrl(mainImage.trim(), 1200, 'auto:best') : ''
+    mainImage?.trim() ? getOptimizedImageUrl(mainImage.trim(), 1200, 'auto:best', 800) : ''
   )
 
   const handleAuthorClick = useCallback((e: React.MouseEvent) => {

@@ -129,9 +129,32 @@ export function optimizeCloudinaryUrl(
 export function getOptimizedImageUrl(
   url: string, 
   maxWidth?: number,
-  quality: 'auto:best' | 'auto:good' | 'auto:eco' | number = 'auto:best'
+  quality: 'auto:best' | 'auto:good' | 'auto:eco' | number = 'auto:best',
+  height?: number
 ): string {
   // Use high quality for larger images (HD), good quality for smaller thumbnails
   const imageQuality = maxWidth && maxWidth >= 800 ? 'auto:best' : (quality || 'auto:good')
-  return optimizeCloudinaryUrl(url, maxWidth, undefined, imageQuality)
+  return optimizeCloudinaryUrl(url, maxWidth, height, imageQuality)
+}
+
+/**
+ * Gets a tightly framed Cloudinary URL for places where images must occupy
+ * a consistent visual box even when the source upload has white padding.
+ */
+export function getFramedImageUrl(
+  url: string,
+  width: number,
+  height: number,
+  quality: 'auto:best' | 'auto:good' | 'auto:eco' | number = 'auto:best'
+): string {
+  const optimized = getOptimizedImageUrl(url, width, quality, height)
+
+  if (!optimized.includes('res.cloudinary.com') || !optimized.includes('/image/upload/')) {
+    return optimized
+  }
+
+  return optimized.replace(
+    '/image/upload/',
+    '/image/upload/e_trim,c_fill,g_auto/'
+  )
 }

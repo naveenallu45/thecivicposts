@@ -72,17 +72,17 @@ function ArticleCard({
       className="block group focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 rounded-lg transition-all duration-200 lg:hover:scale-[1.02] active:scale-[0.98]"
       aria-label={`Read article: ${title}`}
     >
-      <div className="bg-white rounded-lg overflow-hidden h-full border border-gray-100 hover:border-gray-200 transition-colors duration-200">
+      <div className="bg-white rounded-lg overflow-hidden h-full shadow-sm hover:shadow-md transition-shadow duration-200">
         {/* Horizontal layout for mobile/tablet (1-2 columns) */}
         <div className="flex flex-row items-stretch lg:hidden">
           {/* Image Side - Natural sizing without cropping, card height matches image */}
-          <div className="w-[34%] md:w-[34%] flex-shrink-0 bg-gray-100 flex items-center">
+          <div className="w-[34%] md:w-[34%] flex-shrink-0 bg-gray-100 overflow-hidden">
             {mainImage && mainImage.trim() ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={getOptimizedImageUrl(mainImage, 400)}
+                src={getOptimizedImageUrl(mainImage, 400, 'auto:good', 153)}
                 alt={title}
-                className="max-w-full max-h-[119px] md:max-h-[153px] w-auto h-auto block"
+                className="w-full h-[119px] md:h-[153px] object-cover block"
                 onError={(e) => {
                   // Fallback to raw URL if optimized URL fails
                   const target = e.target as HTMLImageElement
@@ -127,13 +127,13 @@ function ArticleCard({
         {/* Vertical layout for laptop (4 columns) - Image top, text below */}
         <div className="hidden lg:flex flex-col h-full">
           {/* Image Top - Natural sizing without cropping, no white space */}
-          <div className="w-full flex-shrink-0 bg-gray-100">
+          <div className="w-full flex-shrink-0 bg-gray-100 overflow-hidden">
             {mainImage && mainImage.trim() ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={getOptimizedImageUrl(mainImage, 500, 'auto:best')}
+                src={getOptimizedImageUrl(mainImage, 500, 'auto:best', 220)}
                 alt={title}
-                className="w-full max-h-[300px] h-auto block"
+                className="w-full h-[220px] object-cover block"
                 onError={(e) => {
                   // Fallback to raw URL if optimized URL fails
                   const target = e.target as HTMLImageElement

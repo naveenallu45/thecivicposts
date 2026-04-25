@@ -51,15 +51,15 @@ function MiniTopStoryCard({
     >
       <div className="bg-white rounded-lg overflow-hidden flex gap-2 md:gap-3 h-full">
         {/* Small Image - Natural sizing without cropping */}
-        <div className="relative w-24 md:w-28 lg:w-32 flex-shrink-0 flex items-center justify-center rounded bg-gray-100">
+        <div className="relative w-24 md:w-28 lg:w-32 flex-shrink-0 rounded bg-gray-100 overflow-hidden">
           {mainImage && mainImage.trim() ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={getOptimizedImageUrl(mainImage, 128)}
+              src={getOptimizedImageUrl(mainImage, 128, 'auto:good', 128)}
               alt={title}
               width={128}
               height={128}
-              className="max-w-full max-h-[112px] md:max-h-[128px] w-auto h-auto rounded"
+              className="w-full h-[112px] md:h-[128px] object-cover block rounded"
               onError={(e) => {
                 // Fallback to raw URL if optimized URL fails
                 const target = e.target as HTMLImageElement

@@ -1,4 +1,4 @@
-import { notFound, redirect } from 'next/navigation'
+import { notFound, redirect, unstable_rethrow } from 'next/navigation'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 // Import models index FIRST to ensure all models are registered before use
@@ -16,7 +16,7 @@ import ViewportPrefetch from '@/components/ViewportPrefetch'
 import YouTubeVideo from '@/components/YouTubeVideo'
 import ArticleCard from '@/components/ArticleCard'
 import type { ArticleListItem } from '@/lib/article-types'
-import { getOptimizedImageUrl } from '@/lib/cloudinary-optimize'
+import { getFramedImageUrl, getOptimizedImageUrl } from '@/lib/cloudinary-optimize'
 import ArticleMainImageCarousel from '@/components/ArticleMainImageCarousel'
 
 // ISR: Revalidate every 60 seconds (1 minute)
@@ -470,16 +470,17 @@ export default async function ArticlePage({
                           <div className="flex gap-3 min-w-max">
                             {miniImages.map((img, idx) => (
                               <div key={`mini-${idx}`} className="w-[280px] sm:w-[360px] lg:w-[420px] flex-shrink-0">
-                                <Image
-                                  src={getOptimizedImageUrl(img.url, 800, 'auto:best')}
-                                  alt={img.alt || article.title || `Supporting image ${idx + 1}`}
-                                  width={800}
-                                  height={600}
-                                  className="w-full h-auto rounded-lg"
-                                  loading="lazy"
-                                  quality={90}
-                                  sizes="(max-width: 768px) 280px, (max-width: 1024px) 360px, 420px"
-                                />
+                                <div className="relative w-full aspect-[3/2] overflow-hidden rounded-lg">
+                                  <Image
+                                    src={getFramedImageUrl(img.url, 800, 600, 'auto:best')}
+                                    alt={img.alt || article.title || `Supporting image ${idx + 1}`}
+                                    fill
+                                    className="object-cover"
+                                    loading="lazy"
+                                    quality={90}
+                                    sizes="(max-width: 768px) 280px, (max-width: 1024px) 360px, 420px"
+                                  />
+                                </div>
                               </div>
                             ))}
                           </div>
@@ -524,18 +525,19 @@ export default async function ArticlePage({
                     .sort((a: { order: number }, b: { order: number }) => a.order - b.order)
                     .map((img: { url: string; alt?: string }, idx: number) => (
                       <div key={idx} className="lg:w-3/4 lg:mx-auto">
-                        <Image
-                          src={getOptimizedImageUrl(img.url, 1200, 'auto:best')}
-                          alt={img.alt || `Article image ${idx + 1}`}
-                          width={1200}
-                          height={600}
-                          className="w-full h-auto rounded-lg"
-                          loading="lazy"
-                          quality={90}
-                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 900px"
-                          placeholder="blur"
-                          blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
-                        />
+                        <div className="relative w-full aspect-[3/2] overflow-hidden rounded-lg">
+                          <Image
+                            src={getFramedImageUrl(img.url, 1200, 800, 'auto:best')}
+                            alt={img.alt || `Article image ${idx + 1}`}
+                            fill
+                            className="object-cover"
+                            loading="lazy"
+                            quality={90}
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 900px"
+                            placeholder="blur"
+                            blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
+                          />
+                        </div>
                       </div>
                     ))}
                 </div>
@@ -592,6 +594,7 @@ export default async function ArticlePage({
     </>
   )
   } catch (error) {
+    unstable_rethrow(error)
     console.error('Error rendering article page:', error)
     throw error // Re-throw to show 500 error page
   }

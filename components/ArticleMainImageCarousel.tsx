@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback, memo } from 'react'
 import Image from 'next/image'
-import { getOptimizedImageUrl } from '@/lib/cloudinary-optimize'
+import { getFramedImageUrl } from '@/lib/cloudinary-optimize'
 
 export type ArticleMainCarouselImage = { url: string; alt?: string }
 
@@ -42,17 +42,18 @@ function ArticleMainImageCarousel({ images, title }: ArticleMainImageCarouselPro
     const img = images[0]
     return (
       <div className="mb-8 w-full">
-        <Image
-          src={getOptimizedImageUrl(img.url, 1200, 'auto:best')}
-          alt={img.alt || title || 'Article main image'}
-          width={1200}
-          height={800}
-          className="w-full h-auto rounded-lg image-fade-in"
-          priority
-          fetchPriority="high"
-          quality={90}
-          sizes="(max-width: 1023px) 92vw, min(900px, 55vw)"
-        />
+        <div className="relative w-full aspect-[3/2] overflow-hidden rounded-lg">
+          <Image
+            src={getFramedImageUrl(img.url, 1200, 800, 'auto:best')}
+            alt={img.alt || title || 'Article main image'}
+            fill
+            className="object-cover image-fade-in"
+            priority
+            fetchPriority="high"
+            quality={90}
+            sizes="(max-width: 1023px) 92vw, min(900px, 55vw)"
+          />
+        </div>
       </div>
     )
   }
@@ -70,18 +71,19 @@ function ArticleMainImageCarousel({ images, title }: ArticleMainImageCarouselPro
             key={`main-carousel-${idx}`}
             className="w-full min-w-full flex-shrink-0 snap-start"
           >
-            <Image
-              src={getOptimizedImageUrl(img.url, 1200, 'auto:best')}
-              alt={img.alt || title || `Main image ${idx + 1}`}
-              width={1200}
-              height={800}
-              className="w-full h-auto rounded-lg image-fade-in"
-              {...(idx === 0
-                ? { priority: true, fetchPriority: 'high' as const }
-                : { loading: 'lazy' as const, fetchPriority: 'low' as const })}
-              quality={90}
-              sizes="(max-width: 1023px) 92vw, min(900px, 55vw)"
-            />
+            <div className="relative w-full aspect-[3/2] overflow-hidden rounded-lg">
+              <Image
+                src={getFramedImageUrl(img.url, 1200, 800, 'auto:best')}
+                alt={img.alt || title || `Main image ${idx + 1}`}
+                fill
+                className="object-cover image-fade-in"
+                {...(idx === 0
+                  ? { priority: true, fetchPriority: 'high' as const }
+                  : { loading: 'lazy' as const, fetchPriority: 'low' as const })}
+                quality={90}
+                sizes="(max-width: 1023px) 92vw, min(900px, 55vw)"
+              />
+            </div>
           </div>
         ))}
       </div>
