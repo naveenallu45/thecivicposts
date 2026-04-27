@@ -76,7 +76,7 @@ function ArticleCard({
     >
       <div className="bg-white rounded-lg overflow-hidden h-full shadow-sm hover:shadow-md transition-shadow duration-200">
         {/* Horizontal layout for mobile/tablet (1-2 columns) */}
-        <div className="flex flex-row items-stretch lg:hidden">
+        <div className="flex flex-row lg:hidden h-[119px] md:h-[153px]">
           {/* Image Side - Keep full image visible without cropping */}
           <div className="w-[34%] md:w-[34%] flex-shrink-0 bg-gray-100 overflow-hidden">
             {mainImage && mainImage.trim() ? (
@@ -105,18 +105,18 @@ function ArticleCard({
           </div>
           
           {/* Content Side */}
-          <div className="w-[66%] md:w-[66%] p-2 md:p-4 flex flex-col min-h-0">
-            <div className="overflow-hidden min-h-0">
-              <h3 className="text-[12px] md:text-base font-bold text-gray-900 mb-2 md:mb-3 font-merriweather group-hover:text-red-600 transition-colors duration-200 break-words line-clamp-3 leading-tight">
+          <div className="w-[66%] md:w-[66%] p-2 md:p-3 flex flex-col h-[119px] md:h-[153px] overflow-hidden">
+            <div className="overflow-hidden min-h-0 flex-1">
+              <h3 className="text-[12px] md:text-sm font-bold text-gray-900 mb-1 md:mb-2 font-merriweather group-hover:text-red-600 transition-colors duration-200 break-words line-clamp-2 md:line-clamp-3 leading-tight">
                 {title}
               </h3>
               {description && (
-                <p className="text-[10px] md:text-[12px] text-gray-600 mb-2 line-clamp-1 md:line-clamp-3 leading-snug">
+                <p className="text-[10px] md:text-[11px] text-gray-600 mb-1 line-clamp-1 md:line-clamp-3 leading-snug">
                   {description}
                 </p>
               )}
             </div>
-            <div className="pt-1 md:pt-2 border-t border-gray-200 flex items-center flex-shrink-0">
+            <div className="pt-1 border-t border-gray-200 flex items-center flex-shrink-0">
               <p className="text-[10px] md:text-xs text-gray-600 font-sans truncate pr-2 leading-tight">
                 <span 
                   onClick={handleAuthorClick}
