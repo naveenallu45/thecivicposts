@@ -111,7 +111,7 @@ function ArticleCard({
                 {title}
               </h3>
               {description && (
-                <p className="text-[10px] md:text-[12px] text-gray-600 mb-2 line-clamp-3 leading-snug">
+                <p className="text-[10px] md:text-[12px] text-gray-600 mb-2 line-clamp-1 md:line-clamp-3 leading-snug">
                   {description}
                 </p>
               )}
@@ -171,7 +171,7 @@ function ArticleCard({
                 </span>
               </h3>
               {description && (
-                <p className="text-[11px] text-gray-600 mt-2 line-clamp-3 leading-relaxed">
+                <p className="text-[11px] text-gray-600 mt-2 line-clamp-1 md:line-clamp-3 leading-relaxed">
                   {description}
                 </p>
               )}
