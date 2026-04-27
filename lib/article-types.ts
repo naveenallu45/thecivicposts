@@ -2,6 +2,8 @@ export interface ArticleListItem {
   _id: { toString: () => string }
   title: string
   subtitle?: string
+  content?: string[]
+  description?: string
   mainImage?: {
     url: string
     public_id: string

@@ -27,7 +27,7 @@ export default async function HomeBelowFoldServer() {
       })
         .sort({ createdAt: -1 })
         .limit(4)
-        .select('title subtitle mainImage publishedDate authorName slug category')
+        .select('title content mainImage publishedDate authorName slug category')
         .lean(),
       ...SITE_CATEGORIES.map((cat) =>
         Article.find({
@@ -40,7 +40,7 @@ export default async function HomeBelowFoldServer() {
         })
           .sort({ createdAt: -1 })
           .limit(6)
-          .select('title subtitle mainImage publishedDate authorName slug category')
+          .select('title content mainImage publishedDate authorName slug category')
           .lean()
       ),
     ])

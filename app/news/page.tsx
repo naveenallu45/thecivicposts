@@ -5,6 +5,7 @@ import Article from '@/models/Article'
 import CategoryInfiniteScroll from '@/components/CategoryInfiniteScroll'
 import type { ArticleListItem } from '@/lib/article-types'
 import { formatDateShort } from '@/lib/date-utils'
+import { getArticleDescription } from '@/lib/article-description'
 import type { Metadata } from 'next'
 
 // ISR: Revalidate every 30 seconds for faster updates
@@ -54,7 +55,7 @@ export default async function NewsPage() {
       })
         .sort({ createdAt: -1 })
         .limit(ARTICLES_PER_PAGE)
-        .select('title subtitle mainImage publishedDate authorName slug category')
+        .select('title content mainImage publishedDate authorName slug category')
         .lean()
         .exec() as Promise<ArticleListItem[]>,
       // Use countDocuments - estimatedDocumentCount doesn't support queries
@@ -77,7 +78,7 @@ export default async function NewsPage() {
   const articlesData = articles.map((article) => ({
     id: article._id.toString(),
     title: article.title,
-    subtitle: article.subtitle,
+    description: getArticleDescription(article.content),
     mainImage: article.mainImage?.url || '',
     publishedDate: article.publishedDate
       ? formatDateShort(article.publishedDate)

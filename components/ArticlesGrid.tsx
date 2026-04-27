@@ -3,7 +3,7 @@ import ArticleCard from './ArticleCard'
 interface Article {
   id: string
   title: string
-  subtitle?: string
+  description?: string
   mainImage: string
   publishedDate: string
   authorName: string
@@ -30,6 +30,7 @@ export default function ArticlesGrid({ articles }: ArticlesGridProps) {
         <ArticleCard
           key={article.id}
           title={article.title}
+          description={article.description}
           mainImage={article.mainImage}
           publishedDate={article.publishedDate}
           authorName={article.authorName}

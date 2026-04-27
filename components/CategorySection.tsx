@@ -10,7 +10,7 @@ import ViewportPrefetch from './ViewportPrefetch'
 interface Article {
   id: string
   title: string
-  subtitle?: string
+  description?: string
   mainImage: string
   publishedDate: string
   authorName: string
@@ -60,6 +60,7 @@ export default function CategorySection({ articles, categoryName }: CategorySect
           <div key={article.id} data-article-id={`${article.category}/${article.slug}`}>
             <ArticleCard
               title={article.title}
+              description={article.description}
               mainImage={article.mainImage}
               publishedDate={article.publishedDate}
               authorName={article.authorName}

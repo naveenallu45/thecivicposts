@@ -7,7 +7,7 @@ import { formatAuthorName } from '@/lib/author-utils'
 interface Article {
   id: string
   title: string
-  subtitle?: string
+  description?: string
   mainImage: string
   publishedDate: string
   authorName: string
@@ -137,6 +137,7 @@ export default function InfiniteScrollArticles({
           >
             <ArticleCard
               title={article.title}
+              description={article.description}
               mainImage={article.mainImage}
               publishedDate={article.publishedDate}
               authorName={article.authorName}

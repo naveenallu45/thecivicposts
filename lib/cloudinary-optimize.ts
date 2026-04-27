@@ -15,7 +15,8 @@ export function optimizeCloudinaryUrl(
   url: string,
   width?: number,
   height?: number,
-  quality: 'auto' | 'auto:best' | 'auto:good' | 'auto:eco' | number = 'auto:best'
+  quality: 'auto' | 'auto:best' | 'auto:good' | 'auto:eco' | number = 'auto:best',
+  cropMode: 'fill' | 'fit' = 'fill'
 ): string {
   if (!url || typeof url !== 'string') {
     return url
@@ -84,9 +85,9 @@ export function optimizeCloudinaryUrl(
       transformParts.push(`h_${height}`)
     }
     
-    // Add crop fill if missing
+    // Add crop mode if missing
     if (!hasC) {
-      transformParts.push('c_fill')
+      transformParts.push(`c_${cropMode}`)
     }
     
     // Combine existing transformations with new ones
@@ -111,7 +112,7 @@ export function optimizeCloudinaryUrl(
     if (height) {
       transformParts.push(`h_${height}`)
     }
-    transformParts.push('c_fill')
+    transformParts.push(`c_${cropMode}`)
     
     return `${basePath}${transformParts.join(',')}/${publicId}`
   }
@@ -130,11 +131,12 @@ export function getOptimizedImageUrl(
   url: string, 
   maxWidth?: number,
   quality: 'auto:best' | 'auto:good' | 'auto:eco' | number = 'auto:best',
-  height?: number
+  height?: number,
+  cropMode: 'fill' | 'fit' = 'fill'
 ): string {
   // Use high quality for larger images (HD), good quality for smaller thumbnails
   const imageQuality = maxWidth && maxWidth >= 800 ? 'auto:best' : (quality || 'auto:good')
-  return optimizeCloudinaryUrl(url, maxWidth, height, imageQuality)
+  return optimizeCloudinaryUrl(url, maxWidth, height, imageQuality, cropMode)
 }
 
 /**

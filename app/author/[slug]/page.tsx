@@ -5,6 +5,7 @@ import Article from '@/models/Article'
 import InfiniteScrollArticles from '@/components/InfiniteScrollArticles'
 import type { ArticleListItem } from '@/lib/article-types'
 import { formatDateShort } from '@/lib/date-utils'
+import { getArticleDescription } from '@/lib/article-description'
 import { generateAuthorSlug } from '@/lib/author-utils'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
@@ -79,7 +80,7 @@ export default async function AuthorPage({
     })
       .sort({ createdAt: -1 })
       .limit(ARTICLES_PER_PAGE)
-      .select('title subtitle mainImage publishedDate authorName slug category')
+      .select('title content mainImage publishedDate authorName slug category')
       .lean() as Promise<ArticleListItem[]>,
     Article.countDocuments({ 
       status: 'published',
@@ -91,7 +92,7 @@ export default async function AuthorPage({
   const articlesData = articles.map((article) => ({
     id: article._id.toString(),
     title: article.title,
-    subtitle: article.subtitle,
+    description: getArticleDescription(article.content),
     mainImage: article.mainImage?.url || '',
     publishedDate: article.publishedDate
       ? formatDateShort(article.publishedDate)

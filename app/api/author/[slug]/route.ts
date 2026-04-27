@@ -30,7 +30,7 @@ export async function GET(
     interface ArticleListItem {
       id: string
       title: string
-      subtitle?: string
+      description?: string
       mainImage: string
       publishedDate: string
       authorName: string
@@ -82,7 +82,7 @@ export async function GET(
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
-        .select('title subtitle mainImage publishedDate authorName slug category')
+        .select('title content mainImage publishedDate authorName slug category')
         .lean(),
       Article.countDocuments({ 
         status: 'published',
@@ -91,10 +91,17 @@ export async function GET(
       })
     ])
 
+    const getArticleDescription = (content?: string[]) => {
+      const firstParagraph = Array.isArray(content) ? String(content[0] || '') : ''
+      const normalized = firstParagraph.replace(/\s+/g, ' ').trim()
+      if (!normalized) return undefined
+      return normalized.length > 140 ? `${normalized.slice(0, 140).trim()}...` : normalized
+    }
+
     const articlesData = articles.map((article) => ({
       id: article._id.toString(),
       title: article.title,
-      subtitle: article.subtitle,
+      description: getArticleDescription(article.content as string[] | undefined),
       mainImage: article.mainImage?.url || '',
       publishedDate: article.publishedDate
         ? formatDateShort(article.publishedDate)

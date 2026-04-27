@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     interface ArticleListItem {
       id: string
       title: string
-      subtitle?: string
+      description?: string
       mainImage: string
       publishedDate: string
       authorName: string
@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
-        .select('title subtitle mainImage publishedDate publishedAt authorName slug category createdAt')
+        .select('title content mainImage publishedDate publishedAt authorName slug category createdAt')
         .lean(),
       Article.countDocuments(query)
     ])
@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
     interface ArticleDoc {
       _id: { toString: () => string }
       title: string
-      subtitle?: string
+      content?: string[]
       mainImage?: { url: string }
       publishedDate: Date
       publishedAt?: Date
@@ -88,10 +88,17 @@ export async function GET(request: NextRequest) {
       createdAt: Date
     }
 
+    const getArticleDescription = (content?: string[]) => {
+      const firstParagraph = Array.isArray(content) ? String(content[0] || '') : ''
+      const normalized = firstParagraph.replace(/\s+/g, ' ').trim()
+      if (!normalized) return undefined
+      return normalized.length > 140 ? `${normalized.slice(0, 140).trim()}...` : normalized
+    }
+
     const articlesData = (articles as ArticleDoc[]).map((article) => ({
       id: article._id.toString(),
       title: article.title,
-      subtitle: article.subtitle,
+      description: getArticleDescription(article.content),
       mainImage: article.mainImage?.url || '',
       publishedDate: (article.publishedAt || article.publishedDate)
         ? formatDateShort(article.publishedAt || article.publishedDate)

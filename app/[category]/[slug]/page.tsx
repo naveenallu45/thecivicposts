@@ -17,6 +17,7 @@ import YouTubeVideo from '@/components/YouTubeVideo'
 import ArticleCard from '@/components/ArticleCard'
 import type { ArticleListItem } from '@/lib/article-types'
 import { getFramedImageUrl, getOptimizedImageUrl } from '@/lib/cloudinary-optimize'
+import { getArticleDescription } from '@/lib/article-description'
 import ArticleMainImageCarousel from '@/components/ArticleMainImageCarousel'
 
 // ISR: Revalidate every 60 seconds (1 minute)
@@ -208,7 +209,7 @@ export default async function ArticlePage({
     })
       .sort({ createdAt: -1 })
       .limit(8)
-      .select('title subtitle mainImage publishedDate authorName slug category')
+      .select('title content mainImage publishedDate authorName slug category')
       .lean() as Promise<ArticleListItem[]>,
     Article.countDocuments({ 
       status: 'published',
@@ -224,14 +225,14 @@ export default async function ArticlePage({
     })
       .sort({ createdAt: -1 })
       .limit(20) // Fetch 20 articles to show multiple rows (5 rows x 4 columns)
-      .select('title subtitle mainImage publishedDate authorName slug category')
+      .select('title content mainImage publishedDate authorName slug category')
       .lean() as Promise<ArticleListItem[]>
   ])
 
   const moreArticlesData = moreArticles.map((article) => ({
     id: article._id.toString(),
     title: article.title,
-    subtitle: article.subtitle,
+    description: getArticleDescription(article.content),
     mainImage: article.mainImage?.url || '',
     publishedDate: article.publishedDate
       ? formatDateShort(article.publishedDate)
@@ -244,7 +245,7 @@ export default async function ArticlePage({
   const recentArticlesData = recentArticles.map((article) => ({
     id: article._id.toString(),
     title: article.title,
-    subtitle: article.subtitle,
+    description: getArticleDescription(article.content),
     mainImage: article.mainImage?.url || '',
     publishedDate: article.publishedDate
       ? formatDateShort(article.publishedDate)
@@ -580,6 +581,7 @@ export default async function ArticlePage({
                 <ArticleCard
                   key={article.id}
                   title={article.title}
+                  description={article.description}
                   mainImage={article.mainImage}
                   publishedDate={article.publishedDate}
                   authorName={article.authorName}

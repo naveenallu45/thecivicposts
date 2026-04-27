@@ -55,11 +55,11 @@ function MiniTopStoryCard({
           {mainImage && mainImage.trim() ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={getOptimizedImageUrl(mainImage, 128, 'auto:good', 128)}
+              src={getOptimizedImageUrl(mainImage, 128, 'auto:good', 128, 'fit')}
               alt={title}
               width={128}
               height={128}
-              className="w-full h-[112px] md:h-[128px] object-cover block rounded"
+              className="w-full h-[112px] md:h-[128px] object-contain block rounded bg-gray-100"
               onError={(e) => {
                 // Fallback to raw URL if optimized URL fails
                 const target = e.target as HTMLImageElement

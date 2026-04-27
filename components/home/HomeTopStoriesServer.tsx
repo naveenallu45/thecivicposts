@@ -25,7 +25,7 @@ export default async function HomeTopStoriesServer() {
       })
         .sort({ createdAt: -1 })
         .limit(10)
-        .select('title subtitle mainImage publishedDate authorName slug category')
+        .select('title content mainImage publishedDate authorName slug category')
         .lean(),
       Article.find({
         status: 'published',
@@ -34,7 +34,7 @@ export default async function HomeTopStoriesServer() {
       })
         .sort({ createdAt: -1 })
         .limit(6)
-        .select('title subtitle mainImage publishedDate authorName slug category')
+        .select('title content mainImage publishedDate authorName slug category')
         .lean(),
     ])
 
