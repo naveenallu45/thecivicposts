@@ -9,7 +9,7 @@ import ViewportPrefetch from './ViewportPrefetch'
 interface Article {
   id: string
   title: string
-  subtitle?: string
+  description?: string
   mainImage: string
   publishedDate: string
   authorName: string
@@ -52,6 +52,7 @@ export default function TopStoriesSection({ topStories, miniTopStories }: TopSto
               <div key={article.id} data-article-id={`${article.category}/${article.slug}`}>
                 <MiniTopStoryCard
                   title={article.title}
+                  description={article.description}
                   mainImage={article.mainImage}
                   publishedDate={article.publishedDate}
                   authorName={article.authorName}

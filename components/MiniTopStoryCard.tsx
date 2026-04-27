@@ -9,6 +9,7 @@ import { getOptimizedImageUrl } from '@/lib/cloudinary-optimize'
 
 interface MiniTopStoryCardProps {
   title: string
+  description?: string
   mainImage: string
   publishedDate: string
   authorName: string
@@ -18,6 +19,7 @@ interface MiniTopStoryCardProps {
 
 function MiniTopStoryCard({
   title,
+  description,
   mainImage,
   publishedDate,
   authorName,
@@ -49,7 +51,7 @@ function MiniTopStoryCard({
       className="block group transition-transform duration-200 lg:hover:scale-[1.02] active:scale-[0.98]"
       aria-label={`Read article: ${title}`}
     >
-      <div className="bg-white rounded-lg overflow-hidden flex gap-2 md:gap-3 h-full">
+      <div className="bg-white rounded-lg overflow-hidden flex gap-2 md:gap-3 lg:h-full">
         {/* Small Image - Natural sizing without cropping */}
         <div className="relative w-24 md:w-28 lg:w-32 flex-shrink-0 rounded bg-gray-100 overflow-hidden">
           {mainImage && mainImage.trim() ? (
@@ -84,6 +86,11 @@ function MiniTopStoryCard({
           <h3 className="text-[11px] md:text-xs lg:text-xs font-bold text-gray-900 mb-1 font-merriweather group-hover:text-red-600 transition-colors duration-200 line-clamp-3 leading-snug">
             {title}
           </h3>
+          {description && (
+            <p className="text-[10px] text-gray-600 mb-1 overflow-hidden max-h-[2.7em] md:max-h-none md:line-clamp-2 leading-snug">
+              {description}
+            </p>
+          )}
           <p className="text-[10px] md:text-[10px] lg:text-[10px] text-gray-600 font-sans leading-tight truncate">
             <span 
               onClick={handleAuthorClick}

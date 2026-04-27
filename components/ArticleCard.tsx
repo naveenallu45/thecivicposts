@@ -74,17 +74,17 @@ function ArticleCard({
       className="block group focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 rounded-lg transition-all duration-200 lg:hover:scale-[1.02] active:scale-[0.98]"
       aria-label={`Read article: ${title}`}
     >
-      <div className="bg-white rounded-lg overflow-hidden h-full shadow-sm hover:shadow-md transition-shadow duration-200">
+      <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200 lg:h-full">
         {/* Horizontal layout for mobile/tablet (1-2 columns) */}
-        <div className="flex flex-row lg:hidden h-[119px] md:h-[153px]">
+        <div className="flex flex-row lg:hidden h-[119px] md:h-[153px] overflow-hidden">
           {/* Image Side - Keep full image visible without cropping */}
-          <div className="w-[34%] md:w-[34%] flex-shrink-0 bg-gray-100 overflow-hidden">
+          <div className="w-[34%] md:w-[34%] h-full flex-shrink-0 bg-gray-100 overflow-hidden">
             {mainImage && mainImage.trim() ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={getOptimizedImageUrl(mainImage, 400, 'auto:good', 153, 'fit')}
                 alt={title}
-                className="w-full h-[119px] md:h-[153px] object-contain block bg-gray-100"
+                className="w-full h-full object-contain block bg-gray-100"
                 onError={(e) => {
                   // Fallback to raw URL if optimized URL fails
                   const target = e.target as HTMLImageElement
@@ -98,20 +98,20 @@ function ArticleCard({
                 loading="lazy"
               />
             ) : (
-              <div className="w-full h-[119px] md:h-[153px] flex items-center justify-center bg-gray-200 text-gray-400 text-xs">
+              <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400 text-xs">
                 No Image
               </div>
             )}
           </div>
           
           {/* Content Side */}
-          <div className="w-[66%] md:w-[66%] p-2 md:p-3 flex flex-col h-[119px] md:h-[153px] overflow-hidden">
+          <div className="w-[66%] md:w-[66%] p-2 md:p-3 flex flex-col h-full overflow-hidden">
             <div className="overflow-hidden min-h-0 flex-1">
               <h3 className="text-[12px] md:text-sm font-bold text-gray-900 mb-1 md:mb-2 font-merriweather group-hover:text-red-600 transition-colors duration-200 break-words line-clamp-2 md:line-clamp-3 leading-tight">
                 {title}
               </h3>
               {description && (
-                <p className="text-[10px] md:text-[11px] text-gray-600 mb-1 line-clamp-1 md:line-clamp-3 leading-snug">
+                <p className="text-[10px] md:text-[11px] text-gray-600 mb-1 overflow-hidden max-h-[2.7em] md:max-h-none md:line-clamp-3 leading-snug">
                   {description}
                 </p>
               )}
