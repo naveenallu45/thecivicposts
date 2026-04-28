@@ -16,7 +16,7 @@ export function optimizeCloudinaryUrl(
   width?: number,
   height?: number,
   _quality: 'auto' | 'auto:best' | 'auto:good' | 'auto:eco' | number = 'auto:good',
-  cropMode: 'fill' | 'fit' = 'fill'
+  cropMode: 'fill' | 'fit' = 'fit'
 ): string {
   // Kept for API compatibility; quality transforms are intentionally disabled.
   void _quality
@@ -131,7 +131,7 @@ export function getOptimizedImageUrl(
   maxWidth?: number,
   _quality: 'auto:best' | 'auto:good' | 'auto:eco' | number = 'auto:good',
   height?: number,
-  cropMode: 'fill' | 'fit' = 'fill'
+  cropMode: 'fill' | 'fit' = 'fit'
 ): string {
   // Kept for API compatibility; quality transforms are intentionally disabled.
   void _quality
@@ -157,6 +157,6 @@ export function getFramedImageUrl(
 
   return optimized.replace(
     '/image/upload/',
-    '/image/upload/e_trim,c_fill,g_auto/'
+    '/image/upload/e_trim,c_fit,g_auto/'
   )
 }

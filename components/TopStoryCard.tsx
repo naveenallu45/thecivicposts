@@ -31,7 +31,7 @@ function TopStoryCard({
   const router = useRouter()
   const [, startTransition] = useTransition()
   const [imgSrc, setImgSrc] = useState(() =>
-    mainImage?.trim() ? getOptimizedImageUrl(mainImage.trim(), 1200, 'auto:best', 800) : ''
+    mainImage?.trim() ? getOptimizedImageUrl(mainImage.trim(), 1200, 'auto:best', 800, 'fit') : ''
   )
 
   const handleAuthorClick = useCallback((e: React.MouseEvent) => {
@@ -62,7 +62,7 @@ function TopStoryCard({
               src={imgSrc}
               alt={title}
               fill
-              className="object-cover"
+              className="object-contain bg-gray-100"
               sizes="(max-width: 1024px) 100vw, 66vw"
               {...(priorityImage
                 ? { priority: true, fetchPriority: 'high' as const }

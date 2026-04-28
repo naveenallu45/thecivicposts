@@ -4,7 +4,7 @@ import connectDB from '@/lib/mongodb'
 import Article from '@/models/Article'
 import InfiniteScrollArticles from '@/components/InfiniteScrollArticles'
 import type { ArticleListItem } from '@/lib/article-types'
-import { formatDateShort } from '@/lib/date-utils'
+import { formatDateShort, getTodayEndDate } from '@/lib/date-utils'
 import { getArticleDescription } from '@/lib/article-description'
 import { generateAuthorSlug } from '@/lib/author-utils'
 import { notFound } from 'next/navigation'
@@ -67,9 +67,8 @@ export default async function AuthorPage({
     notFound()
   }
 
-  // Current date for filtering out future-dated articles
-  const currentDate = new Date()
-  currentDate.setHours(0, 0, 0, 0)
+  // Include all articles published up to end of today.
+  const currentDate = getTodayEndDate()
 
   // Load initial 10 articles
   const [articles, totalArticles] = await Promise.all([

@@ -7,7 +7,7 @@ import connectDB from '@/lib/mongodb'
 import Article from '@/models/Article'
 import Image from 'next/image'
 import SocialShare from '@/components/SocialShare'
-import { formatDateShort } from '@/lib/date-utils'
+import { formatDateShort, getTodayEndDate } from '@/lib/date-utils'
 import { renderFormattedText } from '@/lib/text-formatting'
 import { generateAuthorSlug } from '@/lib/author-utils'
 import { extractYouTubeVideoId } from '@/lib/youtube-utils'
@@ -47,9 +47,8 @@ export async function generateMetadata({
   
   const { category, slug } = await params
   
-  // Current date for filtering out future-dated articles
-  const currentDate = new Date()
-  currentDate.setHours(0, 0, 0, 0)
+  // Include all articles published up to end of today.
+  const currentDate = getTodayEndDate()
   
   const article = await Article.findOne({ 
     slug, 
@@ -159,9 +158,8 @@ export default async function ArticlePage({
     'automobiles': 'Automobiles',
   }
   
-  // Current date for filtering out future-dated articles
-  const currentDate = new Date()
-  currentDate.setHours(0, 0, 0, 0) // Set to start of day for accurate comparison
+  // Include all articles published up to end of today.
+  const currentDate = getTodayEndDate()
 
   // Fetch article (ISR will cache this page)
   // Optimized: Only select needed fields for better performance
@@ -476,7 +474,7 @@ export default async function ArticlePage({
                                     src={getFramedImageUrl(img.url, 800, 600, 'auto:best')}
                                     alt={img.alt || article.title || `Supporting image ${idx + 1}`}
                                     fill
-                                    className="object-cover"
+                                    className="object-contain bg-gray-100"
                                     loading="lazy"
                                     quality={90}
                                     sizes="(max-width: 768px) 280px, (max-width: 1024px) 360px, 420px"
@@ -531,7 +529,7 @@ export default async function ArticlePage({
                             src={getFramedImageUrl(img.url, 1200, 800, 'auto:best')}
                             alt={img.alt || `Article image ${idx + 1}`}
                             fill
-                            className="object-cover"
+                            className="object-contain bg-gray-100"
                             loading="lazy"
                             quality={90}
                             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 900px"

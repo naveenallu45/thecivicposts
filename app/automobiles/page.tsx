@@ -4,7 +4,7 @@ import connectDB from '@/lib/mongodb'
 import Article from '@/models/Article'
 import CategoryInfiniteScroll from '@/components/CategoryInfiniteScroll'
 import type { ArticleListItem } from '@/lib/article-types'
-import { formatDateShort } from '@/lib/date-utils'
+import { formatDateShort, getTodayEndDate } from '@/lib/date-utils'
 import { getArticleDescription } from '@/lib/article-description'
 import type { Metadata } from 'next'
 
@@ -35,9 +35,8 @@ export const metadata: Metadata = {
 }
 
 export default async function AutomobilesPage() {
-  // Current date for filtering out future-dated articles
-  const currentDate = new Date()
-  currentDate.setHours(0, 0, 0, 0)
+  // Include all articles published up to end of today.
+  const currentDate = getTodayEndDate()
 
   let articles: ArticleListItem[] = []
   let totalArticles = 0

@@ -9,10 +9,10 @@ import {
   type HomeArticleDocument,
   type HomeTransformedArticle,
 } from '@/lib/home-articles'
+import { getTodayEndDate } from '@/lib/date-utils'
 
 export default async function HomeBelowFoldServer() {
-  const currentDate = new Date()
-  currentDate.setHours(0, 0, 0, 0)
+  const currentDate = getTodayEndDate()
 
   let trendingData: HomeTransformedArticle[] = []
   let categoryData: HomeTransformedArticle[][] = []

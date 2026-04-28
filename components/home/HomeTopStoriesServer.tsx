@@ -7,10 +7,10 @@ import {
   type HomeArticleDocument,
   type HomeTransformedArticle,
 } from '@/lib/home-articles'
+import { getTodayEndDate } from '@/lib/date-utils'
 
 export default async function HomeTopStoriesServer() {
-  const currentDate = new Date()
-  currentDate.setHours(0, 0, 0, 0)
+  const currentDate = getTodayEndDate()
 
   let topStoriesData: HomeTransformedArticle[] = []
   let miniTopStoriesData: HomeTransformedArticle[] = []

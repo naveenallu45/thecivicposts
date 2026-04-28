@@ -138,9 +138,9 @@ function ArticleCard({
             {mainImage && mainImage.trim() ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={getOptimizedImageUrl(mainImage, 500, 'auto:best', 220)}
+                src={getOptimizedImageUrl(mainImage, 500, 'auto:best', 220, 'fit')}
                 alt={title}
-                className="w-full h-[220px] object-cover block"
+                className="w-full h-[220px] object-contain block bg-gray-100"
                 onError={(e) => {
                   // Fallback to raw URL if optimized URL fails
                   const target = e.target as HTMLImageElement

@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import '@/models'
 import connectDB from '@/lib/mongodb'
 import Article from '@/models/Article'
-import { formatDateShort } from '@/lib/date-utils'
+import { formatDateShort, getTodayEndDate } from '@/lib/date-utils'
 import { createCachedResponse } from '@/lib/cache-headers'
 import { queryCache } from '@/lib/query-cache'
 
@@ -45,9 +45,8 @@ export async function GET(request: NextRequest) {
       return createCachedResponse(cachedResult, 60, 300)
     }
 
-    // Current date for filtering out future-dated articles
-    const currentDate = new Date()
-    currentDate.setHours(0, 0, 0, 0)
+    // Include all articles published up to end of today.
+    const currentDate = getTodayEndDate()
 
     const query: { 
       status: string
