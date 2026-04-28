@@ -1,6 +1,6 @@
 /**
  * Optimizes Cloudinary image URLs with transformations for CDN delivery
- * Adds f_auto (format auto), q_auto (quality auto), dpr_auto (device pixel ratio), c_fill (crop fill)
+ * Adds format + sizing transforms while avoiding forced quality compression
  * Uses high quality settings for HD images
  * 
  * Cloudinary URL format: https://res.cloudinary.com/{cloud_name}/image/upload/{transformations}/{public_id}
@@ -15,9 +15,12 @@ export function optimizeCloudinaryUrl(
   url: string,
   width?: number,
   height?: number,
-  quality: 'auto' | 'auto:best' | 'auto:good' | 'auto:eco' | number = 'auto:best',
+  _quality: 'auto' | 'auto:best' | 'auto:good' | 'auto:eco' | number = 'auto:good',
   cropMode: 'fill' | 'fit' = 'fill'
 ): string {
+  // Kept for API compatibility; quality transforms are intentionally disabled.
+  void _quality
+
   if (!url || typeof url !== 'string') {
     return url
   }
@@ -52,7 +55,6 @@ export function optimizeCloudinaryUrl(
     
     // Check what transformations we have
     const hasF = transformations.includes('f_')
-    const hasQ = transformations.includes('q_')
     const hasC = transformations.includes('c_')
     const hasDpr = transformations.includes('dpr_')
     
@@ -62,12 +64,6 @@ export function optimizeCloudinaryUrl(
     // Add format auto if missing (WebP/AVIF for modern browsers)
     if (!hasF) {
       transformParts.push('f_auto')
-    }
-    
-    // Add quality - use high quality for HD images
-    if (!hasQ) {
-      const qValue = typeof quality === 'number' ? `q_${quality}` : `q_${quality}`
-      transformParts.push(qValue)
     }
     
     // Add device pixel ratio auto for retina displays (HD)
@@ -90,9 +86,13 @@ export function optimizeCloudinaryUrl(
       transformParts.push(`c_${cropMode}`)
     }
     
+    // Remove quality transforms to avoid compression.
+    const existingTransforms = transformations
+      .split(',')
+      .filter(t => t.trim() && !t.trim().startsWith('q_'))
+
     // Combine existing transformations with new ones
     // Use comma-separated format for Cloudinary
-    const existingTransforms = transformations.split(',').filter(t => t.trim())
     const allTransforms = [...transformParts, ...existingTransforms]
     
     return `${basePath}${allTransforms.join(',')}/${publicId}`
@@ -102,7 +102,6 @@ export function optimizeCloudinaryUrl(
     
     const transformParts: string[] = [
       'f_auto', // Auto format (WebP/AVIF)
-      typeof quality === 'number' ? `q_${quality}` : `q_${quality}`, // High quality for HD
       'dpr_auto', // Device pixel ratio for retina displays
     ]
     
@@ -130,13 +129,14 @@ export function optimizeCloudinaryUrl(
 export function getOptimizedImageUrl(
   url: string, 
   maxWidth?: number,
-  quality: 'auto:best' | 'auto:good' | 'auto:eco' | number = 'auto:best',
+  _quality: 'auto:best' | 'auto:good' | 'auto:eco' | number = 'auto:good',
   height?: number,
   cropMode: 'fill' | 'fit' = 'fill'
 ): string {
-  // Use high quality for larger images (HD), good quality for smaller thumbnails
-  const imageQuality = maxWidth && maxWidth >= 800 ? 'auto:best' : (quality || 'auto:good')
-  return optimizeCloudinaryUrl(url, maxWidth, height, imageQuality, cropMode)
+  // Kept for API compatibility; quality transforms are intentionally disabled.
+  void _quality
+
+  return optimizeCloudinaryUrl(url, maxWidth, height, 'auto:good', cropMode)
 }
 
 /**

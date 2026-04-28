@@ -39,7 +39,7 @@ export default async function HomeBelowFoldServer() {
           isTrending: { $ne: true },
         })
           .sort({ createdAt: -1 })
-          .limit(6)
+          .limit(4)
           .select('title content mainImage publishedDate authorName slug category')
           .lean()
       ),
