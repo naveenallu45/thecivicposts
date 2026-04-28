@@ -4,7 +4,7 @@ const nextConfig = {
   images: {
     // Modern image formats for better compression and faster loading
     formats: ['image/avif', 'image/webp'],
-    qualities: [100],
+    qualities: [75, 85, 90, 100],
     remotePatterns: [
       {
         protocol: 'https',
