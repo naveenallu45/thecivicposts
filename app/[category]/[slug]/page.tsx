@@ -475,6 +475,7 @@ export default async function ArticlePage({
                                     alt={img.alt || article.title || `Supporting image ${idx + 1}`}
                                     fill
                                     className="object-contain bg-gray-100"
+                                    unoptimized
                                     loading="lazy"
                                     quality={90}
                                     sizes="(max-width: 768px) 280px, (max-width: 1024px) 360px, 420px"
@@ -530,6 +531,7 @@ export default async function ArticlePage({
                             alt={img.alt || `Article image ${idx + 1}`}
                             fill
                             className="object-contain bg-gray-100"
+                            unoptimized
                             loading="lazy"
                             quality={90}
                             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 900px"

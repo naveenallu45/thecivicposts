@@ -48,6 +48,7 @@ function ArticleMainImageCarousel({ images, title }: ArticleMainImageCarouselPro
             alt={img.alt || title || 'Article main image'}
             fill
             className="object-contain bg-gray-100 image-fade-in"
+            unoptimized
             priority
             fetchPriority="high"
             quality={90}
@@ -77,6 +78,7 @@ function ArticleMainImageCarousel({ images, title }: ArticleMainImageCarouselPro
                 alt={img.alt || title || `Main image ${idx + 1}`}
                 fill
                 className="object-contain bg-gray-100 image-fade-in"
+                unoptimized
                 {...(idx === 0
                   ? { priority: true, fetchPriority: 'high' as const }
                   : { loading: 'lazy' as const, fetchPriority: 'low' as const })}

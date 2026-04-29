@@ -63,6 +63,7 @@ function TopStoryCard({
               alt={title}
               fill
               className="object-contain bg-gray-100"
+              unoptimized
               sizes="(max-width: 1024px) 100vw, 66vw"
               {...(priorityImage
                 ? { priority: true, fetchPriority: 'high' as const }
