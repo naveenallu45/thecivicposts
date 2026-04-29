@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback, memo } from 'react'
 import Image from 'next/image'
-import { getFramedImageUrl } from '@/lib/cloudinary-optimize'
+import { getOptimizedImageUrl } from '@/lib/cloudinary-optimize'
 
 export type ArticleMainCarouselImage = { url: string; alt?: string }
 
@@ -44,7 +44,7 @@ function ArticleMainImageCarousel({ images, title }: ArticleMainImageCarouselPro
       <div className="mb-8 w-full">
         <div className="relative w-full aspect-[3/2] overflow-hidden rounded-lg">
           <Image
-            src={getFramedImageUrl(img.url, 1200, 800, 'auto:best')}
+            src={getOptimizedImageUrl(img.url, 1200, 'auto:best', 800, 'fit')}
             alt={img.alt || title || 'Article main image'}
             fill
             className="object-contain bg-gray-100 image-fade-in"
@@ -73,7 +73,7 @@ function ArticleMainImageCarousel({ images, title }: ArticleMainImageCarouselPro
           >
             <div className="relative w-full aspect-[3/2] overflow-hidden rounded-lg">
               <Image
-                src={getFramedImageUrl(img.url, 1200, 800, 'auto:best')}
+                src={getOptimizedImageUrl(img.url, 1200, 'auto:best', 800, 'fit')}
                 alt={img.alt || title || `Main image ${idx + 1}`}
                 fill
                 className="object-contain bg-gray-100 image-fade-in"

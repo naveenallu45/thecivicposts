@@ -16,7 +16,7 @@ import ViewportPrefetch from '@/components/ViewportPrefetch'
 import YouTubeVideo from '@/components/YouTubeVideo'
 import ArticleCard from '@/components/ArticleCard'
 import type { ArticleListItem } from '@/lib/article-types'
-import { getFramedImageUrl, getOptimizedImageUrl } from '@/lib/cloudinary-optimize'
+import { getOptimizedImageUrl } from '@/lib/cloudinary-optimize'
 import { getArticleDescription } from '@/lib/article-description'
 import ArticleMainImageCarousel from '@/components/ArticleMainImageCarousel'
 
@@ -471,7 +471,7 @@ export default async function ArticlePage({
                               <div key={`mini-${idx}`} className="w-[280px] sm:w-[360px] lg:w-[420px] flex-shrink-0">
                                 <div className="relative w-full aspect-[3/2] overflow-hidden rounded-lg">
                                   <Image
-                                    src={getFramedImageUrl(img.url, 800, 600, 'auto:best')}
+                                    src={getOptimizedImageUrl(img.url, 800, 'auto:best', 600, 'fit')}
                                     alt={img.alt || article.title || `Supporting image ${idx + 1}`}
                                     fill
                                     className="object-contain bg-gray-100"
@@ -526,7 +526,7 @@ export default async function ArticlePage({
                       <div key={idx} className="lg:w-3/4 lg:mx-auto">
                         <div className="relative w-full aspect-[3/2] overflow-hidden rounded-lg">
                           <Image
-                            src={getFramedImageUrl(img.url, 1200, 800, 'auto:best')}
+                            src={getOptimizedImageUrl(img.url, 1200, 'auto:best', 800, 'fit')}
                             alt={img.alt || `Article image ${idx + 1}`}
                             fill
                             className="object-contain bg-gray-100"
